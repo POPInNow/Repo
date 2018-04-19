@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (C) 2018 POP Inc.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~       http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    >
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="vertical"
+      android:padding="16dp"
+      >
+
+    <android.support.v7.widget.SwitchCompat
+        android:id="@+id/application_level_dispose"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Dispose of Application level Repo"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        />
+
+    <android.support.v7.widget.SwitchCompat
+        android:id="@+id/observable_mock_switch"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Bust Cache"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        />
+
+    <Button
+        android:id="@+id/observable_mock"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="ObservableRepo from Mock Data Source"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        />
+
+    <android.support.v7.widget.SwitchCompat
+        android:id="@+id/observable_application_switch"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Bust Cache"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        />
+
+    <Button
+        android:id="@+id/observable_application"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="ObservableRepo from Application Data Source"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        />
+
+    <android.support.v7.widget.SwitchCompat
+        android:id="@+id/single_mock_switch"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Bust Cache"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        />
+
+    <Button
+        android:id="@+id/single_mock"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="SingleRepo from Mock Data Source"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        />
+
+    <android.support.v7.widget.SwitchCompat
+        android:id="@+id/single_application_switch"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Bust Cache"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        />
+
+    <Button
+        android:id="@+id/single_application"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="SingleRepo from Application Data Source"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        />
+
+  </LinearLayout>
+</ScrollView>
