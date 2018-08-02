@@ -86,8 +86,8 @@ internal class RepoBuilderImpl<T : Any> internal constructor(
   override fun buildObservable(): ObservableRepo<T> {
     return ObservableRepoImpl(
         fetcher ?: FetcherImpl(debug),
-        memoryCache ?: NoopCache(),
-        persister ?: NoopPersister(),
+        memoryCache ?: NoopCache.instance(),
+        persister ?: NoopPersister.instance(),
         scheduler ?: Schedulers.io(),
         debug
     )
@@ -96,8 +96,8 @@ internal class RepoBuilderImpl<T : Any> internal constructor(
   override fun buildSingle(): SingleRepo<T> {
     return SingleRepoImpl(
         fetcher ?: FetcherImpl(debug),
-        memoryCache ?: NoopCache(),
-        persister ?: NoopPersister(),
+        memoryCache ?: NoopCache.instance(),
+        persister ?: NoopPersister.instance(),
         scheduler ?: Schedulers.io(),
         debug
     )
