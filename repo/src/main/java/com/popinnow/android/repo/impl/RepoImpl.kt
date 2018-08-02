@@ -51,7 +51,7 @@ internal abstract class RepoImpl<T : Any> internal constructor(
       val freshData = fetcher.fetch(key, upstream, scheduler)
       if (bustCache) {
         logger().log { "Busting cache to fetch from upstream" }
-        return@defer freshData
+        return@defer freshData.doOnSubscribe { justInvalidateBackingCaches(key) }
       } else {
         val memory = memoryCache.get(key)
         val persist = persister.read(key)
