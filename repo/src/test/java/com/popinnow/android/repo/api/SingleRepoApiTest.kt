@@ -16,11 +16,9 @@
 
 package com.popinnow.android.repo.api
 
-import com.popinnow.android.repo.Counter
 import com.popinnow.android.repo.Fetcher
 import com.popinnow.android.repo.MemoryCache
 import com.popinnow.android.repo.Persister
-import com.popinnow.android.repo.SingleRepo
 import com.popinnow.android.repo.impl.SingleRepoImpl
 import com.popinnow.android.repo.startNow
 import io.reactivex.Observable
@@ -32,7 +30,6 @@ import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
 import org.mockito.junit.MockitoJUnitRunner
-import java.util.concurrent.TimeUnit.SECONDS
 
 @RunWith(MockitoJUnitRunner::class)
 class SingleRepoApiTest {
@@ -41,11 +38,13 @@ class SingleRepoApiTest {
   @Mock lateinit var memoryCache: MemoryCache<String>
   @Mock lateinit var persister: Persister<String>
   private lateinit var singleRepo: SingleRepoImpl<String>
+  private lateinit var validator: MockRepoOrderValidator<String>
 
   @Before
   fun setup() {
     MockitoAnnotations.initMocks(this)
     singleRepo = SingleRepoImpl(fetcher, memoryCache, persister, DEFAULT_SCHEDULER, true)
+    validator = MockRepoOrderValidator(memoryCache, persister, fetcher)
   }
 
   /**
@@ -53,14 +52,14 @@ class SingleRepoApiTest {
    */
   @Test
   fun `SingleRepoApi memory hit takes priority`() {
-    Mocks.whenever(memoryCache.get(DEFAULT_KEY))
-        .thenReturn(Observable.just(DEFAULT_CACHE_EXPECT))
-
-    Mocks.whenever(fetcher.fetch(DEFAULT_KEY, DEFAULT_UPSTREAM_OBSERVABLE, DEFAULT_SCHEDULER))
-        .thenReturn(Observable.just(DEFAULT_FETCH_EXPECT))
-
-    Mocks.whenever(persister.read(DEFAULT_KEY))
-        .thenReturn(Observable.error(AssertionError("Persister should be missed")))
+    validator.onVisitMemoryReturn(DEFAULT_KEY, Observable.just(DEFAULT_CACHE_EXPECT))
+    validator.onVisitPersisterReturn(
+        DEFAULT_KEY, Observable.error<String>(AssertionError("Persister should be missed"))
+    )
+    validator.onVisitUpstreamReturn(
+        DEFAULT_KEY, Observable.error<String>(AssertionError("Fetcher should be missed")),
+        DEFAULT_SCHEDULER, DEFAULT_UPSTREAM_OBSERVABLE
+    )
 
     // Use the internal method just to avoid the conversion from Single to Observable not triggering Mockito
     singleRepo.get(false, DEFAULT_KEY, DEFAULT_UPSTREAM_OBSERVABLE)
@@ -70,6 +69,10 @@ class SingleRepoApiTest {
         .assertValue(DEFAULT_CACHE_EXPECT)
         .assertComplete()
         .assertNoErrors()
+
+    assert(validator.memoryVisited)
+    assert(!validator.persisterVisited)
+    assert(!validator.upstreamVisited)
   }
 
   /**
@@ -77,18 +80,12 @@ class SingleRepoApiTest {
    */
   @Test
   fun `SingleRepoApi persister hit takes priority`() {
-    val counter = Counter(0)
-    Mocks.whenever(memoryCache.get(DEFAULT_KEY))
-        .thenReturn(Observable.defer {
-          ++counter.count
-          return@defer Observable.empty<String>()
-        })
-
-    Mocks.whenever(fetcher.fetch(DEFAULT_KEY, DEFAULT_UPSTREAM_OBSERVABLE, DEFAULT_SCHEDULER))
-        .thenReturn(Observable.just(DEFAULT_FETCH_EXPECT))
-
-    Mocks.whenever(persister.read(DEFAULT_KEY))
-        .thenReturn(Observable.just(DEFAULT_PERSIST_EXPECT))
+    validator.onVisitMemoryReturn(DEFAULT_KEY, Observable.empty())
+    validator.onVisitPersisterReturn(DEFAULT_KEY, Observable.just(DEFAULT_PERSIST_EXPECT))
+    validator.onVisitUpstreamReturn(
+        DEFAULT_KEY, Observable.error<String>(AssertionError("Fetcher should be missed")),
+        DEFAULT_SCHEDULER, DEFAULT_UPSTREAM_OBSERVABLE
+    )
 
     // Use the internal method just to avoid the conversion from Single to Observable not triggering Mockito
     singleRepo.get(false, DEFAULT_KEY, DEFAULT_UPSTREAM_OBSERVABLE)
@@ -99,7 +96,9 @@ class SingleRepoApiTest {
         .assertComplete()
         .assertNoErrors()
 
-    assert(counter.count == 1) { "MemoryCache was not visited first" }
+    assert(validator.memoryVisited)
+    assert(validator.persisterVisited)
+    assert(!validator.upstreamVisited)
   }
 
   /**
@@ -107,21 +106,12 @@ class SingleRepoApiTest {
    */
   @Test
   fun `SingleRepoApi fetcher delivers even without caching layer`() {
-    val counter = Counter(0)
-    Mocks.whenever(memoryCache.get(DEFAULT_KEY))
-        .thenReturn(Observable.defer {
-          ++counter.count
-          return@defer Observable.empty<String>()
-        })
-
-    Mocks.whenever(fetcher.fetch(DEFAULT_KEY, DEFAULT_UPSTREAM_OBSERVABLE, DEFAULT_SCHEDULER))
-        .thenReturn(Observable.just(DEFAULT_FETCH_EXPECT))
-
-    Mocks.whenever(persister.read(DEFAULT_KEY))
-        .thenReturn(Observable.defer {
-          ++counter.count
-          return@defer Observable.empty<String>()
-        })
+    validator.onVisitMemoryReturn(DEFAULT_KEY, Observable.empty())
+    validator.onVisitPersisterReturn(DEFAULT_KEY, Observable.empty())
+    validator.onVisitUpstreamReturn(
+        DEFAULT_KEY, Observable.just(DEFAULT_FETCH_EXPECT), DEFAULT_SCHEDULER,
+        DEFAULT_UPSTREAM_OBSERVABLE
+    )
 
     // Use the internal method just to avoid the conversion from Single to Observable not triggering Mockito
     singleRepo.get(false, DEFAULT_KEY, DEFAULT_UPSTREAM_OBSERVABLE)
@@ -132,7 +122,9 @@ class SingleRepoApiTest {
         .assertComplete()
         .assertNoErrors()
 
-    assert(counter.count == 2) { "Caching layer was not visited first" }
+    assert(validator.memoryVisited)
+    assert(validator.persisterVisited)
+    assert(validator.upstreamVisited)
   }
 
   companion object {

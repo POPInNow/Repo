@@ -16,10 +16,8 @@
 
 package com.popinnow.android.repo.api
 
-import com.popinnow.android.repo.Counter
 import com.popinnow.android.repo.Fetcher
 import com.popinnow.android.repo.MemoryCache
-import com.popinnow.android.repo.ObservableRepo
 import com.popinnow.android.repo.Persister
 import com.popinnow.android.repo.impl.ObservableRepoImpl
 import com.popinnow.android.repo.startNow
@@ -39,11 +37,13 @@ class ObservableRepoApiTest {
   @Mock lateinit var memoryCache: MemoryCache<String>
   @Mock lateinit var persister: Persister<String>
   private lateinit var observableRepo: ObservableRepoImpl<String>
+  private lateinit var validator: MockRepoOrderValidator<String>
 
   @Before
   fun setup() {
     MockitoAnnotations.initMocks(this)
     observableRepo = ObservableRepoImpl(fetcher, memoryCache, persister, DEFAULT_SCHEDULER, true)
+    validator = MockRepoOrderValidator(memoryCache, persister, fetcher)
   }
 
   /**
@@ -51,14 +51,14 @@ class ObservableRepoApiTest {
    */
   @Test
   fun `ObservableRepoApi memory hit takes priority`() {
-    Mocks.whenever(memoryCache.get(DEFAULT_KEY))
-        .thenReturn(Observable.fromIterable(DEFAULT_CACHE_EXPECT))
-
-    Mocks.whenever(fetcher.fetch(DEFAULT_KEY, DEFAULT_UPSTREAM, DEFAULT_SCHEDULER))
-        .thenReturn(Observable.fromIterable(DEFAULT_FETCH_EXPECT))
-
-    Mocks.whenever(persister.read(DEFAULT_KEY))
-        .thenReturn(Observable.error(AssertionError("Persister should be missed")))
+    validator.onVisitMemoryReturn(DEFAULT_KEY, Observable.fromIterable(DEFAULT_CACHE_EXPECT))
+    validator.onVisitPersisterReturn(
+        DEFAULT_KEY, Observable.error<String>(AssertionError("Persister should be missed"))
+    )
+    validator.onVisitUpstreamReturn(
+        DEFAULT_KEY, Observable.fromIterable(DEFAULT_FETCH_EXPECT), DEFAULT_SCHEDULER,
+        DEFAULT_UPSTREAM
+    )
 
     observableRepo.get(false, DEFAULT_KEY, DEFAULT_UPSTREAM)
         .startNow()
@@ -67,6 +67,10 @@ class ObservableRepoApiTest {
         .assertValueSequence(DEFAULT_CACHE_EXPECT + DEFAULT_FETCH_EXPECT)
         .assertComplete()
         .assertNoErrors()
+
+    assert(validator.memoryVisited)
+    assert(!validator.persisterVisited)
+    assert(validator.upstreamVisited)
   }
 
   /**
@@ -74,18 +78,12 @@ class ObservableRepoApiTest {
    */
   @Test
   fun `ObservableRepoApi persister hit takes priority`() {
-    val counter = Counter(0)
-    Mocks.whenever(memoryCache.get(DEFAULT_KEY))
-        .thenReturn(Observable.defer {
-          ++counter.count
-          return@defer Observable.empty<String>()
-        })
-
-    Mocks.whenever(fetcher.fetch(DEFAULT_KEY, DEFAULT_UPSTREAM, DEFAULT_SCHEDULER))
-        .thenReturn(Observable.fromIterable(DEFAULT_FETCH_EXPECT))
-
-    Mocks.whenever(persister.read(DEFAULT_KEY))
-        .thenReturn(Observable.fromIterable(DEFAULT_PERSIST_EXPECT))
+    validator.onVisitMemoryReturn(DEFAULT_KEY, Observable.empty())
+    validator.onVisitPersisterReturn(DEFAULT_KEY, Observable.fromIterable(DEFAULT_PERSIST_EXPECT))
+    validator.onVisitUpstreamReturn(
+        DEFAULT_KEY, Observable.fromIterable(DEFAULT_FETCH_EXPECT), DEFAULT_SCHEDULER,
+        DEFAULT_UPSTREAM
+    )
 
     observableRepo.get(false, DEFAULT_KEY, DEFAULT_UPSTREAM)
         .startNow()
@@ -95,7 +93,9 @@ class ObservableRepoApiTest {
         .assertComplete()
         .assertNoErrors()
 
-    assert(counter.count == 1) { "MemoryCache was not visited first" }
+    assert(validator.memoryVisited)
+    assert(validator.persisterVisited)
+    assert(validator.upstreamVisited)
   }
 
   /**
@@ -103,21 +103,12 @@ class ObservableRepoApiTest {
    */
   @Test
   fun `ObservableRepoApi fetcher delivers even without caching layer`() {
-    val counter = Counter(0)
-    Mocks.whenever(memoryCache.get(DEFAULT_KEY))
-        .thenReturn(Observable.defer {
-          ++counter.count
-          return@defer Observable.empty<String>()
-        })
-
-    Mocks.whenever(fetcher.fetch(DEFAULT_KEY, DEFAULT_UPSTREAM, DEFAULT_SCHEDULER))
-        .thenReturn(Observable.fromIterable(DEFAULT_FETCH_EXPECT))
-
-    Mocks.whenever(persister.read(DEFAULT_KEY))
-        .thenReturn(Observable.defer {
-          ++counter.count
-          return@defer Observable.empty<String>()
-        })
+    validator.onVisitMemoryReturn(DEFAULT_KEY, Observable.empty())
+    validator.onVisitPersisterReturn(DEFAULT_KEY, Observable.empty())
+    validator.onVisitUpstreamReturn(
+        DEFAULT_KEY, Observable.fromIterable(DEFAULT_FETCH_EXPECT), DEFAULT_SCHEDULER,
+        DEFAULT_UPSTREAM
+    )
 
     observableRepo.get(false, DEFAULT_KEY, DEFAULT_UPSTREAM)
         .startNow()
@@ -127,7 +118,9 @@ class ObservableRepoApiTest {
         .assertComplete()
         .assertNoErrors()
 
-    assert(counter.count == 2) { "Caching layer was not visited first" }
+    assert(validator.memoryVisited)
+    assert(validator.persisterVisited)
+    assert(validator.upstreamVisited)
   }
 
   companion object {
