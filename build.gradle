@@ -62,7 +62,7 @@ ext {
 
   // Tests
   junit = "4.12"
-  mockito = "2.19.0"
+  mockito = "2.21.0"
 
   // Sample
   rxandroid = "2.0.2"
