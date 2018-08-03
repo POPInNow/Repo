@@ -11,7 +11,7 @@ In your `build.gradle`
 
 ```gradle
 dependencies {
-  implementation "com.popinnow.android.repo:repo:0.0.4"
+  implementation "com.popinnow.android.repo:repo:0.0.5"
 }
 ```
 
