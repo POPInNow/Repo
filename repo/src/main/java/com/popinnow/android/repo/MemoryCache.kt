@@ -57,5 +57,19 @@ interface MemoryCache<T : Any> : Invalidatable, MemoryCacheManager<T> {
     value: T
   )
 
+  /**
+   * Adds data into the cache.
+   *
+   * If there is data in the cache already for the given [key], new data will be appended.
+   *
+   * @param key The key for this request.
+   * @param value The data to put into the cache.
+   */
+  @Deprecated("Use add() instead", ReplaceWith("add(key, value)", "com.popinnow.android.repo.MemoryCache"))
+  fun put(
+    key: String,
+    value: T
+  )
+
 }
 

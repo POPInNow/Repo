@@ -75,6 +75,13 @@ internal class ObservableRepoImpl<T : Any> internal constructor(
     }
   }
 
+  override fun put(
+    key: String,
+    value: T
+  ) {
+    add(key, value)
+  }
+
   override fun add(
     key: String,
     value: T

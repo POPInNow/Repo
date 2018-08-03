@@ -35,6 +35,12 @@ internal object NoopCache : MemoryCache<Any> {
   ) {
   }
 
+  override fun put(
+    key: String,
+    value: Any
+  ) {
+  }
+
   override fun invalidate(key: String) {
   }
 
