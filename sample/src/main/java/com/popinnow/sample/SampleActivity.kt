@@ -72,11 +72,8 @@ class SampleActivity : AppCompatActivity() {
       .memoryCache()
       .buildSingle()
 
-  override fun onCreate(
-    savedInstanceState: Bundle?,
-    persistentState: PersistableBundle?
-  ) {
-    super.onCreate(savedInstanceState, persistentState)
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_main)
 
     applicationLevelDisposeSwitch = findViewById(R.id.application_level_dispose)
