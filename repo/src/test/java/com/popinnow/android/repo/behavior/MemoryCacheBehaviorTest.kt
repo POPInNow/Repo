@@ -85,7 +85,7 @@ class MemoryCacheBehaviorTest {
   ) {
     val originalCacheSize = cache.size()
     for (i in 1..size) {
-      cache.put("key$i", "data$i")
+      cache.add("key$i", "data$i")
       assertCacheSize(cache, originalCacheSize + i)
     }
   }
@@ -110,7 +110,7 @@ class MemoryCacheBehaviorTest {
     val cache = createCache(30)
 
     // Putting data into the cache fills it
-    cache.put(
+    cache.add(
         DEFAULT_KEY,
         DEFAULT_EXPECT
     )
@@ -138,7 +138,7 @@ class MemoryCacheBehaviorTest {
   fun `MemoryCacheBehaviorTest invalidates`() {
     val cache = createCache(30)
     // Putting data into the cache fills it
-    cache.put(
+    cache.add(
         DEFAULT_KEY,
         DEFAULT_EXPECT
     )
@@ -173,7 +173,7 @@ class MemoryCacheBehaviorTest {
   fun `MemoryCacheBehaviorTest clears`() {
     val cache = createCache(30)
     // Putting data into the cache fills it
-    cache.put(
+    cache.add(
         DEFAULT_KEY,
         DEFAULT_EXPECT
     )
@@ -214,7 +214,7 @@ class MemoryCacheBehaviorTest {
   fun `MemoryCacheBehaviorTest invalidate is unique`() {
     val cache = createCache(30)
     // Putting data into the cache fills it
-    cache.put(
+    cache.add(
         DEFAULT_KEY,
         DEFAULT_EXPECT
     )
@@ -278,7 +278,7 @@ class MemoryCacheBehaviorTest {
   fun `MemoryCacheBehaviorTest size is bounded`() {
     val cache = createCache(30, maxSize = 2)
     // Putting data into the cache fills it
-    cache.put(
+    cache.add(
         DEFAULT_KEY,
         DEFAULT_EXPECT
     )
@@ -294,13 +294,13 @@ class MemoryCacheBehaviorTest {
     assertCacheSize(cache, 1)
 
     // Put some more data
-    cache.put("key1", "data1")
+    cache.add("key1", "data1")
 
     // Assert the size of the cache is correct
     assertCacheSize(cache, 2)
 
     // Put some more data
-    cache.put("key2", "data2")
+    cache.add("key2", "data2")
 
     // Assert the size of the cache is correctly bounded
     assertCacheSize(cache, 2)
@@ -313,7 +313,7 @@ class MemoryCacheBehaviorTest {
   fun `MemoryCacheBehaviorTest times out`() {
     val cache = createCache(1)
 
-    cache.put(
+    cache.add(
         DEFAULT_KEY,
         DEFAULT_EXPECT
     )
@@ -344,13 +344,13 @@ class MemoryCacheBehaviorTest {
     val expect1 = "Hello"
     val expect2 = "World"
 
-    cache.put(DEFAULT_KEY, expect1)
+    cache.add(DEFAULT_KEY, expect1)
     assertCacheSingleValue(
         cache,
         DEFAULT_KEY, expect1
     )
 
-    cache.put(DEFAULT_KEY, expect2)
+    cache.add(DEFAULT_KEY, expect2)
     assertCacheValues(
         cache,
         DEFAULT_KEY, expect1, expect2
@@ -367,13 +367,13 @@ class MemoryCacheBehaviorTest {
     val expect1 = "Testing"
     val expect2 = "Puts"
 
-    cache.put(
+    cache.add(
         DEFAULT_KEY,
         DEFAULT_EXPECT
     )
     cache.get(DEFAULT_KEY)
         .doOnSubscribe {
-          cache.put(
+          cache.add(
               DEFAULT_KEY, expect1
           )
         }
@@ -384,10 +384,10 @@ class MemoryCacheBehaviorTest {
         .assertValueCount(1)
         .assertComplete()
 
-    cache.put(DEFAULT_KEY, extraPuts)
+    cache.add(DEFAULT_KEY, extraPuts)
     cache.get(DEFAULT_KEY)
         .doOnSubscribe {
-          cache.put(
+          cache.add(
               DEFAULT_KEY, expect2
           )
         }
