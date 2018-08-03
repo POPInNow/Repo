@@ -21,7 +21,6 @@ import com.popinnow.android.repo.RepoBuilder
 import com.popinnow.android.repo.impl.MemoryCacheImpl
 import com.popinnow.android.repo.newRepoBuilder
 import com.popinnow.android.repo.startNow
-import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
 import org.junit.Test
@@ -61,7 +60,7 @@ class SingleRepoBehaviorTest {
         .buildSingle()
 
     // Juice the memory cache
-    memoryCache.put(DEFAULT_KEY, DEFAULT_CACHE_EXPECT)
+    memoryCache.add(DEFAULT_KEY, DEFAULT_CACHE_EXPECT)
 
     repo.get(false, DEFAULT_KEY) { throw AssertionError("Upstream should be avoided") }
         .startNow()

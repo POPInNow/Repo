@@ -29,7 +29,7 @@ internal object NoopCache : MemoryCache<Any> {
     return Observable.empty()
   }
 
-  override fun put(
+  override fun add(
     key: String,
     value: Any
   ) {

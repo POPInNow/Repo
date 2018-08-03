@@ -84,7 +84,7 @@ internal class MemoryCacheImpl<T : Any> internal constructor(
     }
   }
 
-  override fun put(
+  override fun add(
     key: String,
     value: T
   ) {

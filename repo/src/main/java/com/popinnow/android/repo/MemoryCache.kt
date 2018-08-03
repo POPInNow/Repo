@@ -45,14 +45,14 @@ interface MemoryCache<T : Any> : Invalidatable, MemoryCacheManager<T> {
   fun get(key: String): Observable<T>
 
   /**
-   * Puts data into the cache.
+   * Adds data into the cache.
    *
-   * If there is data in the cache already for the given [key], it will be overwritten.
+   * If there is data in the cache already for the given [key], new data will be appended.
    *
    * @param key The key for this request.
    * @param value The data to put into the cache.
    */
-  fun put(
+  fun add(
     key: String,
     value: T
   )

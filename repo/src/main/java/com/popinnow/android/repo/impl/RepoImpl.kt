@@ -87,7 +87,7 @@ internal abstract class RepoImpl<T : Any> internal constructor(
     logger().log { "Put data: $key $value" }
 
     // Store data directly into caches
-    memoryCache.put(key, value)
+    memoryCache.add(key, value)
     persister.write(key, value)
 
     // Cancel fetcher in flights

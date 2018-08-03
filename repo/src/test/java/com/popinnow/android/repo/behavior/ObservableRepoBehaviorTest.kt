@@ -59,7 +59,7 @@ class ObservableRepoBehaviorTest {
         .buildObservable()
 
     // Juice the memory cache
-    DEFAULT_CACHE_EXPECT.forEach { memoryCache.put(DEFAULT_KEY, it) }
+    DEFAULT_CACHE_EXPECT.forEach { memoryCache.add(DEFAULT_KEY, it) }
 
     repo.get(false, DEFAULT_KEY, DEFAULT_UPSTREAM)
         .startNow()

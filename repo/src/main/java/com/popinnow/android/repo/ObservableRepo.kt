@@ -69,12 +69,12 @@ interface ObservableRepo<T : Any> : CacheInvalidator {
   fun memoryCache(): MemoryCacheManager<T>
 
   /**
-   * Put data into the Repo.
+   * Adds data into the Repo.
    *
    * @param key The key for this request
    * @param value The data to put into the Repo
    */
-  fun put(
+  fun add(
     key: String,
     value: T
   )
