@@ -74,6 +74,31 @@ class ObservableRepoApiTest {
   }
 
   /**
+   * When data is returned from the cache, persister is missed and upstream is called after
+   */
+  @Test
+  fun `ObservableRepoApi busted memory hit takes priority`() {
+    validator.onVisitMemoryReturn(DEFAULT_KEY, Observable.empty())
+    validator.onVisitPersisterReturn(DEFAULT_KEY, Observable.empty())
+    validator.onVisitUpstreamReturn(
+        DEFAULT_KEY, Observable.fromIterable(DEFAULT_FETCH_EXPECT), DEFAULT_SCHEDULER,
+        DEFAULT_UPSTREAM
+    )
+
+    observableRepo.get(true, DEFAULT_KEY, DEFAULT_UPSTREAM)
+        .startNow()
+        .test()
+        // Cache then upstream (but cache is busted)
+        .assertValueSequence(DEFAULT_FETCH_EXPECT)
+        .assertComplete()
+        .assertNoErrors()
+
+    assert(validator.memoryVisited)
+    assert(validator.persisterVisited)
+    assert(validator.upstreamVisited)
+  }
+
+  /**
    * When data is returned from the persister, memory cache is hit but empty and upstream is called after
    */
   @Test
@@ -99,6 +124,31 @@ class ObservableRepoApiTest {
   }
 
   /**
+   * When data is returned from the persister, memory cache is hit but empty and upstream is called after
+   */
+  @Test
+  fun `ObservableRepoApi busted persister hit takes priority`() {
+    validator.onVisitMemoryReturn(DEFAULT_KEY, Observable.empty())
+    validator.onVisitPersisterReturn(DEFAULT_KEY, Observable.empty())
+    validator.onVisitUpstreamReturn(
+        DEFAULT_KEY, Observable.fromIterable(DEFAULT_FETCH_EXPECT), DEFAULT_SCHEDULER,
+        DEFAULT_UPSTREAM
+    )
+
+    observableRepo.get(true, DEFAULT_KEY, DEFAULT_UPSTREAM)
+        .startNow()
+        .test()
+        // Cache then upstream
+        .assertValueSequence(DEFAULT_FETCH_EXPECT)
+        .assertComplete()
+        .assertNoErrors()
+
+    assert(validator.memoryVisited)
+    assert(validator.persisterVisited)
+    assert(validator.upstreamVisited)
+  }
+
+  /**
    * When no caching layer exists, we just hit the fetcher, but we visit everyone first
    */
   @Test
@@ -111,6 +161,31 @@ class ObservableRepoApiTest {
     )
 
     observableRepo.get(false, DEFAULT_KEY, DEFAULT_UPSTREAM)
+        .startNow()
+        .test()
+        // Cache then upstream (but no caches)
+        .assertValueSequence(DEFAULT_FETCH_EXPECT)
+        .assertComplete()
+        .assertNoErrors()
+
+    assert(validator.memoryVisited)
+    assert(validator.persisterVisited)
+    assert(validator.upstreamVisited)
+  }
+
+  /**
+   * When no caching layer exists, we just hit the fetcher, but we visit everyone first
+   */
+  @Test
+  fun `ObservableRepoApi busted fetcher delivers even without caching layer`() {
+    validator.onVisitMemoryReturn(DEFAULT_KEY, Observable.empty())
+    validator.onVisitPersisterReturn(DEFAULT_KEY, Observable.empty())
+    validator.onVisitUpstreamReturn(
+        DEFAULT_KEY, Observable.fromIterable(DEFAULT_FETCH_EXPECT), DEFAULT_SCHEDULER,
+        DEFAULT_UPSTREAM
+    )
+
+    observableRepo.get(true, DEFAULT_KEY, DEFAULT_UPSTREAM)
         .startNow()
         .test()
         // Cache then upstream (but no caches)

@@ -70,11 +70,7 @@ internal class SingleRepoImpl<T : Any> internal constructor(
   ): Observable<T> {
     return cache.lastElement()
         .switchIfEmpty(persist.lastElement())
-        .switchIfEmpty(upstream.singleOrError()
-            // When the upstream is subscribed to and returns data, it should be placed into the caches,
-            // but subscribing to the caches should not reset the cached data.
-            .doOnSuccess { internalPut(key, it) }
-        )
+        .switchIfEmpty(upstream.singleOrError())
         .toObservable()
   }
 

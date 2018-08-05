@@ -76,6 +76,32 @@ class SingleRepoApiTest {
   }
 
   /**
+   * When data is returned from the cache, persister is missed and upstream is called after
+   */
+  @Test
+  fun `SingleRepoApi busted memory hit takes priority`() {
+    validator.onVisitMemoryReturn(DEFAULT_KEY, Observable.empty())
+    validator.onVisitPersisterReturn(DEFAULT_KEY, Observable.empty())
+    validator.onVisitUpstreamReturn(
+        DEFAULT_KEY, Observable.just(DEFAULT_FETCH_EXPECT),
+        DEFAULT_SCHEDULER, DEFAULT_UPSTREAM_OBSERVABLE
+    )
+
+    // Use the internal method just to avoid the conversion from Single to Observable not triggering Mockito
+    singleRepo.get(true, DEFAULT_KEY, DEFAULT_UPSTREAM_OBSERVABLE)
+        .startNow()
+        .test()
+        // Cache or upstream (but no caches)
+        .assertValue(DEFAULT_FETCH_EXPECT)
+        .assertComplete()
+        .assertNoErrors()
+
+    assert(validator.memoryVisited)
+    assert(validator.persisterVisited)
+    assert(validator.upstreamVisited)
+  }
+
+  /**
    * When data is returned from the persister, memory cache is hit but empty and upstream is called after
    */
   @Test
@@ -102,6 +128,32 @@ class SingleRepoApiTest {
   }
 
   /**
+   * When data is returned from the persister, memory cache is hit but empty and upstream is called after
+   */
+  @Test
+  fun `SingleRepoApi busted persister hit takes priority`() {
+    validator.onVisitMemoryReturn(DEFAULT_KEY, Observable.empty())
+    validator.onVisitPersisterReturn(DEFAULT_KEY, Observable.empty())
+    validator.onVisitUpstreamReturn(
+        DEFAULT_KEY, Observable.just(DEFAULT_FETCH_EXPECT),
+        DEFAULT_SCHEDULER, DEFAULT_UPSTREAM_OBSERVABLE
+    )
+
+    // Use the internal method just to avoid the conversion from Single to Observable not triggering Mockito
+    singleRepo.get(true, DEFAULT_KEY, DEFAULT_UPSTREAM_OBSERVABLE)
+        .startNow()
+        .test()
+        // Cache or upstream (but no caches)
+        .assertValue(DEFAULT_FETCH_EXPECT)
+        .assertComplete()
+        .assertNoErrors()
+
+    assert(validator.memoryVisited)
+    assert(validator.persisterVisited)
+    assert(validator.upstreamVisited)
+  }
+
+  /**
    * When no caching layer exists, we just hit the fetcher, but we visit everyone first
    */
   @Test
@@ -115,6 +167,32 @@ class SingleRepoApiTest {
 
     // Use the internal method just to avoid the conversion from Single to Observable not triggering Mockito
     singleRepo.get(false, DEFAULT_KEY, DEFAULT_UPSTREAM_OBSERVABLE)
+        .startNow()
+        .test()
+        // Cache or upstream (but no caches)
+        .assertValue(DEFAULT_FETCH_EXPECT)
+        .assertComplete()
+        .assertNoErrors()
+
+    assert(validator.memoryVisited)
+    assert(validator.persisterVisited)
+    assert(validator.upstreamVisited)
+  }
+
+  /**
+   * When no caching layer exists, we just hit the fetcher, but we visit everyone first
+   */
+  @Test
+  fun `SingleRepoApi busted fetcher delivers even without caching layer`() {
+    validator.onVisitMemoryReturn(DEFAULT_KEY, Observable.empty())
+    validator.onVisitPersisterReturn(DEFAULT_KEY, Observable.empty())
+    validator.onVisitUpstreamReturn(
+        DEFAULT_KEY, Observable.just(DEFAULT_FETCH_EXPECT),
+        DEFAULT_SCHEDULER, DEFAULT_UPSTREAM_OBSERVABLE
+    )
+
+    // Use the internal method just to avoid the conversion from Single to Observable not triggering Mockito
+    singleRepo.get(true, DEFAULT_KEY, DEFAULT_UPSTREAM_OBSERVABLE)
         .startNow()
         .test()
         // Cache or upstream (but no caches)

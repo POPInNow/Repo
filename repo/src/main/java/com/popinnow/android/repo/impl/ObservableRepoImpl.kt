@@ -16,7 +16,6 @@
 
 package com.popinnow.android.repo.impl
 
-import android.support.annotation.CheckResult
 import com.popinnow.android.repo.Fetcher
 import com.popinnow.android.repo.MemoryCache
 import com.popinnow.android.repo.ObservableRepo
@@ -24,7 +23,6 @@ import com.popinnow.android.repo.Persister
 import com.popinnow.android.repo.manager.MemoryCacheManager
 import io.reactivex.Observable
 import io.reactivex.Scheduler
-import java.util.concurrent.atomic.AtomicBoolean
 
 internal class ObservableRepoImpl<T : Any> internal constructor(
   fetcher: Fetcher<T>,
@@ -55,24 +53,7 @@ internal class ObservableRepoImpl<T : Any> internal constructor(
     persist: Observable<T>
   ): Observable<T> {
     return cache.switchIfEmpty(persist)
-        .concatWith(upstream
-            // When the stream begins emitting, we clear the cache
-            .doOnFirst { justInvalidateBackingCaches(key) }
-            // When the upstream is subscribed to and returns data, it should be placed into the caches,
-            // but subscribing to the caches should not reset the cached data.
-            .doOnNext { internalPut(key, it) })
-  }
-
-  @CheckResult
-  private inline fun Observable<T>.doOnFirst(crossinline consumer: (T) -> Unit): Observable<T> {
-    return this.compose { source ->
-      val firstEmitted = AtomicBoolean(false)
-      return@compose source.doOnNext {
-        if (firstEmitted.compareAndSet(false, true)) {
-          consumer(it)
-        }
-      }
-    }
+        .concatWith(upstream)
   }
 
   override fun put(

@@ -23,6 +23,7 @@ import com.popinnow.android.repo.Persister
 import com.popinnow.android.repo.internal.CacheInvalidator
 import io.reactivex.Observable
 import io.reactivex.Scheduler
+import java.util.concurrent.atomic.AtomicBoolean
 
 internal abstract class RepoImpl<T : Any> internal constructor(
   protected val fetcher: Fetcher<T>,
@@ -49,17 +50,36 @@ internal abstract class RepoImpl<T : Any> internal constructor(
   ): Observable<T> {
     return Observable.defer {
       val freshData = fetcher.fetch(key, upstream, scheduler)
+          // When the stream begins emitting, we clear the cache
+          .doOnFirst { justInvalidateBackingCaches(key) }
+          // When the upstream is subscribed to and returns data, it should be placed into the caches,
+          // but subscribing to the caches should not reset the cached data.
+          .doOnNext { internalPut(key, it) }
+
       if (bustCache) {
         logger().log { "Busting cache to fetch from upstream" }
-        return@defer freshData.doOnSubscribe { justInvalidateBackingCaches(key) }
+        justInvalidateBackingCaches(key)
       } else {
-        val memory = memoryCache.get(key)
-        val persist = persister.read(key)
         logger().log { "Fetching from repository" }
-        return@defer realFetch(key, freshData, memory, persist)
       }
+
+      val memory = memoryCache.get(key)
+      val persist = persister.read(key)
+      return@defer realFetch(key, freshData, memory, persist)
     }
         .doOnError { invalidate(key) }
+  }
+
+  @CheckResult
+  private inline fun Observable<T>.doOnFirst(crossinline consumer: (T) -> Unit): Observable<T> {
+    return this.compose { source ->
+      val firstEmitted = AtomicBoolean(false)
+      return@compose source.doOnNext {
+        if (firstEmitted.compareAndSet(false, true)) {
+          consumer(it)
+        }
+      }
+    }
   }
 
   protected fun justInvalidateBackingCaches(key: String) {
