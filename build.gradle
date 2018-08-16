@@ -53,7 +53,7 @@ ext {
   POM_GROUP = "com.popinnow.android.repo"
   POM_VERSION = "0.0.7-SNAPSHOT"
 
-  minSdk = 19
+  minSdk = 14
   maxSdk = 28
 
   // Library
