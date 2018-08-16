@@ -102,7 +102,6 @@ class SingleRepoBehaviorTest {
     private const val DEFAULT_KEY = "example-key"
     private val DEFAULT_SCHEDULER = Schedulers.trampoline()
     private val DEFAULT_CACHE_EXPECT = listOf("Hello", "World")
-    private val DEFAULT_PERSIST_EXPECT = listOf("Persister", "Defaults")
     private val DEFAULT_FETCH_EXPECT = listOf("Upstream", "Payload")
     private val DEFAULT_UPSTREAM = { _: String -> Single.just(DEFAULT_FETCH_EXPECT) }
   }

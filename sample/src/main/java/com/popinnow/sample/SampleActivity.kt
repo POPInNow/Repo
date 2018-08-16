@@ -17,7 +17,6 @@
 package com.popinnow.sample
 
 import android.os.Bundle
-import android.os.PersistableBundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.SwitchCompat
 import android.widget.Button

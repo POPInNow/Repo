@@ -35,12 +35,12 @@ class SampleMockDataSourceInt {
 
 class SampleMockDataSourceString {
 
-  private var character: Char = 'a';
+  private var character: Char = 'a'
 
   @CheckResult
   fun getCharacter(reset: Boolean): String {
     if (reset) {
-      character = 'a';
+      character = 'a'
     }
 
     val result = character++

@@ -29,22 +29,22 @@ object Mocks {
     return Mockito.`when`(methodCall)!!
   }
 
-  @JvmStatic
-  @CheckResult
-  fun <T : Any> answerWhen(
-    methodCall: T?,
-    answer: (InvocationOnMock) -> Any
-  ): T {
-    return Mockito.doAnswer(answer).`when`(methodCall)!!
-  }
+//  @JvmStatic
+//  @CheckResult
+//  fun <T : Any> answerWhen(
+//    methodCall: T?,
+//    answer: (InvocationOnMock) -> Any
+//  ): T {
+//    return Mockito.doAnswer(answer).`when`(methodCall)!!
+//  }
 
-  @JvmStatic
-  @CheckResult
-  fun <T : Any> throwWhen(
-    methodCall: T?,
-    throwable: Throwable
-  ): T {
-    return Mockito.doThrow(throwable).`when`(methodCall)!!
-  }
+//  @JvmStatic
+//  @CheckResult
+//  fun <T : Any> throwWhen(
+//    methodCall: T?,
+//    throwable: Throwable
+//  ): T {
+//    return Mockito.doThrow(throwable).`when`(methodCall)!!
+//  }
 
 }

@@ -40,11 +40,11 @@ fun <T : Any> Single<T>.startNow(): Single<T> {
   }
 }
 
-@CheckResult
-fun <T : Any> Flowable<T>.startNow(): Flowable<T> {
-  return this.compose {
-    return@compose it
-        .subscribeOn(Schedulers.trampoline())
-        .observeOn(Schedulers.trampoline())
-  }
-}
+//@CheckResult
+//fun <T : Any> Flowable<T>.startNow(): Flowable<T> {
+//  return this.compose {
+//    return@compose it
+//        .subscribeOn(Schedulers.trampoline())
+//        .observeOn(Schedulers.trampoline())
+//  }
+//}
