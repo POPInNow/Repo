@@ -18,11 +18,12 @@
 
 buildscript {
   ext {
-    kotlin_version = '1.2.60'
+    kotlin_version = '1.2.61'
     plugin_version = '3.1.4'
   }
   repositories {
     google()
+    mavenCentral()
     jcenter()
   }
   dependencies {
@@ -57,7 +58,7 @@ ext {
   maxSdk = 28
 
   // Library
-  rxjava = "2.2.0"
+  rxjava = "2.2.1"
   supportLib = "27.1.1"
 
   // Tests
@@ -65,7 +66,7 @@ ext {
   mockito = "2.21.0"
 
   // Sample
-  rxandroid = "2.0.2"
+  rxandroid = "2.1.0"
   retrofit = "2.4.0"
   okhttp = "3.11.0"
 }
@@ -73,6 +74,7 @@ ext {
 allprojects {
   repositories {
     google()
+    mavenCentral()
     jcenter()
   }
 }
