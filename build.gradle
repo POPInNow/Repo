@@ -18,7 +18,7 @@
 
 buildscript {
   ext {
-    kotlin_version = '1.2.61'
+    kotlin_version = '1.2.70'
     plugin_version = '3.1.4'
   }
   repositories {
@@ -58,7 +58,7 @@ ext {
   maxSdk = 28
 
   // Library
-  rxjava = "2.2.1"
+  rxjava = "2.2.2"
   supportLib = "27.1.1"
 
   // Tests
