@@ -21,21 +21,21 @@ import com.popinnow.android.repo.MemoryCache
 import io.reactivex.Observable
 import java.util.concurrent.TimeUnit
 
-internal class MemoryCacheImpl<T : Any> internal constructor(
+internal class MemoryCacheImpl constructor(
   debug: Boolean,
   time: Long,
   timeUnit: TimeUnit,
   maxSize: Int
-) : MemoryCache<T> {
+) : MemoryCache {
 
   private val ttl = timeUnit.toNanos(time)
   private val logger = Logger("MemoryCache", debug)
-  private val cache = object : LruCache<String, Entry<T>>(maxSize) {
+  private val cache = object : LruCache<String, Entry>(maxSize) {
     override fun entryRemoved(
       evicted: Boolean,
       key: String?,
-      oldValue: Entry<T>?,
-      newValue: Entry<T>?
+      oldValue: Entry?,
+      newValue: Entry?
     ) {
       super.entryRemoved(evicted, key, oldValue, newValue)
       if (evicted) {
@@ -51,9 +51,9 @@ internal class MemoryCacheImpl<T : Any> internal constructor(
     logger.log { "Create with TTL: $ttl nano seconds" }
   }
 
-  override fun get(key: String): Observable<T> {
+  override fun <T : Any> get(key: String): Observable<T> {
     return Observable.defer {
-      val cached: Entry<T>? = cache.get(key)
+      val cached: Entry? = cache.get(key)
       var returnCached = true
 
       if (cached == null) {
@@ -73,7 +73,10 @@ internal class MemoryCacheImpl<T : Any> internal constructor(
 
       // If this is still true, then cached was not null, we unwrap with !!
       if (returnCached) {
-        val list = cached!!.data.toList()
+        @Suppress("UNCHECKED_CAST")
+        val list = cached!!.data.asSequence()
+            .map { it as T }
+            .toList()
         logger.log { "Memory cache return data: ${ArrayList(list)}" }
         return@defer Observable.fromIterable(list)
       } else {
@@ -86,31 +89,31 @@ internal class MemoryCacheImpl<T : Any> internal constructor(
 
   override fun put(
     key: String,
-    value: T
+    value: Any
   ) {
     add(key, value)
   }
 
   override fun add(
     key: String,
-    value: T
+    value: Any
   ) {
     addToCache(key) { it.add(value) }
   }
 
-  override fun add(
+  override fun addAll(
     key: String,
-    values: List<T>
+    values: List<Any>
   ) {
     addToCache(key) { it.addAll(values) }
   }
 
   private fun addToCache(
     key: String,
-    addToList: (ArrayList<T>) -> Unit
+    addToList: (ArrayList<Any>) -> Unit
   ) {
     val cached = cache.get(key)
-    val list: ArrayList<T>
+    val list: ArrayList<Any>
     if (cached == null) {
       list = ArrayList(1)
     } else {
@@ -147,8 +150,8 @@ internal class MemoryCacheImpl<T : Any> internal constructor(
     cache.trimToSize(maxSize)
   }
 
-  private data class Entry<V : Any> internal constructor(
+  private data class Entry internal constructor(
     internal val time: Long,
-    internal val data: ArrayList<V>
+    internal val data: ArrayList<Any>
   )
 }

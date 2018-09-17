@@ -27,19 +27,19 @@ import io.reactivex.Observable
  *
  * @see Invalidatable
  */
-interface Persister<T : Any> : Invalidatable {
+interface Persister : Invalidatable {
 
   @CheckResult
-  fun read(key: String): Observable<T>
+  fun <T : Any> read(key: String): Observable<T>
 
   fun write(
     key: String,
-    value: T
+    value: Any
   )
 
-  fun write(
+  fun writeAll(
     key: String,
-    values: List<T>
+    values: List<Any>
   )
 
 }

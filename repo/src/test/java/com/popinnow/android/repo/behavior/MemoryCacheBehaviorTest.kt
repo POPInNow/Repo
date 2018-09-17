@@ -30,15 +30,15 @@ class MemoryCacheBehaviorTest {
   private fun createCache(
     time: Long,
     maxSize: Int = 10
-  ): MemoryCache<String> {
+  ): MemoryCache {
     return MemoryCacheImpl(true, time, SECONDS, maxSize)
   }
 
   private fun assertCacheIsEmpty(
-    cache: MemoryCache<String>,
+    cache: MemoryCache,
     key: String
   ) {
-    cache.get(key)
+    cache.get<Any>(key)
         .startNow()
         .test()
         .assertNoValues()
@@ -47,11 +47,11 @@ class MemoryCacheBehaviorTest {
   }
 
   private fun assertCacheSingleValue(
-    cache: MemoryCache<String>,
+    cache: MemoryCache,
     key: String,
     value: String
   ) {
-    cache.get(key)
+    cache.get<String>(key)
         .startNow()
         .test()
         .assertValue(value)
@@ -60,11 +60,11 @@ class MemoryCacheBehaviorTest {
   }
 
   private fun assertCacheValues(
-    cache: MemoryCache<String>,
+    cache: MemoryCache,
     key: String,
     vararg values: String
   ) {
-    cache.get(key)
+    cache.get<String>(key)
         .startNow()
         .test()
         .assertValueSequence(arrayListOf(*values))
@@ -73,14 +73,14 @@ class MemoryCacheBehaviorTest {
   }
 
   private fun assertCacheSize(
-    cache: MemoryCache<String>,
+    cache: MemoryCache,
     size: Int
   ) {
     assert(cache.size() == size) { "Wrong cache size: ${cache.size()}, expected $size" }
   }
 
   private fun fillCacheWithDummyData(
-    cache: MemoryCache<String>,
+    cache: MemoryCache,
     size: Int
   ) {
     val originalCacheSize = cache.size()
@@ -371,7 +371,7 @@ class MemoryCacheBehaviorTest {
         DEFAULT_KEY,
         DEFAULT_EXPECT
     )
-    cache.get(DEFAULT_KEY)
+    cache.get<String>(DEFAULT_KEY)
         .doOnSubscribe {
           cache.add(
               DEFAULT_KEY, expect1
@@ -385,11 +385,9 @@ class MemoryCacheBehaviorTest {
         .assertComplete()
 
     cache.add(DEFAULT_KEY, extraPuts)
-    cache.get(DEFAULT_KEY)
+    cache.get<String>(DEFAULT_KEY)
         .doOnSubscribe {
-          cache.add(
-              DEFAULT_KEY, expect2
-          )
+          cache.add(DEFAULT_KEY, expect2)
         }
         .startNow()
         .test()

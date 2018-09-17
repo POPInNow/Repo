@@ -23,41 +23,41 @@ import java.util.concurrent.TimeUnit
 /**
  * Builder to construct Repo objects
  */
-interface RepoBuilder<T : Any> {
+interface RepoBuilder {
 
   @CheckResult
-  fun debug(debug: Boolean): RepoBuilder<T>
+  fun debug(debug: Boolean): RepoBuilder
 
   @CheckResult
-  fun fetcher(fetcher: Fetcher<T>): RepoBuilder<T>
+  fun fetcher(fetcher: Fetcher): RepoBuilder
 
   @CheckResult
-  fun scheduler(scheduler: Scheduler): RepoBuilder<T>
+  fun scheduler(scheduler: Scheduler): RepoBuilder
 
   @CheckResult
-  fun scheduler(scheduler: () -> Scheduler): RepoBuilder<T>
+  fun scheduler(scheduler: () -> Scheduler): RepoBuilder
 
   @CheckResult
-  fun memoryCache(): RepoBuilder<T>
+  fun memoryCache(): RepoBuilder
 
   @CheckResult
   fun memoryCache(
     time: Long,
     timeUnit: TimeUnit
-  ): RepoBuilder<T>
+  ): RepoBuilder
 
   @CheckResult
-  fun memoryCache(maxSize: Int): RepoBuilder<T>
+  fun memoryCache(maxSize: Int): RepoBuilder
 
   @CheckResult
   fun memoryCache(
     time: Long,
     timeUnit: TimeUnit,
     maxSize: Int
-  ): RepoBuilder<T>
+  ): RepoBuilder
 
   @CheckResult
-  fun memoryCache(cache: MemoryCache<T>): RepoBuilder<T>
+  fun memoryCache(cache: MemoryCache): RepoBuilder
 
   /**
    * TODO: Expose this method once we have decided how the default Persister implementation will work.
@@ -67,13 +67,13 @@ interface RepoBuilder<T : Any> {
 
   @Deprecated("Use build() instead")
   @CheckResult
-  fun buildSingle(): SingleRepo<T>
+  fun <T : Any> buildSingle(): SingleRepo<T>
 
   @Deprecated("Use build() instead")
   @CheckResult
-  fun buildObservable(): ObservableRepo<T>
+  fun <T : Any> buildObservable(): ObservableRepo<T>
 
   @CheckResult
-  fun build(): Repo<T>
+  fun build(): Repo
 
 }

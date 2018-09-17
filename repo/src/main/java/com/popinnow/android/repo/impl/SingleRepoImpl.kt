@@ -28,9 +28,9 @@ import io.reactivex.Single
 
 @Deprecated("Use RepoImpl<T>")
 internal class SingleRepoImpl<T : Any> internal constructor(
-  fetcher: Fetcher<T>,
-  memoryCache: MemoryCache<T>,
-  persister: Persister<T>,
+  fetcher: Fetcher,
+  memoryCache: MemoryCache,
+  persister: Persister,
   scheduler: Scheduler,
   debug: Boolean
 ) : SingleRepo<T> {
@@ -59,7 +59,7 @@ internal class SingleRepoImpl<T : Any> internal constructor(
     return delegate.testingGet(bustCache, key, upstream)
   }
 
-  override fun memoryCache(): MemoryCacheManager<T> {
+  override fun memoryCache(): MemoryCacheManager {
     return delegate.memoryCache()
   }
 

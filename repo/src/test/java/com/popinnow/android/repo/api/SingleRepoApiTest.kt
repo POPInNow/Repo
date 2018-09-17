@@ -31,14 +31,15 @@ import org.mockito.Mock
 import org.mockito.MockitoAnnotations
 import org.mockito.junit.MockitoJUnitRunner
 
+@Deprecated("This test will eventually be removed in favor of Repo and RepoApiTest")
 @RunWith(MockitoJUnitRunner::class)
 class SingleRepoApiTest {
 
-  @Mock lateinit var fetcher: Fetcher<String>
-  @Mock lateinit var memoryCache: MemoryCache<String>
-  @Mock lateinit var persister: Persister<String>
+  @Mock lateinit var fetcher: Fetcher
+  @Mock lateinit var memoryCache: MemoryCache
+  @Mock lateinit var persister: Persister
+  private lateinit var validator: MockRepoOrderValidator
   private lateinit var singleRepo: SingleRepoImpl<String>
-  private lateinit var validator: MockRepoOrderValidator<String>
 
   @Before
   fun setup() {

@@ -22,21 +22,21 @@ import com.popinnow.android.repo.Persister
 import io.reactivex.Observable
 import io.reactivex.Scheduler
 
-internal class MockRepoOrderValidator<T : Any> internal constructor(
-  private val memoryCache: MemoryCache<T>,
-  private val persister: Persister<T>,
-  private val fetcher: Fetcher<T>
+internal class MockRepoOrderValidator internal constructor(
+  private val memoryCache: MemoryCache,
+  private val persister: Persister,
+  private val fetcher: Fetcher
 ) {
 
   internal var memoryVisited = false
   internal var persisterVisited = false
   internal var upstreamVisited = false
 
-  internal fun onVisitMemoryReturn(
+  internal fun <T : Any> onVisitMemoryReturn(
     key: String,
     observable: Observable<T>
   ) {
-    Mocks.whenever(memoryCache.get(key))
+    Mocks.whenever(memoryCache.get<T>(key))
         .thenReturn(observable
             .doOnSubscribe {
               // Memory should be visited first
@@ -52,11 +52,11 @@ internal class MockRepoOrderValidator<T : Any> internal constructor(
             })
   }
 
-  internal fun onVisitPersisterReturn(
+  internal fun <T : Any> onVisitPersisterReturn(
     key: String,
     observable: Observable<T>
   ) {
-    Mocks.whenever(persister.read(key))
+    Mocks.whenever(persister.read<T>(key))
         .thenReturn(observable
             .doOnSubscribe {
               if (memoryVisited && !persisterVisited && !upstreamVisited) {
@@ -73,7 +73,7 @@ internal class MockRepoOrderValidator<T : Any> internal constructor(
             })
   }
 
-  internal fun onVisitUpstreamReturn(
+  internal fun <T : Any> onVisitUpstreamReturn(
     key: String,
     observable: Observable<T>,
     scheduler: Scheduler,

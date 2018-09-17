@@ -30,7 +30,7 @@ import io.reactivex.Observable
  * @see Invalidatable
  * @see MemoryCacheManager
  */
-interface MemoryCache<T : Any> : Invalidatable, MemoryCacheManager<T> {
+interface MemoryCache : Invalidatable, MemoryCacheManager {
 
   /**
    * Retrieves data stored in the cache.
@@ -42,7 +42,7 @@ interface MemoryCache<T : Any> : Invalidatable, MemoryCacheManager<T> {
    * @return [Observable]
    */
   @CheckResult
-  fun get(key: String): Observable<T>
+  fun <T : Any> get(key: String): Observable<T>
 
   /**
    * Adds data into the cache.
@@ -54,7 +54,7 @@ interface MemoryCache<T : Any> : Invalidatable, MemoryCacheManager<T> {
    */
   fun add(
     key: String,
-    value: T
+    value: Any
   )
 
   /**
@@ -65,9 +65,9 @@ interface MemoryCache<T : Any> : Invalidatable, MemoryCacheManager<T> {
    * @param key The key for this request.
    * @param values The list of data to put into the cache.
    */
-  fun add(
+  fun addAll(
     key: String,
-    values: List<T>
+    values: List<Any>
   )
 
   /**
@@ -83,7 +83,7 @@ interface MemoryCache<T : Any> : Invalidatable, MemoryCacheManager<T> {
   )
   fun put(
     key: String,
-    value: T
+    value: Any
   )
 
 }

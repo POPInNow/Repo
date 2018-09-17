@@ -28,19 +28,19 @@ import io.reactivex.Scheduler
 import io.reactivex.Single
 import java.util.concurrent.atomic.AtomicBoolean
 
-internal class RepoImpl<T : Any> internal constructor(
-  private val fetcher: Fetcher<T>,
-  private val memoryCache: MemoryCache<T>,
-  private val persister: Persister<T>,
+internal class RepoImpl internal constructor(
+  private val fetcher: Fetcher,
+  private val memoryCache: MemoryCache,
+  private val persister: Persister,
   private val scheduler: Scheduler,
   debug: Boolean,
   logTag: String = "RepoImpl"
-) : Repo<T> {
+) : Repo {
 
   private val logger by lazy { Logger(logTag, debug) }
 
   @CheckResult
-  private fun fetchCacheThenUpstream(
+  private fun <T : Any> fetchCacheThenUpstream(
     upstream: Observable<T>,
     cache: Observable<T>,
     persist: Observable<T>
@@ -50,7 +50,7 @@ internal class RepoImpl<T : Any> internal constructor(
   }
 
   @CheckResult
-  private fun fetchCacheOrUpstream(
+  private fun <T : Any> fetchCacheOrUpstream(
     upstream: Observable<T>,
     cache: Observable<T>,
     persist: Observable<T>
@@ -61,7 +61,7 @@ internal class RepoImpl<T : Any> internal constructor(
         .toObservable()
   }
 
-  private fun fetch(
+  private fun <T : Any> fetch(
     fetchCacheAndUpstream: Boolean,
     bustCache: Boolean,
     key: String,
@@ -82,8 +82,8 @@ internal class RepoImpl<T : Any> internal constructor(
         logger.log { "Fetching from repository" }
       }
 
-      val memory = memoryCache.get(key)
-      val persist = persister.read(key)
+      val memory: Observable<T> = memoryCache.get(key)
+      val persist: Observable<T> = persister.read(key)
       if (fetchCacheAndUpstream) {
         return@defer fetchCacheThenUpstream(freshData, memory, persist)
       } else {
@@ -94,7 +94,7 @@ internal class RepoImpl<T : Any> internal constructor(
   }
 
   @CheckResult
-  private inline fun Observable<T>.doOnFirst(crossinline consumer: (T) -> Unit): Observable<T> {
+  private inline fun <T : Any> Observable<T>.doOnFirst(crossinline consumer: (T) -> Unit): Observable<T> {
     return this.compose { source ->
       val firstEmitted = AtomicBoolean(false)
       return@compose source.doOnNext {
@@ -109,7 +109,7 @@ internal class RepoImpl<T : Any> internal constructor(
    * Exposed as internal so that it can be tested.
    */
   @VisibleForTesting
-  internal fun testingGet(
+  internal fun <T : Any> testingGet(
     bustCache: Boolean,
     key: String,
     upstream: (String) -> Observable<T>
@@ -117,7 +117,7 @@ internal class RepoImpl<T : Any> internal constructor(
     return fetch(false, bustCache, key, upstream).singleOrError()
   }
 
-  override fun get(
+  override fun <T : Any> get(
     bustCache: Boolean,
     key: String,
     upstream: (String) -> Single<T>
@@ -126,7 +126,7 @@ internal class RepoImpl<T : Any> internal constructor(
     return fetch(false, bustCache, key, realUpstream).singleOrError()
   }
 
-  override fun observe(
+  override fun <T : Any> observe(
     bustCache: Boolean,
     key: String,
     upstream: (String) -> Observable<T>
@@ -141,7 +141,7 @@ internal class RepoImpl<T : Any> internal constructor(
 
   private fun internalPut(
     key: String,
-    value: T
+    value: Any
   ) {
     logger.log { "Put data: $key $value" }
 
@@ -153,15 +153,15 @@ internal class RepoImpl<T : Any> internal constructor(
     fetcher.invalidateCaches(key)
   }
 
-  private fun internalPut(
+  private fun internalPutAll(
     key: String,
-    values: List<T>
+    values: List<Any>
   ) {
     logger.log { "Put data: $key $values" }
 
     // Store data directly into caches
-    memoryCache.add(key, values)
-    persister.write(key, values)
+    memoryCache.addAll(key, values)
+    persister.writeAll(key, values)
 
     // Cancel fetcher in flights
     fetcher.invalidateCaches(key)
@@ -169,32 +169,32 @@ internal class RepoImpl<T : Any> internal constructor(
 
   override fun push(
     key: String,
-    value: T
+    value: Any
   ) {
     internalPut(key, value)
   }
 
-  override fun push(
+  override fun pushAll(
     key: String,
-    values: List<T>
+    values: List<Any>
   ) {
-    internalPut(key, values)
+    internalPutAll(key, values)
   }
 
   override fun replace(
     key: String,
-    value: T
+    value: Any
   ) {
     justInvalidateBackingCaches(key)
     internalPut(key, value)
   }
 
-  override fun replace(
+  override fun replaceAll(
     key: String,
-    values: List<T>
+    values: List<Any>
   ) {
     justInvalidateBackingCaches(key)
-    internalPut(key, values)
+    internalPutAll(key, values)
   }
 
   override fun invalidateCaches(key: String) {
@@ -220,7 +220,7 @@ internal class RepoImpl<T : Any> internal constructor(
     fetcher.clearAll()
   }
 
-  override fun memoryCache(): MemoryCacheManager<T> {
+  override fun memoryCache(): MemoryCacheManager {
     return memoryCache
   }
 

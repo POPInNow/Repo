@@ -33,12 +33,12 @@ import java.util.concurrent.TimeUnit.SECONDS
 class FetcherBehaviorTest {
 
   @CheckResult
-  private fun createFetcher(): Fetcher<String> {
+  private fun createFetcher(): Fetcher {
     return FetcherImpl(true)
   }
 
   private fun assertFetch(
-    fetcher: Fetcher<String>,
+    fetcher: Fetcher,
     key: String,
     upstream: (String) -> Observable<String>,
     values: List<String>

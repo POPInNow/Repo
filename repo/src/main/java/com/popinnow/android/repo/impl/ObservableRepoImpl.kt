@@ -26,9 +26,9 @@ import io.reactivex.Scheduler
 
 @Deprecated("Use RepoImpl<T>")
 internal class ObservableRepoImpl<T : Any> internal constructor(
-  fetcher: Fetcher<T>,
-  memoryCache: MemoryCache<T>,
-  persister: Persister<T>,
+  fetcher: Fetcher,
+  memoryCache: MemoryCache,
+  persister: Persister,
   scheduler: Scheduler,
   debug: Boolean
 ) : ObservableRepo<T> {
@@ -45,7 +45,7 @@ internal class ObservableRepoImpl<T : Any> internal constructor(
     return delegate.observe(bustCache, key, upstream)
   }
 
-  override fun memoryCache(): MemoryCacheManager<T> {
+  override fun memoryCache(): MemoryCacheManager {
     return delegate.memoryCache()
   }
 
@@ -60,7 +60,7 @@ internal class ObservableRepoImpl<T : Any> internal constructor(
     key: String,
     values: List<T>
   ) {
-    delegate.push(key, values)
+    delegate.pushAll(key, values)
   }
 
   override fun put(

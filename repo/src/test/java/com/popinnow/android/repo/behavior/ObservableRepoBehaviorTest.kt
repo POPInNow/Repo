@@ -28,19 +28,20 @@ import org.junit.runner.RunWith
 import org.mockito.junit.MockitoJUnitRunner
 import java.util.concurrent.TimeUnit.SECONDS
 
+@Deprecated("This test will eventually be removed in favor of Repo and RepoBehaviorTest")
 @RunWith(MockitoJUnitRunner::class)
 class ObservableRepoBehaviorTest {
 
   @CheckResult
-  private fun builder(): RepoBuilder<String> {
-    return newRepoBuilder<String>().debug(true)
+  private fun builder(): RepoBuilder {
+    return newRepoBuilder().debug(true)
         .scheduler(DEFAULT_SCHEDULER)
   }
 
   @Test
   fun `ObservableRepoBehavior no-cache simple get`() {
     val repo = builder()
-        .buildObservable()
+        .buildObservable<String>()
 
     repo.get(false, DEFAULT_KEY, DEFAULT_UPSTREAM)
         .startNow()
@@ -53,10 +54,10 @@ class ObservableRepoBehaviorTest {
 
   @Test
   fun `ObservableRepoBehavior memory cache simple get`() {
-    val memoryCache = MemoryCacheImpl<String>(true, 30, SECONDS, 10)
+    val memoryCache = MemoryCacheImpl(true, 30, SECONDS, 10)
     val repo = builder()
         .memoryCache(memoryCache)
-        .buildObservable()
+        .buildObservable<String>()
 
     // Juice the memory cache
     DEFAULT_CACHE_EXPECT.forEach { memoryCache.add(DEFAULT_KEY, it) }
@@ -74,7 +75,7 @@ class ObservableRepoBehaviorTest {
   fun `ObservableRepoBehavior get fills caches`() {
     val repo = builder()
         .memoryCache()
-        .buildObservable()
+        .buildObservable<String>()
 
     repo.get(false, DEFAULT_KEY, DEFAULT_UPSTREAM)
         .startNow()
@@ -97,7 +98,7 @@ class ObservableRepoBehaviorTest {
   fun `ObservableRepoBehavior cached results returned before upstream`() {
     val repo = builder()
         .memoryCache()
-        .buildObservable()
+        .buildObservable<String>()
 
     repo.get(false, DEFAULT_KEY, DEFAULT_UPSTREAM)
         .startNow()
@@ -120,7 +121,7 @@ class ObservableRepoBehaviorTest {
   fun `ObservableRepoBehavior only previous cached result returned`() {
     val repo = builder()
         .memoryCache()
-        .buildObservable()
+        .buildObservable<String>()
 
     repo.get(false, DEFAULT_KEY, DEFAULT_UPSTREAM)
         .startNow()

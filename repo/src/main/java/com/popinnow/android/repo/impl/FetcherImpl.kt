@@ -23,6 +23,7 @@ import io.reactivex.Observable
 import io.reactivex.Scheduler
 import io.reactivex.disposables.Disposable
 import io.reactivex.subjects.ReplaySubject
+import io.reactivex.subjects.Subject
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -30,23 +31,25 @@ import java.util.concurrent.ConcurrentHashMap
  *
  * The SingleFetcher will memoryCache any in flight upstream requests until they have completed.
  */
-internal class FetcherImpl<T : Any> internal constructor(
+internal class FetcherImpl internal constructor(
   debug: Boolean
-) : Fetcher<T>, Invalidatable {
+) : Fetcher, Invalidatable {
 
   private val logger = Logger("Fetcher", debug)
-  private val inFlight: ConcurrentHashMap<String, Observable<T>> = ConcurrentHashMap()
+  private val inFlight: ConcurrentHashMap<String, Subject<*>> = ConcurrentHashMap()
   private val disposables: ConcurrentHashMap<String, Disposable> = ConcurrentHashMap()
 
-  override fun fetch(
+  override fun <T : Any> fetch(
     key: String,
     upstream: (String) -> Observable<T>,
     scheduler: Scheduler
   ): Observable<T> {
-    return Observable.defer {
+    return Observable.defer<T> {
       // We can't use the getOrPut() extension because it may run the upstream fetch even though
       // it guarantees no double data insertions.
-      val cachedRequest = inFlight[key]
+      @Suppress("UNCHECKED_CAST")
+      val cachedRequest: Observable<T>? = inFlight[key] as? Observable<T>
+
       if (cachedRequest == null) {
         logger.log { "Attempting upstream: $key" }
         return@defer fetchUpstream(key, upstream, scheduler)
@@ -64,7 +67,7 @@ internal class FetcherImpl<T : Any> internal constructor(
   }
 
   @CheckResult
-  private fun fetchUpstream(
+  private fun <T : Any> fetchUpstream(
     key: String,
     upstream: (String) -> Observable<T>,
     scheduler: Scheduler
@@ -74,7 +77,8 @@ internal class FetcherImpl<T : Any> internal constructor(
         .toSerialized()
 
     // One last check to be sure we are not clobbering an in flight
-    val old: Observable<T>? = inFlight.putIfAbsent(key, subject)
+    @Suppress("UNCHECKED_CAST")
+    val old: Observable<T>? = inFlight.putIfAbsent(key, subject) as? Observable<T>
     if (old != null) {
       logger.log { "Upstream attempt provides in flight request: $key" }
       return old

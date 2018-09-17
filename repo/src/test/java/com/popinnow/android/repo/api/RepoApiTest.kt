@@ -34,11 +34,11 @@ import org.mockito.junit.MockitoJUnitRunner
 @RunWith(MockitoJUnitRunner::class)
 class RepoApiTest {
 
-  @Mock lateinit var fetcher: Fetcher<String>
-  @Mock lateinit var memoryCache: MemoryCache<String>
-  @Mock lateinit var persister: Persister<String>
-  private lateinit var repo: RepoImpl<String>
-  private lateinit var validator: MockRepoOrderValidator<String>
+  @Mock lateinit var fetcher: Fetcher
+  @Mock lateinit var memoryCache: MemoryCache
+  @Mock lateinit var persister: Persister
+  private lateinit var validator: MockRepoOrderValidator
+  private lateinit var repo: RepoImpl
 
   @Before
   fun setup() {

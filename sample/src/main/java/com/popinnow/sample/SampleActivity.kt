@@ -32,8 +32,13 @@ import io.reactivex.schedulers.Schedulers
  *
  * A Repo instance scoped to an Activity will be garbage collected only when the subscription to
  * the Repo upstream is terminated. In order to avoid leaking memory in the event that an upstream
- * fetch takes a long time - be sure to call [com.popinnow.android.repo.Invalidatable.invalidate] or
- * [com.popinnow.android.repo.Clearable.clearAll] when tearing down the Activity.
+ * fetch takes a long time - be sure to call
+ *
+ * [com.popinnow.android.repo.internal.Invalidatable.invalidate]
+ * or
+ * [com.popinnow.android.repo.internal.Clearable.clearAll]
+ *
+ * when tearing down the Activity.
  */
 class SampleActivity : AppCompatActivity() {
 
@@ -63,13 +68,8 @@ class SampleActivity : AppCompatActivity() {
   private val mockDataSourceString = SampleMockDataSourceString()
   private val mockDataSourceInt = SampleMockDataSourceInt()
 
-  private val observableMockRepo = newRepoBuilder<String>()
-      .memoryCache()
-      .buildObservable()
-
-  private val singleMockRepo = newRepoBuilder<Int>()
-      .memoryCache()
-      .buildSingle()
+  private val repo = newRepoBuilder().memoryCache()
+      .build()
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -109,16 +109,16 @@ class SampleActivity : AppCompatActivity() {
   }
 
   private fun setupObservableMockButton() {
-    observableMockButton.setOnClickListener {
+    observableMockButton.setOnClickListener { _ ->
       val key = "observable-mock-key"
       // Cancel the request before launching a new one
       observableMockDisposable.dispose()
-      observableMockRepo.invalidate(key)
+      repo.invalidate(key)
 
       // Even though the subscription was disposed, if the cache is not busted you'll see the
       // original data and then see the new counter data
       observableMockDisposable =
-          observableMockRepo.get(bustCacheObservableMock, key) {
+          repo.observe(bustCacheObservableMock, key) { _ ->
             Observable.just(mockDataSourceString.getCharacter(bustCacheObservableMock))
                 .doOnSubscribe {
                   Logger.debug(
@@ -154,7 +154,7 @@ class SampleActivity : AppCompatActivity() {
   }
 
   private fun setupObservableApplicationButton() {
-    observableApplicationButton.setOnClickListener {
+    observableApplicationButton.setOnClickListener { v ->
       val key = "observable-application-key"
       // Cancel the disposable but not the upstream request
       observableApplicationDisposable.dispose()
@@ -165,7 +165,7 @@ class SampleActivity : AppCompatActivity() {
       // Since this repo lives in Application scope, it will keep its cached state even if you
       // close and re-open the application. Upstream requests will not be cancelled unless you
       // stop them at the Application exit point.
-      observableApplicationDisposable = it.context.getSampleApplication()
+      observableApplicationDisposable = v.context.getSampleApplication()
           .getWithObservableRepo(bustCacheObservableApplication, key)
           .subscribeOn(Schedulers.computation())
           .observeOn(AndroidSchedulers.mainThread())
@@ -179,26 +179,24 @@ class SampleActivity : AppCompatActivity() {
                 "ObservableApplication Observer Emit on Thread: ${Thread.currentThread().name}"
             )
           }
-          .subscribe({
-            Logger.info("ObservableApplication subscribed: $it")
-          }, {
-            Logger.error(it, "ObservableApplication error")
-          }, {
-            Logger.info("ObservableApplication complete")
-          })
+          .subscribe(
+              { Logger.info("ObservableApplication subscribed: $it") },
+              { Logger.error(it, "ObservableApplication error") },
+              { Logger.info("ObservableApplication complete") }
+          )
     }
   }
 
   private fun setupSingleMockButton() {
-    singleMockButton.setOnClickListener {
+    singleMockButton.setOnClickListener { _ ->
       val key = "single-mock-key"
       // Cancel the request before launching a new one
       singleMockDisposable.dispose()
-      singleMockRepo.invalidate(key)
+      repo.invalidate(key)
 
       // Even though the subscription was disposed, if the cache is not busted you'll see the
       // original data instead of the new counter data
-      singleMockDisposable = singleMockRepo.get(bustCacheSingleMock, key) {
+      singleMockDisposable = repo.get(bustCacheSingleMock, key) { _ ->
         Single.just(mockDataSourceInt.getCount(bustCacheSingleMock))
             .doOnSubscribe {
               Logger.debug("SingleMock Source Subscribe on Thread: ${Thread.currentThread().name}")
@@ -215,16 +213,15 @@ class SampleActivity : AppCompatActivity() {
           .doOnSuccess {
             Logger.debug("SingleMock Observer Emit on Thread: ${Thread.currentThread().name}")
           }
-          .subscribe({
-            Logger.info("SingleMock subscribed: $it")
-          }, {
-            Logger.error(it, "SingleMock error")
-          })
+          .subscribe(
+              { Logger.info("SingleMock subscribed: $it") },
+              { Logger.error(it, "SingleMock error") }
+          )
     }
   }
 
   private fun setupSingleApplication() {
-    singleApplicationButton.setOnClickListener {
+    singleApplicationButton.setOnClickListener { v ->
       val key = "single-application-key"
       // Cancel disposable but not the upstream request
       singleApplicationDisposable.dispose()
@@ -235,7 +232,7 @@ class SampleActivity : AppCompatActivity() {
       // Since this repo lives in Application scope, it will keep its cached state even if you
       // close and re-open the application. Upstream requests will not be cancelled unless you
       // stop them at the Application exit point.
-      singleApplicationDisposable = it.context.getSampleApplication()
+      singleApplicationDisposable = v.context.getSampleApplication()
           .getWithSingleRepo(bustCacheSingleApplication, key)
           .subscribeOn(Schedulers.computation())
           .observeOn(AndroidSchedulers.mainThread())
@@ -249,11 +246,10 @@ class SampleActivity : AppCompatActivity() {
                 "SingleApplication Observer Emit on Thread: ${Thread.currentThread().name}"
             )
           }
-          .subscribe({
-            Logger.info("SingleApplication subscribed: $it")
-          }, {
-            Logger.error(it, "SingleApplication error")
-          })
+          .subscribe(
+              { Logger.info("SingleApplication subscribed: $it") },
+              { Logger.error(it, "SingleApplication error") }
+          )
     }
   }
 
@@ -263,10 +259,9 @@ class SampleActivity : AppCompatActivity() {
     // Make sure to both dispose of the Disposable that the Observer is subscribed to, as well as
     // invalidating or clearing the Repo to fully stop operation.
     observableMockDisposable.dispose()
-    observableMockRepo.clearAll()
-
     singleMockDisposable.dispose()
-    singleMockRepo.clearAll()
+
+    repo.clearAll()
 
     observableApplicationDisposable.dispose()
     singleApplicationDisposable.dispose()

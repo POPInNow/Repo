@@ -30,14 +30,14 @@ import io.reactivex.Scheduler
 import io.reactivex.schedulers.Schedulers
 import java.util.concurrent.TimeUnit
 
-internal class RepoBuilderImpl<T : Any> internal constructor(
-  private var fetcher: Fetcher<T>? = null,
-  private var persister: Persister<T>? = null,
+internal class RepoBuilderImpl internal constructor(
+  private var fetcher: Fetcher? = null,
+  private var persister: Persister? = null,
   private var scheduler: Scheduler? = null,
   private var debug: Boolean = false
-) : RepoBuilder<T> {
+) : RepoBuilder {
 
-  private var cacheBuilder = MemoryCacheBuilder<T>(
+  private var cacheBuilder = MemoryCacheBuilder(
       enabled = false,
       time = DEFAULT_TIME,
       timeUnit = DEFAULT_UNIT,
@@ -45,23 +45,23 @@ internal class RepoBuilderImpl<T : Any> internal constructor(
       custom = null
   )
 
-  override fun debug(debug: Boolean): RepoBuilder<T> {
+  override fun debug(debug: Boolean): RepoBuilder {
     this.debug = debug
     return this
   }
 
-  override fun memoryCache(): RepoBuilder<T> {
+  override fun memoryCache(): RepoBuilder {
     return memoryCache(DEFAULT_TIME, DEFAULT_UNIT)
   }
 
   override fun memoryCache(
     time: Long,
     timeUnit: TimeUnit
-  ): RepoBuilder<T> {
+  ): RepoBuilder {
     return memoryCache(time, timeUnit, DEFAULT_MAX_SIZE)
   }
 
-  override fun memoryCache(maxSize: Int): RepoBuilder<T> {
+  override fun memoryCache(maxSize: Int): RepoBuilder {
     return memoryCache(DEFAULT_TIME, DEFAULT_UNIT, maxSize)
   }
 
@@ -69,7 +69,7 @@ internal class RepoBuilderImpl<T : Any> internal constructor(
     time: Long,
     timeUnit: TimeUnit,
     maxSize: Int
-  ): RepoBuilder<T> {
+  ): RepoBuilder {
     this.cacheBuilder.also {
       it.enabled = true
       it.time = time
@@ -80,7 +80,7 @@ internal class RepoBuilderImpl<T : Any> internal constructor(
     return this
   }
 
-  override fun memoryCache(cache: MemoryCache<T>): RepoBuilder<T> {
+  override fun memoryCache(cache: MemoryCache): RepoBuilder {
     this.cacheBuilder.also {
       it.enabled = true
       it.time = DEFAULT_TIME
@@ -91,23 +91,23 @@ internal class RepoBuilderImpl<T : Any> internal constructor(
     return this
   }
 
-  override fun fetcher(fetcher: Fetcher<T>): RepoBuilder<T> {
+  override fun fetcher(fetcher: Fetcher): RepoBuilder {
     this.fetcher = fetcher
     return this
   }
 
-  override fun scheduler(scheduler: () -> Scheduler): RepoBuilder<T> {
+  override fun scheduler(scheduler: () -> Scheduler): RepoBuilder {
     return scheduler(scheduler())
   }
 
-  override fun scheduler(scheduler: Scheduler): RepoBuilder<T> {
+  override fun scheduler(scheduler: Scheduler): RepoBuilder {
     this.scheduler = scheduler
     return this
   }
 
   @CheckResult
-  private fun cacheBuilderToCache(): MemoryCache<T> {
-    val cache: MemoryCache<T>
+  private fun cacheBuilderToCache(): MemoryCache {
+    val cache: MemoryCache
     if (this.cacheBuilder.enabled) {
       val customCache = this.cacheBuilder.custom
       if (customCache == null) {
@@ -121,48 +121,48 @@ internal class RepoBuilderImpl<T : Any> internal constructor(
         cache = customCache
       }
     } else {
-      cache = NoopCache.instance()
+      cache = NoopCache
     }
 
     return cache
   }
 
-  override fun buildObservable(): ObservableRepo<T> {
+  override fun <T : Any> buildObservable(): ObservableRepo<T> {
     return ObservableRepoImpl(
         fetcher ?: FetcherImpl(debug),
         cacheBuilderToCache(),
-        persister ?: NoopPersister.instance(),
+        persister ?: NoopPersister,
         scheduler ?: Schedulers.io(),
         debug
     )
   }
 
-  override fun buildSingle(): SingleRepo<T> {
+  override fun <T : Any> buildSingle(): SingleRepo<T> {
     return SingleRepoImpl(
         fetcher ?: FetcherImpl(debug),
         cacheBuilderToCache(),
-        persister ?: NoopPersister.instance(),
+        persister ?: NoopPersister,
         scheduler ?: Schedulers.io(),
         debug
     )
   }
 
-  override fun build(): Repo<T> {
+  override fun build(): Repo {
     return RepoImpl(
         fetcher ?: FetcherImpl(debug),
         cacheBuilderToCache(),
-        persister ?: NoopPersister.instance(),
+        persister ?: NoopPersister,
         scheduler ?: Schedulers.io(),
         debug
     )
   }
 
-  internal data class MemoryCacheBuilder<T : Any> internal constructor(
+  internal data class MemoryCacheBuilder internal constructor(
     internal var enabled: Boolean,
     internal var time: Long,
     internal var timeUnit: TimeUnit,
     internal var maxSize: Int,
-    internal var custom: MemoryCache<T>?
+    internal var custom: MemoryCache?
   )
 
   companion object {

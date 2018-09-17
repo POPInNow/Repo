@@ -33,14 +33,14 @@ import java.util.concurrent.TimeUnit.SECONDS
 class RepoBehaviorTest {
 
   @CheckResult
-  private inline fun <reified T : Any> builder(): RepoBuilder<T> {
-    return newRepoBuilder<T>().debug(true)
+  private inline fun builder(): RepoBuilder {
+    return newRepoBuilder().debug(true)
         .scheduler(DEFAULT_SCHEDULER)
   }
 
   @Test
   fun `RepoBehavior Observable no-cache simple get`() {
-    val repo = builder<String>().build()
+    val repo = builder().build()
 
     repo.observe(false, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM)
         .startNow()
@@ -53,8 +53,8 @@ class RepoBehaviorTest {
 
   @Test
   fun `RepoBehavior Observable memory cache simple get`() {
-    val memoryCache = MemoryCacheImpl<String>(true, 30, SECONDS, 10)
-    val repo = builder<String>()
+    val memoryCache = MemoryCacheImpl(true, 30, SECONDS, 10)
+    val repo = builder()
         .memoryCache(memoryCache)
         .build()
 
@@ -72,7 +72,7 @@ class RepoBehaviorTest {
 
   @Test
   fun `RepoBehavior Observable get fills caches`() {
-    val repo = builder<String>()
+    val repo = builder()
         .memoryCache()
         .build()
 
@@ -95,7 +95,7 @@ class RepoBehaviorTest {
 
   @Test
   fun `RepoBehavior Observable cached results returned before upstream`() {
-    val repo = builder<String>()
+    val repo = builder()
         .memoryCache()
         .build()
 
@@ -118,7 +118,7 @@ class RepoBehaviorTest {
 
   @Test
   fun `RepoBehavior Observable only previous cached result returned`() {
-    val repo = builder<String>()
+    val repo = builder()
         .memoryCache()
         .build()
 
@@ -155,7 +155,7 @@ class RepoBehaviorTest {
 
   @Test
   fun `RepoBehavior Single no-cache simple get`() {
-    val repo = builder<List<String>>().build()
+    val repo = builder().build()
 
     repo.get(false, DEFAULT_SINGLE_KEY, DEFAULT_SINGLE_UPSTREAM)
         .startNow()
@@ -169,15 +169,17 @@ class RepoBehaviorTest {
 
   @Test
   fun `RepoBehavior Single memory cache simple get`() {
-    val memoryCache = MemoryCacheImpl<List<String>>(true, 30, SECONDS, 10)
-    val repo = builder<List<String>>()
+    val memoryCache = MemoryCacheImpl(true, 30, SECONDS, 10)
+    val repo = builder()
         .memoryCache(memoryCache)
         .build()
 
     // Juice the memory cache
     memoryCache.add(DEFAULT_SINGLE_KEY, DEFAULT_SINGLE_CACHE_EXPECT)
 
-    repo.get(false, DEFAULT_SINGLE_KEY) { throw AssertionError("Upstream should be avoided") }
+    repo.get<List<String>>(false, DEFAULT_SINGLE_KEY) {
+      throw AssertionError("Upstream should be avoided")
+    }
         .startNow()
         .test()
         .assertNoErrors()
@@ -189,7 +191,7 @@ class RepoBehaviorTest {
 
   @Test
   fun `RepoBehavior Single get fills caches`() {
-    val repo = builder<List<String>>()
+    val repo = builder()
         .memoryCache()
         .build()
 
@@ -202,7 +204,9 @@ class RepoBehaviorTest {
         .assertValueCount(1)
         .assertComplete()
 
-    repo.get(false, DEFAULT_SINGLE_KEY) { throw AssertionError("Upstream should be avoided") }
+    repo.get<List<String>>(false, DEFAULT_SINGLE_KEY) {
+      throw AssertionError("Upstream should be avoided")
+    }
         .startNow()
         .test()
         .assertNoErrors()

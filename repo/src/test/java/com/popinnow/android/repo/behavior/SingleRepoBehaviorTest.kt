@@ -28,19 +28,20 @@ import org.junit.runner.RunWith
 import org.mockito.junit.MockitoJUnitRunner
 import java.util.concurrent.TimeUnit.SECONDS
 
+@Deprecated("This test will eventually be removed in favor of Repo and RepoBehaviorTest")
 @RunWith(MockitoJUnitRunner::class)
 class SingleRepoBehaviorTest {
 
   @CheckResult
-  private fun builder(): RepoBuilder<List<String>> {
-    return newRepoBuilder<List<String>>().debug(true)
+  private fun builder(): RepoBuilder {
+    return newRepoBuilder().debug(true)
         .scheduler(DEFAULT_SCHEDULER)
   }
 
   @Test
   fun `SingleRepoBehavior no-cache simple get`() {
     val repo = builder()
-        .buildSingle()
+        .buildSingle<List<String>>()
 
     repo.get(false, DEFAULT_KEY, DEFAULT_UPSTREAM)
         .startNow()
@@ -54,10 +55,10 @@ class SingleRepoBehaviorTest {
 
   @Test
   fun `SingleRepoBehavior memory cache simple get`() {
-    val memoryCache = MemoryCacheImpl<List<String>>(true, 30, SECONDS, 10)
+    val memoryCache = MemoryCacheImpl(true, 30, SECONDS, 10)
     val repo = builder()
         .memoryCache(memoryCache)
-        .buildSingle()
+        .buildSingle<List<String>>()
 
     // Juice the memory cache
     memoryCache.add(DEFAULT_KEY, DEFAULT_CACHE_EXPECT)
@@ -76,7 +77,7 @@ class SingleRepoBehaviorTest {
   fun `SingleRepoBehavior get fills caches`() {
     val repo = builder()
         .memoryCache()
-        .buildSingle()
+        .buildSingle<List<String>>()
 
     repo.get(false, DEFAULT_KEY, DEFAULT_UPSTREAM)
         .startNow()

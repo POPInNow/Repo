@@ -29,7 +29,7 @@ import io.reactivex.Scheduler
  *
  * @see CacheInvalidator
  */
-interface Fetcher<T : Any> : CacheInvalidator {
+interface Fetcher : CacheInvalidator {
 
   /**
    * Fetch data from the upstream source.
@@ -53,7 +53,7 @@ interface Fetcher<T : Any> : CacheInvalidator {
    *            NOTE: While hot observables should in theory work, they are not tested.
    */
   @CheckResult
-  fun fetch(
+  fun <T : Any> fetch(
     key: String,
     upstream: (String) -> Observable<T>,
     scheduler: Scheduler

@@ -67,7 +67,7 @@ interface ObservableRepo<T : Any> : CacheInvalidator {
    * @return [MemoryCacheManager]
    */
   @CheckResult
-  fun memoryCache(): MemoryCacheManager<T>
+  fun memoryCache(): MemoryCacheManager
 
   /**
    * Adds data into the Repo.

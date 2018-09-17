@@ -27,6 +27,6 @@ import com.popinnow.android.repo.impl.RepoBuilderImpl
  * @return [RepoBuilder]
  */
 @CheckResult
-fun <T : Any> newRepoBuilder(): RepoBuilder<T> {
+fun newRepoBuilder(): RepoBuilder {
   return RepoBuilderImpl()
 }

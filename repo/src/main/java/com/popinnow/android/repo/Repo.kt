@@ -44,7 +44,7 @@ import io.reactivex.Single
  * If caching is enabled for this Repo, the latest emitted item from the upstream data source will
  * be cached.
  */
-interface Repo<T : Any> : CacheInvalidator {
+interface Repo : CacheInvalidator {
 
   /**
    * Observe data from this Repo, possibly from the provided upstream source.
@@ -65,7 +65,7 @@ interface Repo<T : Any> : CacheInvalidator {
    * @return [Observable]
    */
   @CheckResult
-  fun observe(
+  fun <T : Any> observe(
     bustCache: Boolean,
     key: String,
     upstream: (String) -> Observable<T>
@@ -90,7 +90,7 @@ interface Repo<T : Any> : CacheInvalidator {
    * @return [Single]
    */
   @CheckResult
-  fun get(
+  fun <T : Any> get(
     bustCache: Boolean,
     key: String,
     upstream: (String) -> Single<T>
@@ -102,7 +102,7 @@ interface Repo<T : Any> : CacheInvalidator {
    * @return [MemoryCacheManager]
    */
   @CheckResult
-  fun memoryCache(): MemoryCacheManager<T>
+  fun memoryCache(): MemoryCacheManager
 
   /**
    * Replace data in the Repo with a single item.
@@ -112,7 +112,7 @@ interface Repo<T : Any> : CacheInvalidator {
    */
   fun replace(
     key: String,
-    value: T
+    value: Any
   )
 
   /**
@@ -121,9 +121,9 @@ interface Repo<T : Any> : CacheInvalidator {
    * @param key The key for this request
    * @param values The list data to put into the Repo
    */
-  fun replace(
+  fun replaceAll(
     key: String,
-    values: List<T>
+    values: List<Any>
   )
 
   /**
@@ -134,7 +134,7 @@ interface Repo<T : Any> : CacheInvalidator {
    */
   fun push(
     key: String,
-    value: T
+    value: Any
   )
 
   /**
@@ -143,9 +143,9 @@ interface Repo<T : Any> : CacheInvalidator {
    * @param key The key for this request
    * @param values The list data to put into the Repo
    */
-  fun push(
+  fun pushAll(
     key: String,
-    values: List<T>
+    values: List<Any>
   )
 
   /**

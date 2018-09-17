@@ -18,7 +18,7 @@ package com.popinnow.android.repo.manager
 
 import android.support.annotation.CheckResult
 
-interface MemoryCacheManager<T: Any> {
+interface MemoryCacheManager {
 
   /**
    * Get the current size of the cache

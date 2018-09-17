@@ -19,8 +19,6 @@ package com.popinnow.sample
 import android.app.Application
 import android.content.Context
 import android.support.annotation.CheckResult
-import com.popinnow.android.repo.ObservableRepo
-import com.popinnow.android.repo.SingleRepo
 import com.popinnow.android.repo.newRepoBuilder
 import io.reactivex.Observable
 import io.reactivex.Single
@@ -33,31 +31,15 @@ import io.reactivex.Single
  */
 class SampleApplication : Application() {
 
-  /**
-   * Singletons can be initialized before the application is created
-   */
-  private val singleRepo: SingleRepo<String> = newRepoBuilder<String>()
+  private val repo = newRepoBuilder()
       .memoryCache()
-      .buildSingle()
-
-  /**
-   * Or at a later time
-   */
-  private lateinit var observableRepo: ObservableRepo<Int>
+      .build()
 
   private val mockDataSourceString = SampleMockDataSourceString()
   private val mockDataSourceInt = SampleMockDataSourceInt()
 
-  override fun onCreate() {
-    super.onCreate()
-    observableRepo = newRepoBuilder<Int>()
-        .memoryCache()
-        .buildObservable()
-  }
-
   fun clearRepos() {
-    observableRepo.clearAll()
-    singleRepo.clearAll()
+    repo.clearCaches()
   }
 
   @CheckResult
@@ -65,7 +47,7 @@ class SampleApplication : Application() {
     bustCache: Boolean,
     key: String
   ): Observable<Int> {
-    return observableRepo.get(bustCache, key) {
+    return repo.observe(bustCache, key) { _ ->
       Observable.just(mockDataSourceInt.getCount(bustCache))
           .doOnSubscribe {
             Logger.debug(
@@ -85,7 +67,7 @@ class SampleApplication : Application() {
     bustCache: Boolean,
     key: String
   ): Single<String> {
-    return singleRepo.get(bustCache, key) {
+    return repo.get(bustCache, key) { _ ->
       Single.just(mockDataSourceString.getCharacter(bustCache))
           .doOnSubscribe {
             Logger.debug(

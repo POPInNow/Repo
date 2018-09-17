@@ -16,16 +16,14 @@
 
 package com.popinnow.android.repo.noop
 
-import android.support.annotation.CheckResult
 import com.popinnow.android.repo.Persister
 import io.reactivex.Observable
 
 /**
  * A Persister implementation that does nothing.
  */
-internal object NoopPersister : Persister<Any> {
-
-  override fun read(key: String): Observable<Any> {
+internal object NoopPersister : Persister {
+  override fun <T : Any> read(key: String): Observable<T> {
     return Observable.empty()
   }
 
@@ -35,7 +33,7 @@ internal object NoopPersister : Persister<Any> {
   ) {
   }
 
-  override fun write(
+  override fun writeAll(
     key: String,
     values: List<Any>
   ) {
@@ -47,9 +45,4 @@ internal object NoopPersister : Persister<Any> {
   override fun clearAll() {
   }
 
-  @CheckResult
-  internal fun <T : Any> instance(): Persister<T> {
-    @Suppress("UNCHECKED_CAST")
-    return NoopPersister as Persister<T>
-  }
 }

@@ -68,7 +68,7 @@ interface SingleRepo<T : Any> : CacheInvalidator {
    * @return [MemoryCacheManager]
    */
   @CheckResult
-  fun memoryCache(): MemoryCacheManager<T>
+  fun memoryCache(): MemoryCacheManager
 
   /**
    * Put data into the Repo.
