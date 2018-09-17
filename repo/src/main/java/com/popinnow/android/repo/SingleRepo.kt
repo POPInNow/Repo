@@ -22,7 +22,7 @@ import com.popinnow.android.repo.manager.MemoryCacheManager
 import io.reactivex.Single
 
 /**
- * ObservableRepo follows the cache-or-upstream model using [Single] streams.
+ * SingleRepo follows the cache-or-upstream model using [Single] streams.
  *
  * This Repo follows the cache-or-upstream model. When requests are made to this Repo
  * the [io.reactivex.Observer] is subscribed to a stream which is sourced from a
@@ -34,6 +34,7 @@ import io.reactivex.Single
  * If caching is enabled for this Repo, the latest emitted item from the upstream data source will
  * be cached.
  */
+@Deprecated("Use Repo<T> instead")
 interface SingleRepo<T : Any> : CacheInvalidator {
 
   /**

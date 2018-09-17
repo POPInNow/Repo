@@ -21,6 +21,7 @@ import com.popinnow.android.repo.Fetcher
 import com.popinnow.android.repo.MemoryCache
 import com.popinnow.android.repo.ObservableRepo
 import com.popinnow.android.repo.Persister
+import com.popinnow.android.repo.Repo
 import com.popinnow.android.repo.RepoBuilder
 import com.popinnow.android.repo.SingleRepo
 import com.popinnow.android.repo.noop.NoopCache
@@ -138,6 +139,16 @@ internal class RepoBuilderImpl<T : Any> internal constructor(
 
   override fun buildSingle(): SingleRepo<T> {
     return SingleRepoImpl(
+        fetcher ?: FetcherImpl(debug),
+        cacheBuilderToCache(),
+        persister ?: NoopPersister.instance(),
+        scheduler ?: Schedulers.io(),
+        debug
+    )
+  }
+
+  override fun build(): Repo<T> {
+    return RepoImpl(
         fetcher ?: FetcherImpl(debug),
         cacheBuilderToCache(),
         persister ?: NoopPersister.instance(),

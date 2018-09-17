@@ -17,33 +17,52 @@
 package com.popinnow.android.repo.impl
 
 import android.support.annotation.CheckResult
+import android.support.annotation.VisibleForTesting
 import com.popinnow.android.repo.Fetcher
 import com.popinnow.android.repo.MemoryCache
 import com.popinnow.android.repo.Persister
-import com.popinnow.android.repo.internal.CacheInvalidator
+import com.popinnow.android.repo.Repo
+import com.popinnow.android.repo.manager.MemoryCacheManager
 import io.reactivex.Observable
 import io.reactivex.Scheduler
+import io.reactivex.Single
 import java.util.concurrent.atomic.AtomicBoolean
 
-internal abstract class RepoImpl<T : Any> internal constructor(
-  protected val fetcher: Fetcher<T>,
-  protected val memoryCache: MemoryCache<T>,
-  protected val persister: Persister<T>,
-  private val scheduler: Scheduler
-) : CacheInvalidator {
+internal class RepoImpl<T : Any> internal constructor(
+  private val fetcher: Fetcher<T>,
+  private val memoryCache: MemoryCache<T>,
+  private val persister: Persister<T>,
+  private val scheduler: Scheduler,
+  debug: Boolean,
+  logTag: String = "RepoImpl"
+) : Repo<T> {
+
+  private val logger by lazy { Logger(logTag, debug) }
 
   @CheckResult
-  protected abstract fun logger(): Logger
-
-  @CheckResult
-  protected abstract fun realFetch(
-    key: String,
+  private fun fetchCacheThenUpstream(
     upstream: Observable<T>,
     cache: Observable<T>,
     persist: Observable<T>
-  ): Observable<T>
+  ): Observable<T> {
+    return cache.switchIfEmpty(persist)
+        .concatWith(upstream)
+  }
 
-  protected fun fetch(
+  @CheckResult
+  private fun fetchCacheOrUpstream(
+    upstream: Observable<T>,
+    cache: Observable<T>,
+    persist: Observable<T>
+  ): Observable<T> {
+    return cache.lastElement()
+        .switchIfEmpty(persist.lastElement())
+        .switchIfEmpty(upstream.singleOrError())
+        .toObservable()
+  }
+
+  private fun fetch(
+    fetchCacheAndUpstream: Boolean,
     bustCache: Boolean,
     key: String,
     upstream: (String) -> Observable<T>
@@ -57,15 +76,19 @@ internal abstract class RepoImpl<T : Any> internal constructor(
           .doOnNext { internalPut(key, it) }
 
       if (bustCache) {
-        logger().log { "Busting cache to fetch from upstream" }
+        logger.log { "Busting cache to fetch from upstream" }
         justInvalidateBackingCaches(key)
       } else {
-        logger().log { "Fetching from repository" }
+        logger.log { "Fetching from repository" }
       }
 
       val memory = memoryCache.get(key)
       val persist = persister.read(key)
-      return@defer realFetch(key, freshData, memory, persist)
+      if (fetchCacheAndUpstream) {
+        return@defer fetchCacheThenUpstream(freshData, memory, persist)
+      } else {
+        return@defer fetchCacheOrUpstream(freshData, memory, persist)
+      }
     }
         .doOnError { invalidate(key) }
   }
@@ -82,29 +105,45 @@ internal abstract class RepoImpl<T : Any> internal constructor(
     }
   }
 
-  protected fun justInvalidateBackingCaches(key: String) {
+  /**
+   * Exposed as internal so that it can be tested.
+   */
+  @VisibleForTesting
+  internal fun testingGet(
+    bustCache: Boolean,
+    key: String,
+    upstream: (String) -> Observable<T>
+  ): Single<T> {
+    return fetch(false, bustCache, key, upstream).singleOrError()
+  }
+
+  override fun get(
+    bustCache: Boolean,
+    key: String,
+    upstream: (String) -> Single<T>
+  ): Single<T> {
+    val realUpstream: (String) -> Observable<T> = { upstream(it).toObservable() }
+    return fetch(false, bustCache, key, realUpstream).singleOrError()
+  }
+
+  override fun get(
+    bustCache: Boolean,
+    key: String,
+    upstream: (String) -> Observable<T>
+  ): Observable<T> {
+    return fetch(true, bustCache, key, upstream)
+  }
+
+  private fun justInvalidateBackingCaches(key: String) {
     memoryCache.invalidate(key)
     persister.invalidate(key)
   }
 
-  override fun invalidateCaches(key: String) {
-    logger().log { "Invalidating caches: $key" }
-    justInvalidateBackingCaches(key)
-    fetcher.invalidateCaches(key)
-  }
-
-  override fun clearCaches() {
-    logger().log { "Clearing caches" }
-    memoryCache.clearAll()
-    persister.clearAll()
-    fetcher.clearCaches()
-  }
-
-  protected fun internalPut(
+  private fun internalPut(
     key: String,
     value: T
   ) {
-    logger().log { "Put data: $key $value" }
+    logger.log { "Put data: $key $value" }
 
     // Store data directly into caches
     memoryCache.add(key, value)
@@ -114,11 +153,11 @@ internal abstract class RepoImpl<T : Any> internal constructor(
     fetcher.invalidateCaches(key)
   }
 
-  protected fun internalPut(
+  private fun internalPut(
     key: String,
     values: List<T>
   ) {
-    logger().log { "Put data: $key $values" }
+    logger.log { "Put data: $key $values" }
 
     // Store data directly into caches
     memoryCache.add(key, values)
@@ -128,14 +167,61 @@ internal abstract class RepoImpl<T : Any> internal constructor(
     fetcher.invalidateCaches(key)
   }
 
-  final override fun invalidate(key: String) {
+  override fun push(
+    key: String,
+    value: T
+  ) {
+    internalPut(key, value)
+  }
+
+  override fun push(
+    key: String,
+    values: List<T>
+  ) {
+    internalPut(key, values)
+  }
+
+  override fun replace(
+    key: String,
+    value: T
+  ) {
+    justInvalidateBackingCaches(key)
+    internalPut(key, value)
+  }
+
+  override fun replace(
+    key: String,
+    values: List<T>
+  ) {
+    justInvalidateBackingCaches(key)
+    internalPut(key, values)
+  }
+
+  override fun invalidateCaches(key: String) {
+    logger.log { "Invalidating caches: $key" }
+    justInvalidateBackingCaches(key)
+    fetcher.invalidateCaches(key)
+  }
+
+  override fun invalidate(key: String) {
     invalidateCaches(key)
     fetcher.invalidate(key)
   }
 
-  final override fun clearAll() {
+  override fun clearCaches() {
+    logger.log { "Clearing caches" }
+    memoryCache.clearAll()
+    persister.clearAll()
+    fetcher.clearCaches()
+  }
+
+  override fun clearAll() {
     clearCaches()
     fetcher.clearAll()
+  }
+
+  override fun memoryCache(): MemoryCacheManager<T> {
+    return memoryCache
   }
 
 }

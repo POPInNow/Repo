@@ -26,18 +26,17 @@ import io.reactivex.Observable
 import io.reactivex.Scheduler
 import io.reactivex.Single
 
+@Deprecated("Use RepoImpl<T>")
 internal class SingleRepoImpl<T : Any> internal constructor(
   fetcher: Fetcher<T>,
   memoryCache: MemoryCache<T>,
   persister: Persister<T>,
   scheduler: Scheduler,
   debug: Boolean
-) : RepoImpl<T>(fetcher, memoryCache, persister, scheduler), SingleRepo<T> {
+) : SingleRepo<T> {
 
-  private val logger = Logger("SingleRepo", debug)
-
-  override fun logger(): Logger {
-    return logger
+  private val delegate by lazy {
+    RepoImpl(fetcher, memoryCache, persister, scheduler, debug, "SingleRepoImpl")
   }
 
   override fun get(
@@ -45,8 +44,7 @@ internal class SingleRepoImpl<T : Any> internal constructor(
     key: String,
     upstream: (String) -> Single<T>
   ): Single<T> {
-    val realUpstream: (String) -> Observable<T> = { upstream(it).toObservable() }
-    return fetch(bustCache, key, realUpstream).singleOrError()
+    return delegate.get(bustCache, key, upstream)
   }
 
   /**
@@ -58,39 +56,34 @@ internal class SingleRepoImpl<T : Any> internal constructor(
     key: String,
     upstream: (String) -> Observable<T>
   ): Single<T> {
-    return fetch(bustCache, key, upstream).singleOrError()
+    return delegate.testingGet(bustCache, key, upstream)
   }
 
-  /**
-   * Fetching from a SingleRepo only returns the latest piece of data
-   */
-  override fun realFetch(
-    key: String,
-    upstream: Observable<T>,
-    cache: Observable<T>,
-    persist: Observable<T>
-  ): Observable<T> {
-    return cache.lastElement()
-        .switchIfEmpty(persist.lastElement())
-        .switchIfEmpty(upstream.singleOrError())
-        .toObservable()
+  override fun memoryCache(): MemoryCacheManager<T> {
+    return delegate.memoryCache()
   }
 
-  /**
-   * Putting into a SingleRepo invalidates any caches before modifying
-   */
   override fun put(
     key: String,
     value: T
   ) {
-    justInvalidateBackingCaches(key)
-    internalPut(key, value)
+    delegate.replace(key, value)
   }
 
-  /**
-   * Access the memory cache
-   */
-  override fun memoryCache(): MemoryCacheManager<T> {
-    return memoryCache
+  override fun invalidateCaches(key: String) {
+    delegate.invalidateCaches(key)
   }
+
+  override fun invalidate(key: String) {
+    delegate.invalidate(key)
+  }
+
+  override fun clearCaches() {
+    delegate.clearCaches()
+  }
+
+  override fun clearAll() {
+    delegate.clearAll()
+  }
+
 }

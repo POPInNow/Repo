@@ -24,18 +24,17 @@ import com.popinnow.android.repo.manager.MemoryCacheManager
 import io.reactivex.Observable
 import io.reactivex.Scheduler
 
+@Deprecated("Use RepoImpl<T>")
 internal class ObservableRepoImpl<T : Any> internal constructor(
   fetcher: Fetcher<T>,
   memoryCache: MemoryCache<T>,
   persister: Persister<T>,
   scheduler: Scheduler,
   debug: Boolean
-) : RepoImpl<T>(fetcher, memoryCache, persister, scheduler), ObservableRepo<T> {
+) : ObservableRepo<T> {
 
-  private val logger = Logger("ObservableRepo", debug)
-
-  override fun logger(): Logger {
-    return logger
+  private val delegate by lazy {
+    RepoImpl(fetcher, memoryCache, persister, scheduler, debug, "ObservableRepoImpl")
   }
 
   override fun get(
@@ -43,17 +42,25 @@ internal class ObservableRepoImpl<T : Any> internal constructor(
     key: String,
     upstream: (String) -> Observable<T>
   ): Observable<T> {
-    return fetch(bustCache, key, upstream)
+    return delegate.get(bustCache, key, upstream)
   }
 
-  override fun realFetch(
+  override fun memoryCache(): MemoryCacheManager<T> {
+    return delegate.memoryCache()
+  }
+
+  override fun add(
     key: String,
-    upstream: Observable<T>,
-    cache: Observable<T>,
-    persist: Observable<T>
-  ): Observable<T> {
-    return cache.switchIfEmpty(persist)
-        .concatWith(upstream)
+    value: T
+  ) {
+    delegate.push(key, value)
+  }
+
+  override fun add(
+    key: String,
+    values: List<T>
+  ) {
+    delegate.push(key, values)
   }
 
   override fun put(
@@ -63,22 +70,20 @@ internal class ObservableRepoImpl<T : Any> internal constructor(
     add(key, value)
   }
 
-  override fun add(
-    key: String,
-    value: T
-  ) {
-    internalPut(key, value)
+  override fun invalidateCaches(key: String) {
+    delegate.invalidateCaches(key)
   }
 
-  override fun add(
-    key: String,
-    values: List<T>
-  ) {
-    internalPut(key, values)
+  override fun invalidate(key: String) {
+    delegate.invalidate(key)
   }
 
-  override fun memoryCache(): MemoryCacheManager<T> {
-    return memoryCache
+  override fun clearCaches() {
+    delegate.clearCaches()
+  }
+
+  override fun clearAll() {
+    delegate.clearAll()
   }
 
 }

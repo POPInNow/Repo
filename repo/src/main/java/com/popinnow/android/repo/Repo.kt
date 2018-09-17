@@ -20,9 +20,10 @@ import android.support.annotation.CheckResult
 import com.popinnow.android.repo.internal.CacheInvalidator
 import com.popinnow.android.repo.manager.MemoryCacheManager
 import io.reactivex.Observable
+import io.reactivex.Single
 
 /**
- * ObservableRepo follows the cache-then-upstream model using [io.reactivex.Observable] streams.
+ * Repo follows the cache-then-upstream model and cache-or-upstream model.
  *
  * This Repo follows the cache-then-upstream model. When requests are made to this Repo
  * the [io.reactivex.Observer] is subscribed to a stream which is sourced from a potentially
@@ -32,9 +33,18 @@ import io.reactivex.Observable
  *
  * If caching is enabled for this Repo, the latest emitted item from the upstream data source will
  * be cached.
+ *
+ * This Repo follows the cache-or-upstream model. When requests are made to this Repo
+ * the [io.reactivex.Observer] is subscribed to a stream which is sourced from a
+ * [io.reactivex.Single]. If any data exists in the cache for this Repo, it will be emitted instead
+ * of calling the upstream.
+ *
+ * If any cached data exists and is emitted, the upstream will never be subscribed to.
+ *
+ * If caching is enabled for this Repo, the latest emitted item from the upstream data source will
+ * be cached.
  */
-@Deprecated("Use Repo<T> instead")
-interface ObservableRepo<T : Any> : CacheInvalidator {
+interface Repo<T : Any> : CacheInvalidator {
 
   /**
    * Get data from this Repo, possibly from the provided upstream source.
@@ -62,6 +72,31 @@ interface ObservableRepo<T : Any> : CacheInvalidator {
   ): Observable<T>
 
   /**
+   * Get data from this Repo, possibly from the provided upstream source.
+   *
+   * If [bustCache] is true, the Repo will skip any caching layers that may have data, and will
+   * always fetch new data from the [upstream]. Any data retrieved from the [upstream] will still
+   * be put back into the caches.
+   *
+   * The [key] is what controls uniqueness of requests.
+   *
+   * If no cached data exists in the Repo for a given [key], then fresh data will be pulled
+   * from the [upstream]. If cached data exists, it will be emitted, and the [upstream]
+   * will never be pulled.
+   *
+   * @param bustCache Bypass any caching and pull data straight from the upstream source.
+   * @param key The key for this request.
+   * @param upstream The lazy upstream data source.
+   * @return [Single]
+   */
+  @CheckResult
+  fun get(
+    bustCache: Boolean,
+    key: String,
+    upstream: (String) -> Single<T>
+  ): Single<T>
+
+  /**
    * Get a manager that allows the querying of this Repo's [MemoryCache]
    *
    * @return [MemoryCacheManager]
@@ -70,40 +105,47 @@ interface ObservableRepo<T : Any> : CacheInvalidator {
   fun memoryCache(): MemoryCacheManager<T>
 
   /**
-   * Adds data into the Repo.
+   * Replace data in the Repo with a single item.
    *
    * @param key The key for this request
    * @param value The data to put into the Repo
    */
-  fun add(
+  fun replace(
     key: String,
     value: T
   )
 
   /**
-   * Adds a list of data into the Repo.
+   * Replace data into the Repo with a list of items.
    *
    * @param key The key for this request
    * @param values The list data to put into the Repo
    */
-  fun add(
+  fun replace(
     key: String,
     values: List<T>
   )
 
   /**
-   * Adds data into the Repo.
+   * Push data into the Repo.
    *
    * @param key The key for this request
    * @param value The data to put into the Repo
    */
-  @Deprecated(
-      "Use add() instead",
-      ReplaceWith("add(key, value)", "com.popinnow.android.repo.ObservableRepo")
-  )
-  fun put(
+  fun push(
     key: String,
     value: T
+  )
+
+  /**
+   * Push a list of data into the Repo.
+   *
+   * @param key The key for this request
+   * @param values The list data to put into the Repo
+   */
+  fun push(
+    key: String,
+    values: List<T>
   )
 
   /**
