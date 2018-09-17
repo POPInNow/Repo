@@ -34,7 +34,7 @@ import io.reactivex.Single
  * If caching is enabled for this Repo, the latest emitted item from the upstream data source will
  * be cached.
  */
-@Deprecated("Use Repo<T> instead")
+@Deprecated("Use Repo instead")
 interface SingleRepo<T : Any> : CacheInvalidator {
 
   /**

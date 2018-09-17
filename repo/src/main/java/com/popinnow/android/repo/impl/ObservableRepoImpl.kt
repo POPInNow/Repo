@@ -24,7 +24,7 @@ import com.popinnow.android.repo.manager.MemoryCacheManager
 import io.reactivex.Observable
 import io.reactivex.Scheduler
 
-@Deprecated("Use RepoImpl<T>")
+@Deprecated("Use RepoImpl")
 internal class ObservableRepoImpl<T : Any> internal constructor(
   fetcher: Fetcher,
   memoryCache: MemoryCache,

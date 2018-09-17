@@ -26,7 +26,7 @@ import io.reactivex.Observable
 import io.reactivex.Scheduler
 import io.reactivex.Single
 
-@Deprecated("Use RepoImpl<T>")
+@Deprecated("Use RepoImpl")
 internal class SingleRepoImpl<T : Any> internal constructor(
   fetcher: Fetcher,
   memoryCache: MemoryCache,
