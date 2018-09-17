@@ -16,6 +16,7 @@
 
 package com.popinnow.android.repo.impl
 
+import android.support.annotation.CheckResult
 import android.support.v4.util.LruCache
 import com.popinnow.android.repo.MemoryCache
 import io.reactivex.Observable
@@ -51,28 +52,28 @@ internal class MemoryCacheImpl constructor(
     logger.log { "Create with TTL: $ttl nano seconds" }
   }
 
+  @CheckResult
+  private fun hasCachedData(cached: Entry?): Boolean {
+    if (cached == null) {
+      logger.log { "Cached data is empty, do not return" }
+      return false
+    }
+
+    // If this is still true, then cached was not null, we unwrap with !!
+    val cachedTime = cached.time
+    val currentTime = System.nanoTime()
+    if (cachedTime + ttl < currentTime) {
+      logger.log { "Cached time is out of bounds. ${cachedTime + ttl} $currentTime" }
+      return false
+    } else {
+      return true
+    }
+  }
+
   override fun <T : Any> get(key: String): Observable<T> {
     return Observable.defer {
       val cached: Entry? = cache.get(key)
-      var returnCached = true
-
-      if (cached == null) {
-        logger.log { "Cached data is empty, do not return" }
-        returnCached = false
-      }
-
-      // If this is still true, then cached was not null, we unwrap with !!
-      if (returnCached) {
-        val cachedTime = cached!!.time
-        val currentTime = System.nanoTime()
-        if (cachedTime + ttl < currentTime) {
-          logger.log { "Cached time is out of bounds. ${cachedTime + ttl} $currentTime" }
-          returnCached = false
-        }
-      }
-
-      // If this is still true, then cached was not null, we unwrap with !!
-      if (returnCached) {
+      if (hasCachedData(cached)) {
         @Suppress("UNCHECKED_CAST")
         val list = cached!!.data.asSequence()
             .map { it as T }
