@@ -80,12 +80,26 @@ interface ObservableRepo<T : Any> : CacheInvalidator {
   )
 
   /**
+   * Adds a list of data into the Repo.
+   *
+   * @param key The key for this request
+   * @param values The list data to put into the Repo
+   */
+  fun add(
+    key: String,
+    values: List<T>
+  )
+
+  /**
    * Adds data into the Repo.
    *
    * @param key The key for this request
    * @param value The data to put into the Repo
    */
-  @Deprecated("Use add() instead", ReplaceWith("add(key, value)", "com.popinnow.android.repo.MemoryCache"))
+  @Deprecated(
+      "Use add() instead",
+      ReplaceWith("add(key, value)", "com.popinnow.android.repo.ObservableRepo")
+  )
   fun put(
     key: String,
     value: T

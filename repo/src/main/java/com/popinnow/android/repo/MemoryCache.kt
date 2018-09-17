@@ -65,7 +65,9 @@ interface MemoryCache<T : Any> : Invalidatable, MemoryCacheManager<T> {
    * @param key The key for this request.
    * @param value The data to put into the cache.
    */
-  @Deprecated("Use add() instead", ReplaceWith("add(key, value)", "com.popinnow.android.repo.MemoryCache"))
+  @Deprecated(
+      "Use add() instead", ReplaceWith("add(key, value)", "com.popinnow.android.repo.MemoryCache")
+  )
   fun put(
     key: String,
     value: T
