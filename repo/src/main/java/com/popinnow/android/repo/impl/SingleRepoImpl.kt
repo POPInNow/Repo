@@ -16,6 +16,7 @@
 
 package com.popinnow.android.repo.impl
 
+import android.support.annotation.VisibleForTesting
 import com.popinnow.android.repo.Fetcher
 import com.popinnow.android.repo.MemoryCache
 import com.popinnow.android.repo.Persister
@@ -45,12 +46,13 @@ internal class SingleRepoImpl<T : Any> internal constructor(
     upstream: (String) -> Single<T>
   ): Single<T> {
     val realUpstream: (String) -> Observable<T> = { upstream(it).toObservable() }
-    return get(bustCache, key, realUpstream)
+    return fetch(bustCache, key, realUpstream).singleOrError()
   }
 
   /**
    * Exposed as internal so that it can be tested.
    */
+  @VisibleForTesting
   internal fun get(
     bustCache: Boolean,
     key: String,
