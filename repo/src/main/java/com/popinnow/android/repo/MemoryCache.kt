@@ -58,6 +58,19 @@ interface MemoryCache<T : Any> : Invalidatable, MemoryCacheManager<T> {
   )
 
   /**
+   * Adds a list of data into the cache.
+   *
+   * If there is data in the cache already for the given [key], new data will be appended.
+   *
+   * @param key The key for this request.
+   * @param values The list of data to put into the cache.
+   */
+  fun add(
+    key: String,
+    values: List<T>
+  )
+
+  /**
    * Adds data into the cache.
    *
    * If there is data in the cache already for the given [key], new data will be appended.

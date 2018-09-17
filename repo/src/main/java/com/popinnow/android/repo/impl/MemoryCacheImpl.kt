@@ -95,6 +95,20 @@ internal class MemoryCacheImpl<T : Any> internal constructor(
     key: String,
     value: T
   ) {
+    addToCache(key) { it.add(value) }
+  }
+
+  override fun add(
+    key: String,
+    values: List<T>
+  ) {
+    addToCache(key) { it.addAll(values) }
+  }
+
+  private fun addToCache(
+    key: String,
+    addToList: (ArrayList<T>) -> Unit
+  ) {
     val cached = cache.get(key)
     val list: ArrayList<T>
     if (cached == null) {
@@ -102,11 +116,11 @@ internal class MemoryCacheImpl<T : Any> internal constructor(
     } else {
       list = cached.data
     }
-    list.add(value)
+    addToList(list)
 
     // Don't log list or its a ConcurrentModificationError. Wrap in a copy
     val currentTime = System.nanoTime()
-    logger.log { "Put in memory cache: $value ($currentTime) ${ArrayList(list)}" }
+    logger.log { "Put in memory cache: ($currentTime) ${ArrayList(list)}" }
     cache.put(key, Entry(currentTime, list))
   }
 

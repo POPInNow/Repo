@@ -35,6 +35,12 @@ internal object NoopPersister : Persister<Any> {
   ) {
   }
 
+  override fun write(
+    key: String,
+    values: List<Any>
+  ) {
+  }
+
   override fun invalidate(key: String) {
   }
 

@@ -37,4 +37,9 @@ interface Persister<T : Any> : Invalidatable {
     value: T
   )
 
+  fun write(
+    key: String,
+    values: List<T>
+  )
+
 }

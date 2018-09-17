@@ -70,6 +70,13 @@ internal class ObservableRepoImpl<T : Any> internal constructor(
     internalPut(key, value)
   }
 
+  override fun add(
+    key: String,
+    values: List<T>
+  ) {
+    internalPut(key, values)
+  }
+
   override fun memoryCache(): MemoryCacheManager<T> {
     return memoryCache
   }

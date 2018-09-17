@@ -35,6 +35,12 @@ internal object NoopCache : MemoryCache<Any> {
   ) {
   }
 
+  override fun add(
+    key: String,
+    values: List<Any>
+  ) {
+  }
+
   override fun put(
     key: String,
     value: Any

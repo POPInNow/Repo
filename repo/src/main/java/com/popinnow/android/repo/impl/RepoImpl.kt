@@ -114,6 +114,20 @@ internal abstract class RepoImpl<T : Any> internal constructor(
     fetcher.invalidateCaches(key)
   }
 
+  protected fun internalPut(
+    key: String,
+    values: List<T>
+  ) {
+    logger().log { "Put data: $key $values" }
+
+    // Store data directly into caches
+    memoryCache.add(key, values)
+    persister.write(key, values)
+
+    // Cancel fetcher in flights
+    fetcher.invalidateCaches(key)
+  }
+
   final override fun invalidate(key: String) {
     invalidateCaches(key)
     fetcher.invalidate(key)
