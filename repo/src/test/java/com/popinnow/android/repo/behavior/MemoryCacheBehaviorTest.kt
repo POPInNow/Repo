@@ -367,16 +367,9 @@ class MemoryCacheBehaviorTest {
     val expect1 = "Testing"
     val expect2 = "Puts"
 
-    cache.add(
-        DEFAULT_KEY,
-        DEFAULT_EXPECT
-    )
+    cache.add(DEFAULT_KEY, DEFAULT_EXPECT)
     cache.get<String>(DEFAULT_KEY)
-        .doOnSubscribe {
-          cache.add(
-              DEFAULT_KEY, expect1
-          )
-        }
+        .doOnSubscribe { cache.add(DEFAULT_KEY, expect1) }
         .startNow()
         .test()
         // The put happens after the cache is accessed, so it should not appear
@@ -386,18 +379,12 @@ class MemoryCacheBehaviorTest {
 
     cache.add(DEFAULT_KEY, extraPuts)
     cache.get<String>(DEFAULT_KEY)
-        .doOnSubscribe {
-          cache.add(DEFAULT_KEY, expect2)
-        }
+        .doOnSubscribe { cache.add(DEFAULT_KEY, expect2) }
         .startNow()
         .test()
         // The put happens after the cache is accessed, so it should not appear
         // but the first access plus the first put should
-        .assertValueSequence(
-            arrayListOf(
-                DEFAULT_EXPECT, expect1, extraPuts
-            )
-        )
+        .assertValueSequence(arrayListOf(DEFAULT_EXPECT, expect1, extraPuts))
         .assertValueCount(3)
         .assertComplete()
 
