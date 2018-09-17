@@ -53,7 +53,7 @@ internal class SingleRepoImpl<T : Any> internal constructor(
    * Exposed as internal so that it can be tested.
    */
   @VisibleForTesting
-  internal fun get(
+  internal fun testingGet(
     bustCache: Boolean,
     key: String,
     upstream: (String) -> Observable<T>

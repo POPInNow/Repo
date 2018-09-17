@@ -62,7 +62,7 @@ class SingleRepoApiTest {
     )
 
     // Use the internal method just to avoid the conversion from Single to Observable not triggering Mockito
-    singleRepo.get(false, DEFAULT_KEY, DEFAULT_UPSTREAM_OBSERVABLE)
+    singleRepo.testingGet(false, DEFAULT_KEY, DEFAULT_UPSTREAM_OBSERVABLE)
         .startNow()
         .test()
         // Cache or upstream
@@ -88,7 +88,7 @@ class SingleRepoApiTest {
     )
 
     // Use the internal method just to avoid the conversion from Single to Observable not triggering Mockito
-    singleRepo.get(true, DEFAULT_KEY, DEFAULT_UPSTREAM_OBSERVABLE)
+    singleRepo.testingGet(true, DEFAULT_KEY, DEFAULT_UPSTREAM_OBSERVABLE)
         .startNow()
         .test()
         // Cache or upstream (but no caches)
@@ -114,7 +114,7 @@ class SingleRepoApiTest {
     )
 
     // Use the internal method just to avoid the conversion from Single to Observable not triggering Mockito
-    singleRepo.get(false, DEFAULT_KEY, DEFAULT_UPSTREAM_OBSERVABLE)
+    singleRepo.testingGet(false, DEFAULT_KEY, DEFAULT_UPSTREAM_OBSERVABLE)
         .startNow()
         .test()
         // Cache or upstream
@@ -140,7 +140,7 @@ class SingleRepoApiTest {
     )
 
     // Use the internal method just to avoid the conversion from Single to Observable not triggering Mockito
-    singleRepo.get(true, DEFAULT_KEY, DEFAULT_UPSTREAM_OBSERVABLE)
+    singleRepo.testingGet(true, DEFAULT_KEY, DEFAULT_UPSTREAM_OBSERVABLE)
         .startNow()
         .test()
         // Cache or upstream (but no caches)
@@ -166,7 +166,7 @@ class SingleRepoApiTest {
     )
 
     // Use the internal method just to avoid the conversion from Single to Observable not triggering Mockito
-    singleRepo.get(false, DEFAULT_KEY, DEFAULT_UPSTREAM_OBSERVABLE)
+    singleRepo.testingGet(false, DEFAULT_KEY, DEFAULT_UPSTREAM_OBSERVABLE)
         .startNow()
         .test()
         // Cache or upstream (but no caches)
@@ -192,7 +192,7 @@ class SingleRepoApiTest {
     )
 
     // Use the internal method just to avoid the conversion from Single to Observable not triggering Mockito
-    singleRepo.get(true, DEFAULT_KEY, DEFAULT_UPSTREAM_OBSERVABLE)
+    singleRepo.testingGet(true, DEFAULT_KEY, DEFAULT_UPSTREAM_OBSERVABLE)
         .startNow()
         .test()
         // Cache or upstream (but no caches)
