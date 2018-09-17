@@ -41,15 +41,11 @@ Kotlin:
 ```kotlin
 fun main(args: Array<String>) {
   
-  // For Repos which monitor an upstream source of Single<T> (the cached-or-upstream pattern)
-  val singleRepo = newRepoBuilder()
+  val repo = newRepoBuilder()
+    // Enable memory level caching
     .memoryCache()
-    .buildSingle()
-  
-  // For Repos which monitor an upstream source of Observable<T> (the cached-then-upstream pattern)
-  val observableRepo = newRepoBuilder()
-    .memoryCache()
-    .buildObservable()
+    // Build Repo instance
+    .build()
 }
 ```
 
@@ -58,15 +54,11 @@ Java:
 class MyClass {
   
   public static void main(String... args) {
-    // For Repos which monitor an upstream source of Single<T> (the cached-or-upstream pattern)
-    final SingleRepo singleRepo = Repos.newRepoBuilder()
+    final Repo repo = Repos.newRepoBuilder()
+      // Enable memory level caching
       .memoryCache()
-      .buildSingle();
-  
-    // For Repos which monitor an upstream source of Observable<T> (the cached-then-upstream pattern)
-    final ObservableRepo observableRepo = Repos.newRepoBuilder()
-      .memoryCache()
-      .buildObservable();
+      // Build Repo instance
+      .build();
   }
   
 }
@@ -102,7 +94,7 @@ fun test () {
 ```
 
 You can add simple memory caching as well as making sure the repeated requests fire only a single  
-network call by wrapping the call to `MyService.fetchDataFromUpstream` with a `SingleRepo` instance:
+network call by wrapping the call to `MyService.fetchDataFromUpstream` with a `Repo` instance:
 
 ```kotlin
 interface MyService {
@@ -114,14 +106,13 @@ interface MyService {
 
 fun test () {
   val myService: MyService = createService(MyService::class.java)
-  val key = "myservice"
   
-  val singleRepo = newRepoBuilder()
+  val repo = newRepoBuilder()
     .memoryCache()
-    .buildSingle()
+    .build()
   
   // Fetches from upstream once, and then from the cache each time after
-  singleRepo.get(bustCache = false, key) { myService.fetchDataFromUpstream(it) }
+  repo.get(bustCache = false, key = "my-service") { key: String -> myService.fetchDataFromUpstream(key) }
     .map { transformData(it) }
     .subscribeOn(Schedulers.io())
     .observeOn(AndroidSchedulers.mainThread())
@@ -136,7 +127,7 @@ fun test () {
 
 ```kotlin
 fun test() {
-  val repo = newRepoBuilder().memoryCache().buildSingle()
+  val repo = newRepoBuilder().memoryCache().build()
   
   val arg1 = "Hello"
   val arg2 = "World"
@@ -149,12 +140,12 @@ fun test() {
 
 #### In Flight Caching
 
-Once an upstream request is fired off by the `Repo.get(...)` method, the active upstream request
-will be cached for the duration of its lifetime. This means that subsequent calls to the same
-data source will not fire additional requests to the upstream data source. Any new calls for the
-same upstream data will be attached to the existing call, and data will be delivered to all subscribers
-once the upstream call resolves. At the point of resolution, any new upstreams calls to the data source
-will fire off a new upstream request with the same in-flight caching behavior.
+Once an upstream request is fired off, the active upstream request will be cached for the duration  
+of its lifetime. This means that subsequent calls to the same data source will not fire additional  
+requests to the upstream data source. Any new calls for the same upstream data will be attached  
+to the existing call, and data will be delivered to all subscribers once the upstream call  
+resolves. At the point of resolution, any new upstreams calls to the data source will fire off a  
+new upstream request with the same in-flight caching behavior.
 
 #### In Memory Caching
 
@@ -164,14 +155,15 @@ A common problem in mobile development is the persistence of data during configu
 to the instance which caches requests on write for the next 30 seconds. Any request made to the
 Repo during this period that does not bust the cache will return data from the memory cache.
 
-A `SingleRepo` will cache the returned data from upstream Single sources and return either
-the cached data or fresh data from the upstream source. A `SingleRepo` will either subscribe
+A call to `Repo.get()` will cache the returned data from upstream Single sources and return either
+the cached data or fresh data from the upstream source. A call to `Repo.get()` will either subscribe  
 the caller to the original upstream source, or subscribe the caller to a stream of cached
 data from the upstream source.
 
-An `ObservableRepo` will cache the returned data from upstream Observable sources and return the
-latest cached data, and then fresh data from the upstream source. An `ObservableRepo` will always
-subscribe the caller to the original upstream source, but will always emit cached data first.
+A call to `Repo.observe()` will cache the returned data from upstream Observable sources and return  
+the latest cached data, and then fresh data from the upstream source. A call to `Repo.observe()`  
+will always subscribe the caller to the original upstream source, but will always emit cached data  
+first.
 
 Any side effects directly on the upstream source will not be
 replayed to the caller if the caller is subsribed to the cached observable, but all side effects
@@ -179,19 +171,37 @@ on the subscribed Single or Observable instance will be emitted in both cases.
 
 ```kotlin
 fun test() {
-  val singleRepoInstance = newRepoBuilder()
+  val repo = newRepoBuilder()
     .memoryCache()
-    .buildSingle()
+    .build()
   
   // Logging will only happen on fresh requests from the upstream
-  singleRepoInstance.get(false, key) { key -> upstreamSingle().doOnNext { logUpstream(it) } }
+  // Upstream request will only happen if there is no valid cached data
+  repo.get(bustCache, key) { key -> upstreamSingle().doOnSuccess { logUpstream(it) } }
     .subscribeOn(Schedulers.io())
     .subscribeOn(AndroidSchedulers.mainThread())
     .subscribe()
   
   // Logging will happen on every call to the Repo instance whether it fetches data
   // from the upstream source or from the cache interface
-  singleRepoInstance.get(false, key) { key -> upstreamSingle() }
+  // Upstream request will only happen if there is no valid cached data
+  repo.get(bustCache, key) { key -> upstreamSingle() }
+    .doOnNext { logEverytime(it) }
+    .subscribeOn(Schedulers.io())
+    .subscribeOn(AndroidSchedulers.mainThread())
+    .subscribe()
+    
+  // Logging will only happen on fresh requests from the upstream
+  // Upstream request will always happen, and will be delivered after cached data if it exists
+  repo.observe(bustCache, key) { key -> upstreamObservable().doOnNext { logUpstream(it) } }
+    .subscribeOn(Schedulers.io())
+    .subscribeOn(AndroidSchedulers.mainThread())
+    .subscribe()
+    
+  // Logging will happen on every call to the Repo instance whether it fetches data
+  // from the upstream source or from the cache interface
+  // Upstream request will always happen, and will be delivered after cached data if it exists
+  repo.observe(bustCache, key) { key -> upstreamObservable() }
     .doOnNext { logEverytime(it) }
     .subscribeOn(Schedulers.io())
     .subscribeOn(AndroidSchedulers.mainThread())
@@ -227,19 +237,21 @@ Observable will not call `invalidate()`, and calling `invalidate()` will not cal
 For a complete clean up of `Repo` resources once you are done using them, you would do something like:
 ```kotlin
 fun test() {
-  val singleRepoInstance = newRepoBuilder()
+  val repo = newRepoBuilder()
     .memoryCache()
-    .buildSingle()
-
-  // Do stuff with singleRepoInstance ...
-  val disposable = singleRepoInstance.get(false, "my-key") { ... }
-
+    .build()
+  
+  // Do stuff with repo ...
+  val disposable = repo.get(false, "my-key") { upstream() }
+    .map { it.transform() }
+    .subscibe()
+  
   // Stop just a single managed request
-  singleRepoInstance.invalidate("my-key")
-
+  repo.invalidate("my-key")
+  
   // Or stop everything
-  singleRepoInstance.clearAll()
-
+  repo.clearAll()
+  
   // Make sure to dispose as well!
   disposable.dispose()
 }
