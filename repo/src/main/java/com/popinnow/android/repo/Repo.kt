@@ -47,7 +47,7 @@ import io.reactivex.Single
 interface Repo<T : Any> : CacheInvalidator {
 
   /**
-   * Get data from this Repo, possibly from the provided upstream source.
+   * Observe data from this Repo, possibly from the provided upstream source.
    *
    * If [bustCache] is true, the Repo will skip any caching layers that may have data, and will
    * always fetch new data from the [upstream]. Any data retrieved from the [upstream] will still
@@ -65,7 +65,7 @@ interface Repo<T : Any> : CacheInvalidator {
    * @return [Observable]
    */
   @CheckResult
-  fun get(
+  fun observe(
     bustCache: Boolean,
     key: String,
     upstream: (String) -> Observable<T>

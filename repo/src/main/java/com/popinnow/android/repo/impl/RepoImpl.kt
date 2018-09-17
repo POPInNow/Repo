@@ -126,7 +126,7 @@ internal class RepoImpl<T : Any> internal constructor(
     return fetch(false, bustCache, key, realUpstream).singleOrError()
   }
 
-  override fun get(
+  override fun observe(
     bustCache: Boolean,
     key: String,
     upstream: (String) -> Observable<T>

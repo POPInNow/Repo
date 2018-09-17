@@ -42,7 +42,7 @@ internal class ObservableRepoImpl<T : Any> internal constructor(
     key: String,
     upstream: (String) -> Observable<T>
   ): Observable<T> {
-    return delegate.get(bustCache, key, upstream)
+    return delegate.observe(bustCache, key, upstream)
   }
 
   override fun memoryCache(): MemoryCacheManager<T> {

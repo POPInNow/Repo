@@ -65,7 +65,7 @@ class RepoApiTest {
         DEFAULT_OBSERVABLE_UPSTREAM
     )
 
-    repo.get(false, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM)
+    repo.observe(false, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM)
         .startNow()
         .test()
         // Cache then upstream
@@ -91,7 +91,7 @@ class RepoApiTest {
         DEFAULT_OBSERVABLE_UPSTREAM
     )
 
-    repo.get(true, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM)
+    repo.observe(true, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM)
         .startNow()
         .test()
         // Cache then upstream (but cache is busted)
@@ -119,7 +119,7 @@ class RepoApiTest {
         DEFAULT_OBSERVABLE_UPSTREAM
     )
 
-    repo.get(false, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM)
+    repo.observe(false, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM)
         .startNow()
         .test()
         // Cache then upstream
@@ -145,7 +145,7 @@ class RepoApiTest {
         DEFAULT_OBSERVABLE_UPSTREAM
     )
 
-    repo.get(true, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM)
+    repo.observe(true, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM)
         .startNow()
         .test()
         // Cache then upstream
@@ -171,7 +171,7 @@ class RepoApiTest {
         DEFAULT_OBSERVABLE_UPSTREAM
     )
 
-    repo.get(false, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM)
+    repo.observe(false, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM)
         .startNow()
         .test()
         // Cache then upstream (but no caches)
@@ -197,7 +197,7 @@ class RepoApiTest {
         DEFAULT_OBSERVABLE_UPSTREAM
     )
 
-    repo.get(true, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM)
+    repo.observe(true, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM)
         .startNow()
         .test()
         // Cache then upstream (but no caches)
@@ -374,7 +374,7 @@ class RepoApiTest {
 
     private val DEFAULT_SCHEDULER = Schedulers.trampoline()
 
-    private const val DEFAULT_OBSERVABLE_KEY = "example-key"
+    private const val DEFAULT_OBSERVABLE_KEY = "example-key-observe"
     private val DEFAULT_OBSERVABLE_CACHE_EXPECT = arrayListOf("Hello", "World")
     private val DEFAULT_OBSERVABLE_PERSIST_EXPECT = arrayListOf("Persister", "Defaults")
     private val DEFAULT_OBSERVABLE_FETCH_EXPECT = arrayListOf("Upstream", "Payload")
@@ -382,7 +382,7 @@ class RepoApiTest {
       Observable.fromIterable(DEFAULT_OBSERVABLE_FETCH_EXPECT)
     }
 
-    private const val DEFAULT_SINGLE_KEY = "example-key"
+    private const val DEFAULT_SINGLE_KEY = "example-key-get"
     private const val DEFAULT_SINGLE_CACHE_EXPECT = "Cache"
     private const val DEFAULT_SINGLE_PERSIST_EXPECT = "Persister"
     private const val DEFAULT_SINGLE_FETCH_EXPECT = "Upstream"
