@@ -65,14 +65,6 @@ interface RepoBuilder {
 //  @CheckResult
 //  fun persister(TODO): RepoBuilder<T, Built>
 
-  @Deprecated("Use build() instead")
-  @CheckResult
-  fun <T : Any> buildSingle(): SingleRepo<T>
-
-  @Deprecated("Use build() instead")
-  @CheckResult
-  fun <T : Any> buildObservable(): ObservableRepo<T>
-
   @CheckResult
   fun build(): Repo
 

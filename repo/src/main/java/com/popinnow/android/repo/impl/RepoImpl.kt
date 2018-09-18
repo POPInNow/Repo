@@ -65,7 +65,8 @@ internal class RepoImpl internal constructor(
     fetchCacheAndUpstream: Boolean,
     bustCache: Boolean,
     key: String,
-    upstream: (String) -> Observable<T>
+    upstream: (String) -> Observable<T>,
+    mapper: (Any) -> T
   ): Observable<T> {
     return Observable.defer {
       val freshData = fetcher.fetch(key, upstream, scheduler)
@@ -82,8 +83,8 @@ internal class RepoImpl internal constructor(
         logger.log { "Fetching from repository" }
       }
 
-      val memory: Observable<T> = memoryCache.get(key)
-      val persist: Observable<T> = persister.read(key)
+      val memory: Observable<T> = memoryCache.get(key, mapper)
+      val persist: Observable<T> = persister.read(key, mapper)
       if (fetchCacheAndUpstream) {
         return@defer fetchCacheThenUpstream(freshData, memory, persist)
       } else {
@@ -112,9 +113,29 @@ internal class RepoImpl internal constructor(
   internal fun <T : Any> testingGet(
     bustCache: Boolean,
     key: String,
-    upstream: (String) -> Observable<T>
+    upstream: (String) -> Observable<T>,
+    mapper: (Any) -> T
   ): Single<T> {
-    return fetch(false, bustCache, key, upstream).singleOrError()
+    return fetch(false, bustCache, key, upstream, mapper).singleOrError()
+  }
+
+  /**
+   * Exposed as internal so that it can be tested.
+   */
+  @VisibleForTesting
+  internal fun <T : Any> testingObserve(
+    bustCache: Boolean,
+    key: String,
+    upstream: (String) -> Observable<T>,
+    mapper: (Any) -> T
+  ): Observable<T> {
+    return fetch(true, bustCache, key, upstream, mapper)
+  }
+
+  @CheckResult
+  private fun <T : Any> mapper(item: Any): T {
+    @Suppress("UNCHECKED_CAST")
+    return item as T
   }
 
   override fun <T : Any> get(
@@ -123,7 +144,7 @@ internal class RepoImpl internal constructor(
     upstream: (String) -> Single<T>
   ): Single<T> {
     val realUpstream: (String) -> Observable<T> = { upstream(it).toObservable() }
-    return fetch(false, bustCache, key, realUpstream).singleOrError()
+    return fetch(false, bustCache, key, realUpstream, this::mapper).singleOrError()
   }
 
   override fun <T : Any> observe(
@@ -131,7 +152,7 @@ internal class RepoImpl internal constructor(
     key: String,
     upstream: (String) -> Observable<T>
   ): Observable<T> {
-    return fetch(true, bustCache, key, upstream)
+    return fetch(true, bustCache, key, upstream, this::mapper)
   }
 
   private fun justInvalidateBackingCaches(key: String) {

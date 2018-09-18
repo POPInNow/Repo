@@ -30,7 +30,10 @@ import io.reactivex.Observable
 interface Persister : Invalidatable {
 
   @CheckResult
-  fun <T : Any> read(key: String): Observable<T>
+  fun <T : Any> read(
+    key: String,
+    mapper: (Any) -> T
+  ): Observable<T>
 
   fun write(
     key: String,

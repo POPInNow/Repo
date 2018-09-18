@@ -70,29 +70,35 @@ internal class MemoryCacheImpl constructor(
     }
   }
 
-  override fun <T : Any> get(key: String): Observable<T> {
+  override fun <T : Any> get(
+    key: String,
+    mapper: (Any) -> T
+  ): Observable<T> {
     return Observable.defer {
       val cached: Entry? = cache.get(key)
       if (hasCachedData(cached)) {
-        @Suppress("UNCHECKED_CAST")
-        val list = cached!!.data.asSequence()
-            .map { it as T }
-            .toList()
-        logger.log { "Memory cache return data: ${ArrayList(list)}" }
-        return@defer Observable.fromIterable(list)
+        var list: List<T>?
+        try {
+          list = requireNotNull(cached).data.map(mapper)
+        } catch (e: Exception) {
+          logger.logError(e) { "Exception thrown when mapping cached data" }
+          list = null
+        }
+
+        if (list == null || list.isEmpty()) {
+          logger.log { "Memory cache holds bad data, invalidate and return empty" }
+          invalidate(key)
+          return@defer Observable.empty<T>()
+        } else {
+          logger.log { "Memory cache return data: ${ArrayList(list)}" }
+          return@defer Observable.fromIterable(list)
+        }
       } else {
         logger.log { "Memory cache is empty" }
         invalidate(key)
         return@defer Observable.empty<T>()
       }
     }
-  }
-
-  override fun put(
-    key: String,
-    value: Any
-  ) {
-    add(key, value)
   }
 
   override fun add(
@@ -109,7 +115,7 @@ internal class MemoryCacheImpl constructor(
     addToCache(key) { it.addAll(values) }
   }
 
-  private fun addToCache(
+  private inline fun addToCache(
     key: String,
     addToList: (ArrayList<Any>) -> Unit
   ) {

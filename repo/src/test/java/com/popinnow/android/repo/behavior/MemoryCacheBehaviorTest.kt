@@ -38,7 +38,7 @@ class MemoryCacheBehaviorTest {
     cache: MemoryCache,
     key: String
   ) {
-    cache.get<Any>(key)
+    cache.get(key) { it }
         .startNow()
         .test()
         .assertNoValues()
@@ -51,7 +51,7 @@ class MemoryCacheBehaviorTest {
     key: String,
     value: String
   ) {
-    cache.get<String>(key)
+    cache.get(key) { it as String }
         .startNow()
         .test()
         .assertValue(value)
@@ -64,7 +64,7 @@ class MemoryCacheBehaviorTest {
     key: String,
     vararg values: String
   ) {
-    cache.get<String>(key)
+    cache.get(key) { it as String }
         .startNow()
         .test()
         .assertValueSequence(arrayListOf(*values))
@@ -368,7 +368,7 @@ class MemoryCacheBehaviorTest {
     val expect2 = "Puts"
 
     cache.add(DEFAULT_KEY, DEFAULT_EXPECT)
-    cache.get<String>(DEFAULT_KEY)
+    cache.get(DEFAULT_KEY) { it as String }
         .doOnSubscribe { cache.add(DEFAULT_KEY, expect1) }
         .startNow()
         .test()
@@ -378,7 +378,7 @@ class MemoryCacheBehaviorTest {
         .assertComplete()
 
     cache.add(DEFAULT_KEY, extraPuts)
-    cache.get<String>(DEFAULT_KEY)
+    cache.get(DEFAULT_KEY) { it as String }
         .doOnSubscribe { cache.add(DEFAULT_KEY, expect2) }
         .startNow()
         .test()
@@ -409,19 +409,7 @@ class MemoryCacheBehaviorTest {
     assertCacheSingleValue(cache, DEFAULT_KEY, DEFAULT_EXPECT)
 
     // Calling get with wrong expected type kills cache
-    cache.get<Int>(DEFAULT_KEY)
-        .startNow()
-        .test()
-        .assertNoValues()
-        .assertNoErrors()
-        .assertComplete()
-
-    // Cache is valid with data
-    cache.add(DEFAULT_KEY, DEFAULT_EXPECT)
-    assertCacheSingleValue(cache, DEFAULT_KEY, DEFAULT_EXPECT)
-
-    // Calling get with wrong expected type kills cache
-    cache.get<Int>(DEFAULT_KEY)
+    cache.get(DEFAULT_KEY) { it as Int }
         .startNow()
         .test()
         .assertNoValues()

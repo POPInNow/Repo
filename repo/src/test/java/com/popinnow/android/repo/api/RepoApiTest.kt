@@ -16,6 +16,7 @@
 
 package com.popinnow.android.repo.api
 
+import android.support.annotation.CheckResult
 import com.popinnow.android.repo.Fetcher
 import com.popinnow.android.repo.MemoryCache
 import com.popinnow.android.repo.Persister
@@ -52,20 +53,26 @@ class RepoApiTest {
    */
   @Test
   fun `RepoApi Observable memory hit takes priority`() {
+    val mapper = generateMapper<String>()
     validator.onVisitMemoryReturn(
-        DEFAULT_OBSERVABLE_KEY, Observable.fromIterable(DEFAULT_OBSERVABLE_CACHE_EXPECT)
+        DEFAULT_OBSERVABLE_KEY,
+        Observable.fromIterable(DEFAULT_OBSERVABLE_CACHE_EXPECT),
+        mapper
     )
     validator.onVisitPersisterReturn(
         DEFAULT_OBSERVABLE_KEY,
-        Observable.error<String>(AssertionError("Persister should be missed"))
+        Observable.error<String>(AssertionError("Persister should be missed")),
+        mapper
     )
     validator.onVisitUpstreamReturn(
-        DEFAULT_OBSERVABLE_KEY, Observable.fromIterable(DEFAULT_OBSERVABLE_FETCH_EXPECT),
+        DEFAULT_OBSERVABLE_KEY,
+        Observable.fromIterable(DEFAULT_OBSERVABLE_FETCH_EXPECT),
         DEFAULT_SCHEDULER,
         DEFAULT_OBSERVABLE_UPSTREAM
     )
 
-    repo.observe(false, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM)
+    // Testing function
+    repo.testingObserve(false, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM, mapper)
         .startNow()
         .test()
         // Cache then upstream
@@ -83,15 +90,16 @@ class RepoApiTest {
    */
   @Test
   fun `RepoApi Observable busted memory hit takes priority`() {
-    validator.onVisitMemoryReturn(DEFAULT_OBSERVABLE_KEY, Observable.empty())
-    validator.onVisitPersisterReturn(DEFAULT_OBSERVABLE_KEY, Observable.empty())
+    val mapper = generateMapper<String>()
+    validator.onVisitMemoryReturn(DEFAULT_OBSERVABLE_KEY, Observable.empty(), mapper)
+    validator.onVisitPersisterReturn(DEFAULT_OBSERVABLE_KEY, Observable.empty(), mapper)
     validator.onVisitUpstreamReturn(
         DEFAULT_OBSERVABLE_KEY, Observable.fromIterable(DEFAULT_OBSERVABLE_FETCH_EXPECT),
         DEFAULT_SCHEDULER,
         DEFAULT_OBSERVABLE_UPSTREAM
     )
 
-    repo.observe(true, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM)
+    repo.testingObserve(true, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM, mapper)
         .startNow()
         .test()
         // Cache then upstream (but cache is busted)
@@ -109,17 +117,21 @@ class RepoApiTest {
    */
   @Test
   fun `RepoApi Observable persister hit takes priority`() {
-    validator.onVisitMemoryReturn(DEFAULT_OBSERVABLE_KEY, Observable.empty())
+    val mapper = generateMapper<String>()
+    validator.onVisitMemoryReturn(DEFAULT_OBSERVABLE_KEY, Observable.empty(), mapper)
     validator.onVisitPersisterReturn(
-        DEFAULT_OBSERVABLE_KEY, Observable.fromIterable(DEFAULT_OBSERVABLE_PERSIST_EXPECT)
+        DEFAULT_OBSERVABLE_KEY,
+        Observable.fromIterable(DEFAULT_OBSERVABLE_PERSIST_EXPECT),
+        mapper
     )
     validator.onVisitUpstreamReturn(
-        DEFAULT_OBSERVABLE_KEY, Observable.fromIterable(DEFAULT_OBSERVABLE_FETCH_EXPECT),
+        DEFAULT_OBSERVABLE_KEY,
+        Observable.fromIterable(DEFAULT_OBSERVABLE_FETCH_EXPECT),
         DEFAULT_SCHEDULER,
         DEFAULT_OBSERVABLE_UPSTREAM
     )
 
-    repo.observe(false, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM)
+    repo.testingObserve(false, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM, mapper)
         .startNow()
         .test()
         // Cache then upstream
@@ -137,15 +149,17 @@ class RepoApiTest {
    */
   @Test
   fun `RepoApi Observable busted persister hit takes priority`() {
-    validator.onVisitMemoryReturn(DEFAULT_OBSERVABLE_KEY, Observable.empty())
-    validator.onVisitPersisterReturn(DEFAULT_OBSERVABLE_KEY, Observable.empty())
+    val mapper = generateMapper<String>()
+    validator.onVisitMemoryReturn(DEFAULT_OBSERVABLE_KEY, Observable.empty(), mapper)
+    validator.onVisitPersisterReturn(DEFAULT_OBSERVABLE_KEY, Observable.empty(), mapper)
     validator.onVisitUpstreamReturn(
-        DEFAULT_OBSERVABLE_KEY, Observable.fromIterable(DEFAULT_OBSERVABLE_FETCH_EXPECT),
+        DEFAULT_OBSERVABLE_KEY,
+        Observable.fromIterable(DEFAULT_OBSERVABLE_FETCH_EXPECT),
         DEFAULT_SCHEDULER,
         DEFAULT_OBSERVABLE_UPSTREAM
     )
 
-    repo.observe(true, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM)
+    repo.testingObserve(true, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM, mapper)
         .startNow()
         .test()
         // Cache then upstream
@@ -163,15 +177,17 @@ class RepoApiTest {
    */
   @Test
   fun `RepoApi Observable fetcher delivers even without caching layer`() {
-    validator.onVisitMemoryReturn(DEFAULT_OBSERVABLE_KEY, Observable.empty())
-    validator.onVisitPersisterReturn(DEFAULT_OBSERVABLE_KEY, Observable.empty())
+    val mapper = generateMapper<String>()
+    validator.onVisitMemoryReturn(DEFAULT_OBSERVABLE_KEY, Observable.empty(), mapper)
+    validator.onVisitPersisterReturn(DEFAULT_OBSERVABLE_KEY, Observable.empty(), mapper)
     validator.onVisitUpstreamReturn(
-        DEFAULT_OBSERVABLE_KEY, Observable.fromIterable(DEFAULT_OBSERVABLE_FETCH_EXPECT),
+        DEFAULT_OBSERVABLE_KEY,
+        Observable.fromIterable(DEFAULT_OBSERVABLE_FETCH_EXPECT),
         DEFAULT_SCHEDULER,
         DEFAULT_OBSERVABLE_UPSTREAM
     )
 
-    repo.observe(false, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM)
+    repo.testingObserve(false, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM, mapper)
         .startNow()
         .test()
         // Cache then upstream (but no caches)
@@ -189,15 +205,17 @@ class RepoApiTest {
    */
   @Test
   fun `RepoApi Observable busted fetcher delivers even without caching layer`() {
-    validator.onVisitMemoryReturn(DEFAULT_OBSERVABLE_KEY, Observable.empty())
-    validator.onVisitPersisterReturn(DEFAULT_OBSERVABLE_KEY, Observable.empty())
+    val mapper = generateMapper<String>()
+    validator.onVisitMemoryReturn(DEFAULT_OBSERVABLE_KEY, Observable.empty(), mapper)
+    validator.onVisitPersisterReturn(DEFAULT_OBSERVABLE_KEY, Observable.empty(), mapper)
     validator.onVisitUpstreamReturn(
-        DEFAULT_OBSERVABLE_KEY, Observable.fromIterable(DEFAULT_OBSERVABLE_FETCH_EXPECT),
+        DEFAULT_OBSERVABLE_KEY,
+        Observable.fromIterable(DEFAULT_OBSERVABLE_FETCH_EXPECT),
         DEFAULT_SCHEDULER,
         DEFAULT_OBSERVABLE_UPSTREAM
     )
 
-    repo.observe(true, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM)
+    repo.testingObserve(true, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM, mapper)
         .startNow()
         .test()
         // Cache then upstream (but no caches)
@@ -215,17 +233,25 @@ class RepoApiTest {
    */
   @Test
   fun `RepoApi Single memory hit takes priority`() {
-    validator.onVisitMemoryReturn(DEFAULT_SINGLE_KEY, Observable.just(DEFAULT_SINGLE_CACHE_EXPECT))
+    val mapper = generateMapper<String>()
+    validator.onVisitMemoryReturn(
+        DEFAULT_SINGLE_KEY,
+        Observable.just(DEFAULT_SINGLE_CACHE_EXPECT),
+        mapper
+    )
     validator.onVisitPersisterReturn(
-        DEFAULT_SINGLE_KEY, Observable.error<String>(AssertionError("Persister should be missed"))
+        DEFAULT_SINGLE_KEY,
+        Observable.error<String>(AssertionError("Persister should be missed")),
+        mapper
     )
     validator.onVisitUpstreamReturn(
-        DEFAULT_SINGLE_KEY, Observable.error<String>(AssertionError("Fetcher should be missed")),
-        DEFAULT_SCHEDULER, DEFAULT_SINGLE_UPSTREAM_OBSERVABLE
+        DEFAULT_SINGLE_KEY,
+        Observable.error<String>(AssertionError("Fetcher should be missed")),
+        DEFAULT_SCHEDULER,
+        DEFAULT_SINGLE_UPSTREAM_OBSERVABLE
     )
 
-    // Use the internal method just to avoid the conversion from Single to Observable not triggering Mockito
-    repo.testingGet(false, DEFAULT_SINGLE_KEY, DEFAULT_SINGLE_UPSTREAM_OBSERVABLE)
+    repo.testingGet(false, DEFAULT_SINGLE_KEY, DEFAULT_SINGLE_UPSTREAM_OBSERVABLE, mapper)
         .startNow()
         .test()
         // Cache or upstream
@@ -243,15 +269,17 @@ class RepoApiTest {
    */
   @Test
   fun `RepoApi Single busted memory hit takes priority`() {
-    validator.onVisitMemoryReturn(DEFAULT_SINGLE_KEY, Observable.empty())
-    validator.onVisitPersisterReturn(DEFAULT_SINGLE_KEY, Observable.empty())
+    val mapper = generateMapper<String>()
+    validator.onVisitMemoryReturn(DEFAULT_SINGLE_KEY, Observable.empty(), mapper)
+    validator.onVisitPersisterReturn(DEFAULT_SINGLE_KEY, Observable.empty(), mapper)
     validator.onVisitUpstreamReturn(
-        DEFAULT_SINGLE_KEY, Observable.just(DEFAULT_SINGLE_FETCH_EXPECT),
-        DEFAULT_SCHEDULER, DEFAULT_SINGLE_UPSTREAM_OBSERVABLE
+        DEFAULT_SINGLE_KEY,
+        Observable.just(DEFAULT_SINGLE_FETCH_EXPECT),
+        DEFAULT_SCHEDULER,
+        DEFAULT_SINGLE_UPSTREAM_OBSERVABLE
     )
 
-    // Use the internal method just to avoid the conversion from Single to Observable not triggering Mockito
-    repo.testingGet(true, DEFAULT_SINGLE_KEY, DEFAULT_SINGLE_UPSTREAM_OBSERVABLE)
+    repo.testingGet(true, DEFAULT_SINGLE_KEY, DEFAULT_SINGLE_UPSTREAM_OBSERVABLE, mapper)
         .startNow()
         .test()
         // Cache or upstream (but no caches)
@@ -269,17 +297,21 @@ class RepoApiTest {
    */
   @Test
   fun `RepoApi Single persister hit takes priority`() {
-    validator.onVisitMemoryReturn(DEFAULT_SINGLE_KEY, Observable.empty())
+    val mapper = generateMapper<String>()
+    validator.onVisitMemoryReturn(DEFAULT_SINGLE_KEY, Observable.empty(), mapper)
     validator.onVisitPersisterReturn(
-        DEFAULT_SINGLE_KEY, Observable.just(DEFAULT_SINGLE_PERSIST_EXPECT)
+        DEFAULT_SINGLE_KEY,
+        Observable.just(DEFAULT_SINGLE_PERSIST_EXPECT),
+        mapper
     )
     validator.onVisitUpstreamReturn(
-        DEFAULT_SINGLE_KEY, Observable.error<String>(AssertionError("Fetcher should be missed")),
-        DEFAULT_SCHEDULER, DEFAULT_SINGLE_UPSTREAM_OBSERVABLE
+        DEFAULT_SINGLE_KEY,
+        Observable.error<String>(AssertionError("Fetcher should be missed")),
+        DEFAULT_SCHEDULER,
+        DEFAULT_SINGLE_UPSTREAM_OBSERVABLE
     )
 
-    // Use the internal method just to avoid the conversion from Single to Observable not triggering Mockito
-    repo.testingGet(false, DEFAULT_SINGLE_KEY, DEFAULT_SINGLE_UPSTREAM_OBSERVABLE)
+    repo.testingGet(false, DEFAULT_SINGLE_KEY, DEFAULT_SINGLE_UPSTREAM_OBSERVABLE, mapper)
         .startNow()
         .test()
         // Cache or upstream
@@ -297,15 +329,17 @@ class RepoApiTest {
    */
   @Test
   fun `RepoApi Single busted persister hit takes priority`() {
-    validator.onVisitMemoryReturn(DEFAULT_SINGLE_KEY, Observable.empty())
-    validator.onVisitPersisterReturn(DEFAULT_SINGLE_KEY, Observable.empty())
+    val mapper = generateMapper<String>()
+    validator.onVisitMemoryReturn(DEFAULT_SINGLE_KEY, Observable.empty(), mapper)
+    validator.onVisitPersisterReturn(DEFAULT_SINGLE_KEY, Observable.empty(), mapper)
     validator.onVisitUpstreamReturn(
-        DEFAULT_SINGLE_KEY, Observable.just(DEFAULT_SINGLE_FETCH_EXPECT),
-        DEFAULT_SCHEDULER, DEFAULT_SINGLE_UPSTREAM_OBSERVABLE
+        DEFAULT_SINGLE_KEY,
+        Observable.just(DEFAULT_SINGLE_FETCH_EXPECT),
+        DEFAULT_SCHEDULER,
+        DEFAULT_SINGLE_UPSTREAM_OBSERVABLE
     )
 
-    // Use the internal method just to avoid the conversion from Single to Observable not triggering Mockito
-    repo.testingGet(true, DEFAULT_SINGLE_KEY, DEFAULT_SINGLE_UPSTREAM_OBSERVABLE)
+    repo.testingGet(true, DEFAULT_SINGLE_KEY, DEFAULT_SINGLE_UPSTREAM_OBSERVABLE, mapper)
         .startNow()
         .test()
         // Cache or upstream (but no caches)
@@ -323,15 +357,15 @@ class RepoApiTest {
    */
   @Test
   fun `RepoApi Single fetcher delivers even without caching layer`() {
-    validator.onVisitMemoryReturn(DEFAULT_SINGLE_KEY, Observable.empty())
-    validator.onVisitPersisterReturn(DEFAULT_SINGLE_KEY, Observable.empty())
+    val mapper = generateMapper<String>()
+    validator.onVisitMemoryReturn(DEFAULT_SINGLE_KEY, Observable.empty(), mapper)
+    validator.onVisitPersisterReturn(DEFAULT_SINGLE_KEY, Observable.empty(), mapper)
     validator.onVisitUpstreamReturn(
         DEFAULT_SINGLE_KEY, Observable.just(DEFAULT_SINGLE_FETCH_EXPECT), DEFAULT_SCHEDULER,
         DEFAULT_SINGLE_UPSTREAM_OBSERVABLE
     )
 
-    // Use the internal method just to avoid the conversion from Single to Observable not triggering Mockito
-    repo.testingGet(false, DEFAULT_SINGLE_KEY, DEFAULT_SINGLE_UPSTREAM_OBSERVABLE)
+    repo.testingGet(false, DEFAULT_SINGLE_KEY, DEFAULT_SINGLE_UPSTREAM_OBSERVABLE, mapper)
         .startNow()
         .test()
         // Cache or upstream (but no caches)
@@ -349,15 +383,15 @@ class RepoApiTest {
    */
   @Test
   fun `RepoApi Single busted fetcher delivers even without caching layer`() {
-    validator.onVisitMemoryReturn(DEFAULT_SINGLE_KEY, Observable.empty())
-    validator.onVisitPersisterReturn(DEFAULT_SINGLE_KEY, Observable.empty())
+    val mapper = generateMapper<String>()
+    validator.onVisitMemoryReturn(DEFAULT_SINGLE_KEY, Observable.empty(), mapper)
+    validator.onVisitPersisterReturn(DEFAULT_SINGLE_KEY, Observable.empty(), mapper)
     validator.onVisitUpstreamReturn(
         DEFAULT_SINGLE_KEY, Observable.just(DEFAULT_SINGLE_FETCH_EXPECT),
         DEFAULT_SCHEDULER, DEFAULT_SINGLE_UPSTREAM_OBSERVABLE
     )
 
-    // Use the internal method just to avoid the conversion from Single to Observable not triggering Mockito
-    repo.testingGet(true, DEFAULT_SINGLE_KEY, DEFAULT_SINGLE_UPSTREAM_OBSERVABLE)
+    repo.testingGet(true, DEFAULT_SINGLE_KEY, DEFAULT_SINGLE_UPSTREAM_OBSERVABLE, mapper)
         .startNow()
         .test()
         // Cache or upstream (but no caches)
@@ -389,6 +423,14 @@ class RepoApiTest {
     private val DEFAULT_SINGLE_UPSTREAM = { _: String -> Single.just(DEFAULT_SINGLE_FETCH_EXPECT) }
     private val DEFAULT_SINGLE_UPSTREAM_OBSERVABLE = { key: String ->
       DEFAULT_SINGLE_UPSTREAM(key).toObservable()
+    }
+
+    @CheckResult
+    private fun <T : Any> generateMapper(): (Any) -> T {
+      return mapper@{ item: Any ->
+        @Suppress("UNCHECKED_CAST")
+        return@mapper item as T
+      }
     }
   }
 }

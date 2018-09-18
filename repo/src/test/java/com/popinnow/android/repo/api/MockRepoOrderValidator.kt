@@ -34,9 +34,10 @@ internal class MockRepoOrderValidator internal constructor(
 
   internal fun <T : Any> onVisitMemoryReturn(
     key: String,
-    observable: Observable<T>
+    observable: Observable<T>,
+    mapper: (Any) -> T
   ) {
-    Mocks.whenever(memoryCache.get<T>(key))
+    Mocks.whenever(memoryCache.get(key, mapper))
         .thenReturn(observable
             .doOnSubscribe {
               // Memory should be visited first
@@ -54,9 +55,10 @@ internal class MockRepoOrderValidator internal constructor(
 
   internal fun <T : Any> onVisitPersisterReturn(
     key: String,
-    observable: Observable<T>
+    observable: Observable<T>,
+    mapper: (Any) -> T
   ) {
-    Mocks.whenever(persister.read<T>(key))
+    Mocks.whenever(persister.read(key, mapper))
         .thenReturn(observable
             .doOnSubscribe {
               if (memoryVisited && !persisterVisited && !upstreamVisited) {

@@ -23,7 +23,11 @@ import io.reactivex.Observable
  * A Persister implementation that does nothing.
  */
 internal object NoopPersister : Persister {
-  override fun <T : Any> read(key: String): Observable<T> {
+
+  override fun <T : Any> read(
+    key: String,
+    mapper: (Any) -> T
+  ): Observable<T> {
     return Observable.empty()
   }
 

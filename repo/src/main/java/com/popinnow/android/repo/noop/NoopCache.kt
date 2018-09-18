@@ -24,7 +24,10 @@ import io.reactivex.Observable
  */
 internal object NoopCache : MemoryCache {
 
-  override fun <T : Any> get(key: String): Observable<T> {
+  override fun <T : Any> get(
+    key: String,
+    mapper: (Any) -> T
+  ): Observable<T> {
     return Observable.empty()
   }
 
@@ -37,12 +40,6 @@ internal object NoopCache : MemoryCache {
   override fun addAll(
     key: String,
     values: List<Any>
-  ) {
-  }
-
-  override fun put(
-    key: String,
-    value: Any
   ) {
   }
 

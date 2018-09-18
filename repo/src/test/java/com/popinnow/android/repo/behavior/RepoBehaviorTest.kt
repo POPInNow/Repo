@@ -33,7 +33,7 @@ import java.util.concurrent.TimeUnit.SECONDS
 class RepoBehaviorTest {
 
   @CheckResult
-  private inline fun builder(): RepoBuilder {
+  private fun builder(): RepoBuilder {
     return newRepoBuilder().debug(true)
         .scheduler(DEFAULT_SCHEDULER)
   }

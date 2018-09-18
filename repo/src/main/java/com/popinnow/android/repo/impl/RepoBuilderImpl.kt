@@ -19,11 +19,9 @@ package com.popinnow.android.repo.impl
 import android.support.annotation.CheckResult
 import com.popinnow.android.repo.Fetcher
 import com.popinnow.android.repo.MemoryCache
-import com.popinnow.android.repo.ObservableRepo
 import com.popinnow.android.repo.Persister
 import com.popinnow.android.repo.Repo
 import com.popinnow.android.repo.RepoBuilder
-import com.popinnow.android.repo.SingleRepo
 import com.popinnow.android.repo.noop.NoopCache
 import com.popinnow.android.repo.noop.NoopPersister
 import io.reactivex.Scheduler
@@ -125,26 +123,6 @@ internal class RepoBuilderImpl internal constructor(
     }
 
     return cache
-  }
-
-  override fun <T : Any> buildObservable(): ObservableRepo<T> {
-    return ObservableRepoImpl(
-        fetcher ?: FetcherImpl(debug),
-        cacheBuilderToCache(),
-        persister ?: NoopPersister,
-        scheduler ?: Schedulers.io(),
-        debug
-    )
-  }
-
-  override fun <T : Any> buildSingle(): SingleRepo<T> {
-    return SingleRepoImpl(
-        fetcher ?: FetcherImpl(debug),
-        cacheBuilderToCache(),
-        persister ?: NoopPersister,
-        scheduler ?: Schedulers.io(),
-        debug
-    )
   }
 
   override fun build(): Repo {
