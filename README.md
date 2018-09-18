@@ -11,7 +11,7 @@ In your `build.gradle`
 
 ```gradle
 dependencies {
-  implementation "com.popinnow.android.repo:repo:0.0.7"
+  implementation "com.popinnow.android.repo:repo:0.0.8"
 }
 ```
 
@@ -73,23 +73,29 @@ Let us assume you have, for example, an upstream network source using
 
 ```kotlin
 interface MyService {
-
+  
   @GET("/some-url")
   fun fetchDataFromUpstream(key: String) : Single<String>
-
-}
-
-fun test () {
-  val myService: MyService = createService(MyService::class.java)
-  val key = "myservice"
   
-  // Fetches from upstream every time
-  myService.fetchDataFromUpstream(key)
-    .map { transformData(it) }
-    .subscribeOn(Schedulers.io())
-    .observeOn(AndroidSchedulers.mainThread())
-    .subscribe()
 }
+  
+class MyClass {
+  
+  private val myService = createService(MyService::class.java)
+  
+  fun test () {
+    val key = "myservice"
+    
+    // Fetches from upstream every time
+    myService.fetchDataFromUpstream(key)
+      .map { transformData(it) }
+      .subscribeOn(Schedulers.io())
+      .observeOn(AndroidSchedulers.mainThread())
+      .subscribe()
+  }
+  
+}
+
 
 ```
 
@@ -98,25 +104,29 @@ network call by wrapping the call to `MyService.fetchDataFromUpstream` with a `R
 
 ```kotlin
 interface MyService {
-
+  
   @GET("/some-url")
   fun fetchDataFromUpstream(key: String) : Single<String>
-
-}
-
-fun test () {
-  val myService: MyService = createService(MyService::class.java)
   
-  val repo = newRepoBuilder()
+}
+  
+class MyClass {
+  
+  private val repo = newRepoBuilder()
     .memoryCache()
     .build()
+    
+  private val myService = createService(MyService::class.java)
   
-  // Fetches from upstream once, and then from the cache each time after
-  repo.get(bustCache = false, key = "my-service") { key: String -> myService.fetchDataFromUpstream(key) }
-    .map { transformData(it) }
-    .subscribeOn(Schedulers.io())
-    .observeOn(AndroidSchedulers.mainThread())
-    .subscribe()
+  fun test () {
+    // Fetches from upstream once, and then from the cache each time after
+    repo.get(bustCache = false, key = "my-service") { key -> myService.fetchDataFromUpstream(key) }
+      .map { transformData(it) }
+      .subscribeOn(Schedulers.io())
+      .observeOn(AndroidSchedulers.mainThread())
+      .subscribe()
+  }
+  
 }
 
 ```
@@ -269,7 +279,6 @@ The Repo library is used internally in the
 
 Please feel free to make an issue on GitHub, leave as much detail as possible regarding  
 the question or the problem you may be experiencing.
-
 
 
 # Contributions
