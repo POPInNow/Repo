@@ -396,6 +396,42 @@ class MemoryCacheBehaviorTest {
     )
   }
 
+  /**
+   * Calling get with the wrong key data type kills the cache
+   */
+  @Test
+  fun `MemoryCacheBehaviorTest get with wrong key type kills cache`() {
+
+    val cache = createCache(30)
+
+    // Cache is valid with data
+    cache.add(DEFAULT_KEY, DEFAULT_EXPECT)
+    assertCacheSingleValue(cache, DEFAULT_KEY, DEFAULT_EXPECT)
+
+    // Calling get with wrong expected type kills cache
+    cache.get<Int>(DEFAULT_KEY)
+        .startNow()
+        .test()
+        .assertNoValues()
+        .assertNoErrors()
+        .assertComplete()
+
+    // Cache is valid with data
+    cache.add(DEFAULT_KEY, DEFAULT_EXPECT)
+    assertCacheSingleValue(cache, DEFAULT_KEY, DEFAULT_EXPECT)
+
+    // Calling get with wrong expected type kills cache
+    cache.get<Int>(DEFAULT_KEY)
+        .startNow()
+        .test()
+        .assertNoValues()
+        .assertNoErrors()
+        .assertComplete()
+
+    // Once bad key is requested, cache is blown away
+    assertCacheIsEmpty(cache, DEFAULT_KEY)
+  }
+
   companion object {
 
     private const val DEFAULT_KEY = "example key"
