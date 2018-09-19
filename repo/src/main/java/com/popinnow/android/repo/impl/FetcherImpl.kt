@@ -32,10 +32,10 @@ import java.util.concurrent.ConcurrentHashMap
  * The SingleFetcher will memoryCache any in flight upstream requests until they have completed.
  */
 internal class FetcherImpl internal constructor(
-  debug: Boolean
+  debug: String
 ) : Fetcher, Invalidatable {
 
-  private val logger = Logger("Fetcher", debug)
+  private val logger = Logger("Fetcher[$debug]", debug.isNotBlank())
   private val inFlight: ConcurrentHashMap<String, Subject<*>> = ConcurrentHashMap()
   private val disposables: ConcurrentHashMap<String, Disposable> = ConcurrentHashMap()
 

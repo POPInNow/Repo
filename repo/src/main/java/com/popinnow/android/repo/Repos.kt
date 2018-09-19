@@ -30,3 +30,15 @@ import com.popinnow.android.repo.impl.RepoBuilderImpl
 fun newRepoBuilder(): RepoBuilder {
   return RepoBuilderImpl()
 }
+
+/**
+ * Create a new Repo instance with all defaults
+ *
+ * @return [Repo]
+ */
+@CheckResult
+fun newRepo(): Repo {
+  return newRepoBuilder()
+      .memoryCache()
+      .build()
+}

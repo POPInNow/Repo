@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit
 interface RepoBuilder {
 
   @CheckResult
-  fun debug(debug: Boolean): RepoBuilder
+  fun debug(debug: String): RepoBuilder
 
   @CheckResult
   fun fetcher(fetcher: Fetcher): RepoBuilder

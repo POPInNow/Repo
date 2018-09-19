@@ -23,14 +23,14 @@ import io.reactivex.Observable
 import java.util.concurrent.TimeUnit
 
 internal class MemoryCacheImpl constructor(
-  debug: Boolean,
+  debug: String,
   time: Long,
   timeUnit: TimeUnit,
   maxSize: Int
 ) : MemoryCache {
 
   private val ttl = timeUnit.toNanos(time)
-  private val logger = Logger("MemoryCache", debug)
+  private val logger = Logger("MemoryCache[$debug]", debug.isNotBlank())
   private val cache = object : LruCache<String, Entry>(maxSize) {
     override fun entryRemoved(
       evicted: Boolean,

@@ -32,7 +32,7 @@ internal class RepoBuilderImpl internal constructor(
   private var fetcher: Fetcher? = null,
   private var persister: Persister? = null,
   private var scheduler: Scheduler? = null,
-  private var debug: Boolean = false
+  private var debug: String = ""
 ) : RepoBuilder {
 
   private var cacheBuilder = MemoryCacheBuilder(
@@ -43,7 +43,7 @@ internal class RepoBuilderImpl internal constructor(
       custom = null
   )
 
-  override fun debug(debug: Boolean): RepoBuilder {
+  override fun debug(debug: String): RepoBuilder {
     this.debug = debug
     return this
   }
