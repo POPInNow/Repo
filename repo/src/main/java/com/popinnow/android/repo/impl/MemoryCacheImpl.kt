@@ -55,6 +55,11 @@ internal class MemoryCacheImpl constructor(
   @CheckResult
   private fun hasCachedData(cached: Entry?): Boolean {
     if (cached == null) {
+      logger.log { "Cached data is null, do not return" }
+      return false
+    }
+
+    if (cached.data.isEmpty()) {
       logger.log { "Cached data is empty, do not return" }
       return false
     }
