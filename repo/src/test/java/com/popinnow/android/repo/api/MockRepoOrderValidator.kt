@@ -79,7 +79,7 @@ internal class MockRepoOrderValidator internal constructor(
     key: String,
     observable: Observable<T>,
     scheduler: Scheduler,
-    upstream: (String) -> Observable<T>
+    upstream: () -> Observable<T>
   ) {
     Mocks.whenever(fetcher.fetch(key, upstream, scheduler))
         .thenReturn(observable

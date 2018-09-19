@@ -118,7 +118,7 @@ class SampleActivity : AppCompatActivity() {
       // Even though the subscription was disposed, if the cache is not busted you'll see the
       // original data and then see the new counter data
       observableMockDisposable =
-          repo.observe(bustCacheObservableMock, key) { _ ->
+          repo.observe(bustCacheObservableMock, key) {
             Observable.just(mockDataSourceString.getCharacter(bustCacheObservableMock))
                 .doOnSubscribe {
                   Logger.debug(
@@ -196,7 +196,7 @@ class SampleActivity : AppCompatActivity() {
 
       // Even though the subscription was disposed, if the cache is not busted you'll see the
       // original data instead of the new counter data
-      singleMockDisposable = repo.get(bustCacheSingleMock, key) { _ ->
+      singleMockDisposable = repo.get(bustCacheSingleMock, key) {
         Single.just(mockDataSourceInt.getCount(bustCacheSingleMock))
             .doOnSubscribe {
               Logger.debug("SingleMock Source Subscribe on Thread: ${Thread.currentThread().name}")

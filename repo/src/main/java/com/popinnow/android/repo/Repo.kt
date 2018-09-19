@@ -68,7 +68,7 @@ interface Repo : CacheInvalidator {
   fun <T : Any> observe(
     bustCache: Boolean,
     key: String,
-    upstream: (String) -> Observable<T>
+    upstream: () -> Observable<T>
   ): Observable<T>
 
   /**
@@ -93,7 +93,7 @@ interface Repo : CacheInvalidator {
   fun <T : Any> get(
     bustCache: Boolean,
     key: String,
-    upstream: (String) -> Single<T>
+    upstream: () -> Single<T>
   ): Single<T>
 
   /**

@@ -55,7 +55,7 @@ interface Fetcher : CacheInvalidator {
   @CheckResult
   fun <T : Any> fetch(
     key: String,
-    upstream: (String) -> Observable<T>,
+    upstream: () -> Observable<T>,
     scheduler: Scheduler
   ): Observable<T>
 

@@ -41,7 +41,7 @@ internal class FetcherImpl internal constructor(
 
   override fun <T : Any> fetch(
     key: String,
-    upstream: (String) -> Observable<T>,
+    upstream: () -> Observable<T>,
     scheduler: Scheduler
   ): Observable<T> {
     return Observable.defer<T> {
@@ -69,7 +69,7 @@ internal class FetcherImpl internal constructor(
   @CheckResult
   private fun <T : Any> fetchUpstream(
     key: String,
-    upstream: (String) -> Observable<T>,
+    upstream: () -> Observable<T>,
     scheduler: Scheduler
   ): Observable<T> {
     // Create the subject which will be returned as the resulting observable
@@ -92,7 +92,7 @@ internal class FetcherImpl internal constructor(
     // schedulers critical to your application, you may wish to implement your own stricter
     // implementation of the Fetcher interface.
     cancelInFlight(key)
-    disposables[key] = upstream(key)
+    disposables[key] = upstream()
         // We must tell the original stream source to subscribe on schedulers outside of the normal
         // returned flow else if the returned stream is terminated prematurely, the source will
         // emit on a dead thread.

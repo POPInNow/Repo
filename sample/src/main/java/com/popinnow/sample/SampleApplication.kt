@@ -47,7 +47,7 @@ class SampleApplication : Application() {
     bustCache: Boolean,
     key: String
   ): Observable<Int> {
-    return repo.observe(bustCache, key) { _ ->
+    return repo.observe(bustCache, key) {
       Observable.just(mockDataSourceInt.getCount(bustCache))
           .doOnSubscribe {
             Logger.debug(
@@ -67,7 +67,7 @@ class SampleApplication : Application() {
     bustCache: Boolean,
     key: String
   ): Single<String> {
-    return repo.get(bustCache, key) { _ ->
+    return repo.get(bustCache, key) {
       Single.just(mockDataSourceString.getCharacter(bustCache))
           .doOnSubscribe {
             Logger.debug(

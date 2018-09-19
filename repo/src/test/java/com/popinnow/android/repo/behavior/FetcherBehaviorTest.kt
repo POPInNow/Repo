@@ -40,7 +40,7 @@ class FetcherBehaviorTest {
   private fun assertFetch(
     fetcher: Fetcher,
     key: String,
-    upstream: (String) -> Observable<String>,
+    upstream: () -> Observable<String>,
     values: List<String>
   ) {
     fetcher.fetch(key, upstream, Schedulers.io())

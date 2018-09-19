@@ -65,7 +65,7 @@ internal class RepoImpl internal constructor(
     fetchCacheAndUpstream: Boolean,
     bustCache: Boolean,
     key: String,
-    upstream: (String) -> Observable<T>,
+    upstream: () -> Observable<T>,
     mapper: (Any) -> T
   ): Observable<T> {
     return Observable.defer {
@@ -113,7 +113,7 @@ internal class RepoImpl internal constructor(
   internal fun <T : Any> testingGet(
     bustCache: Boolean,
     key: String,
-    upstream: (String) -> Observable<T>,
+    upstream: () -> Observable<T>,
     mapper: (Any) -> T
   ): Single<T> {
     return fetch(false, bustCache, key, upstream, mapper).singleOrError()
@@ -126,7 +126,7 @@ internal class RepoImpl internal constructor(
   internal fun <T : Any> testingObserve(
     bustCache: Boolean,
     key: String,
-    upstream: (String) -> Observable<T>,
+    upstream: () -> Observable<T>,
     mapper: (Any) -> T
   ): Observable<T> {
     return fetch(true, bustCache, key, upstream, mapper)
@@ -141,16 +141,16 @@ internal class RepoImpl internal constructor(
   override fun <T : Any> get(
     bustCache: Boolean,
     key: String,
-    upstream: (String) -> Single<T>
+    upstream: () -> Single<T>
   ): Single<T> {
-    val realUpstream: (String) -> Observable<T> = { upstream(it).toObservable() }
+    val realUpstream = { upstream().toObservable() }
     return fetch(false, bustCache, key, realUpstream, this::mapper).singleOrError()
   }
 
   override fun <T : Any> observe(
     bustCache: Boolean,
     key: String,
-    upstream: (String) -> Observable<T>
+    upstream: () -> Observable<T>
   ): Observable<T> {
     return fetch(true, bustCache, key, upstream, this::mapper)
   }

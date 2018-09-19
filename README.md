@@ -46,6 +46,9 @@ fun main(args: Array<String>) {
     .memoryCache()
     // Build Repo instance
     .build()
+    
+  // Or a Repo with defaults - memory cache enabled with default timeout and debugging off.
+  val repo = newRepo()
 }
 ```
 
@@ -59,6 +62,9 @@ class MyClass {
       .memoryCache()
       // Build Repo instance
       .build();
+    
+    // Or a Repo with defaults - memory cache enabled with default timeout and debugging off.
+    final Repo repo = Repos.newRepo();
   }
   
 }
@@ -120,7 +126,7 @@ class MyClass {
   
   fun test () {
     // Fetches from upstream once, and then from the cache each time after
-    repo.get(bustCache = false, key = "my-service") { key -> myService.fetchDataFromUpstream(key) }
+    repo.get(bustCache = false, key = "my-service") { myService.fetchDataFromUpstream(key) }
       .map { transformData(it) }
       .subscribeOn(Schedulers.io())
       .observeOn(AndroidSchedulers.mainThread())
@@ -141,7 +147,7 @@ fun test() {
   
   val arg1 = "Hello"
   val arg2 = "World"
-  repo.get(bustCache = false, key = "some unique string") { key -> upstream(arg1, arg2) }
+  repo.get(bustCache = false, key = "some unique string") { upstream(arg1, arg2) }
     .subscribeOn(Schedulers.io())
     .subscribeOn(AndroidSchedulers.mainThread())
     .subscribe()
@@ -187,7 +193,7 @@ fun test() {
   
   // Logging will only happen on fresh requests from the upstream
   // Upstream request will only happen if there is no valid cached data
-  repo.get(bustCache, key) { key -> upstreamSingle().doOnSuccess { logUpstream(it) } }
+  repo.get(bustCache, key) { upstreamSingle().doOnSuccess { logUpstream(it) } }
     .subscribeOn(Schedulers.io())
     .subscribeOn(AndroidSchedulers.mainThread())
     .subscribe()
@@ -195,7 +201,7 @@ fun test() {
   // Logging will happen on every call to the Repo instance whether it fetches data
   // from the upstream source or from the cache interface
   // Upstream request will only happen if there is no valid cached data
-  repo.get(bustCache, key) { key -> upstreamSingle() }
+  repo.get(bustCache, key) { upstreamSingle() }
     .doOnNext { logEverytime(it) }
     .subscribeOn(Schedulers.io())
     .subscribeOn(AndroidSchedulers.mainThread())
@@ -203,7 +209,7 @@ fun test() {
     
   // Logging will only happen on fresh requests from the upstream
   // Upstream request will always happen, and will be delivered after cached data if it exists
-  repo.observe(bustCache, key) { key -> upstreamObservable().doOnNext { logUpstream(it) } }
+  repo.observe(bustCache, key) { upstreamObservable().doOnNext { logUpstream(it) } }
     .subscribeOn(Schedulers.io())
     .subscribeOn(AndroidSchedulers.mainThread())
     .subscribe()
@@ -211,7 +217,7 @@ fun test() {
   // Logging will happen on every call to the Repo instance whether it fetches data
   // from the upstream source or from the cache interface
   // Upstream request will always happen, and will be delivered after cached data if it exists
-  repo.observe(bustCache, key) { key -> upstreamObservable() }
+  repo.observe(bustCache, key) { upstreamObservable() }
     .doOnNext { logEverytime(it) }
     .subscribeOn(Schedulers.io())
     .subscribeOn(AndroidSchedulers.mainThread())
