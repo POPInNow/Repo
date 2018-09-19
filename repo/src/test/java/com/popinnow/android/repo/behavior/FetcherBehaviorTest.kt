@@ -33,8 +33,8 @@ import java.util.concurrent.TimeUnit.SECONDS
 class FetcherBehaviorTest {
 
   @CheckResult
-  private fun createFetcher(): Fetcher {
-    return FetcherImpl(true)
+  private fun createFetcher(tag: String): Fetcher {
+    return FetcherImpl(tag)
   }
 
   private fun assertFetch(
@@ -58,7 +58,7 @@ class FetcherBehaviorTest {
    */
   @Test
   fun `FetcherBehavior simple get`() {
-    val fetcher = createFetcher()
+    val fetcher = createFetcher("simple get")
     assertFetch(fetcher, DEFAULT_KEY, DEFAULT_UPSTREAM, DEFAULT_EXPECT)
   }
 
@@ -67,13 +67,13 @@ class FetcherBehaviorTest {
    */
   @Test
   fun `FetcherBehavior attaches in flight requests`() {
-    val fetcher = createFetcher()
+    val fetcher = createFetcher("attach in flight")
 
     val counter = Counter(0)
 
-    val upstream = { _: String ->
+    val upstream = upstream@{
       ++counter.count
-      DEFAULT_DELAYED
+      return@upstream DEFAULT_DELAYED
     }
 
     // Set up two basic threads to launch parallel requests
@@ -122,13 +122,13 @@ class FetcherBehaviorTest {
    */
   @Test
   fun `FetcherBehavior invalidateCache does not stop upstream`() {
-    val fetcher = createFetcher()
+    val fetcher = createFetcher("invalidate does not skip upstream")
 
     val counter = Counter(0)
 
-    val upstream = { _: String ->
+    val upstream = upstream@{
       ++counter.count
-      DEFAULT_DELAYED
+      return@upstream DEFAULT_DELAYED
     }
 
     fun startFetch() {
@@ -158,13 +158,11 @@ class FetcherBehaviorTest {
    */
   @Test
   fun `FetcherBehavior invalidate stops upstream`() {
-    val fetcher = createFetcher()
+    val fetcher = createFetcher("invalidate stop upstream")
 
     val counter = Counter(0)
 
-    val upstream = { _: String ->
-      DEFAULT_DELAYED.doOnNext { ++counter.count }
-    }
+    val upstream = { DEFAULT_DELAYED.doOnNext { ++counter.count } }
 
     fun startFetch() {
       fetcher.fetch(DEFAULT_KEY, upstream, Schedulers.io())
@@ -195,12 +193,12 @@ class FetcherBehaviorTest {
    */
   @Test
   fun `FetcherBehavior keeps unique keys`() {
-    val fetcher = createFetcher()
+    val fetcher = createFetcher("keep unique keys")
 
     // Two accesses on the fetcher in parallel do not clobber each others keys
     Observable.zip(
-        fetcher.fetch("key1", { _: String -> Observable.just("This", "is") }, Schedulers.io()),
-        fetcher.fetch("key2", { _: String -> Observable.just("a", "Test") }, Schedulers.io()),
+        fetcher.fetch("key1", { Observable.just("This", "is") }, Schedulers.io()),
+        fetcher.fetch("key2", { Observable.just("a", "Test") }, Schedulers.io()),
         BiFunction<String, String, String> { t1, t2 -> t1 + t2 })
         .test()
         .awaitDone(5, SECONDS)
@@ -213,7 +211,7 @@ class FetcherBehaviorTest {
 
     private const val DEFAULT_KEY = "example-key"
     private val DEFAULT_EXPECT = arrayListOf("Hello", "World")
-    private val DEFAULT_UPSTREAM = { _: String -> Observable.fromIterable(DEFAULT_EXPECT) }
+    private val DEFAULT_UPSTREAM = { Observable.fromIterable(DEFAULT_EXPECT) }
     private val DEFAULT_DELAYED = Observable.just("")
         .delay(1, SECONDS)
         .flatMap { Observable.fromIterable(DEFAULT_EXPECT) }

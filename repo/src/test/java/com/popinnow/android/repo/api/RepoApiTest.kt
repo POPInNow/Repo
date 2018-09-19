@@ -39,13 +39,16 @@ class RepoApiTest {
   @Mock lateinit var memoryCache: MemoryCache
   @Mock lateinit var persister: Persister
   private lateinit var validator: MockRepoOrderValidator
-  private lateinit var repo: RepoImpl
 
   @Before
   fun setup() {
     MockitoAnnotations.initMocks(this)
-    repo = RepoImpl(fetcher, memoryCache, persister, DEFAULT_SCHEDULER, true)
     validator = MockRepoOrderValidator(memoryCache, persister, fetcher)
+  }
+
+  @CheckResult
+  private fun createRepo(debug: String): RepoImpl {
+    return RepoImpl(fetcher, memoryCache, persister, DEFAULT_SCHEDULER, debug)
   }
 
   /**
@@ -72,7 +75,8 @@ class RepoApiTest {
     )
 
     // Testing function
-    repo.testingObserve(false, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM, mapper)
+    createRepo("observable memory hit priority")
+        .testingObserve(false, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM, mapper)
         .startNow()
         .test()
         // Cache then upstream
@@ -99,7 +103,8 @@ class RepoApiTest {
         DEFAULT_OBSERVABLE_UPSTREAM
     )
 
-    repo.testingObserve(true, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM, mapper)
+    createRepo("observable busted memory hit priority")
+        .testingObserve(true, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM, mapper)
         .startNow()
         .test()
         // Cache then upstream (but cache is busted)
@@ -131,7 +136,8 @@ class RepoApiTest {
         DEFAULT_OBSERVABLE_UPSTREAM
     )
 
-    repo.testingObserve(false, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM, mapper)
+    createRepo("observable persister hit priority")
+        .testingObserve(false, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM, mapper)
         .startNow()
         .test()
         // Cache then upstream
@@ -159,7 +165,8 @@ class RepoApiTest {
         DEFAULT_OBSERVABLE_UPSTREAM
     )
 
-    repo.testingObserve(true, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM, mapper)
+    createRepo("observable busted persister hit priority")
+        .testingObserve(true, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM, mapper)
         .startNow()
         .test()
         // Cache then upstream
@@ -187,7 +194,8 @@ class RepoApiTest {
         DEFAULT_OBSERVABLE_UPSTREAM
     )
 
-    repo.testingObserve(false, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM, mapper)
+    createRepo("observable fetcher delivers without cache")
+        .testingObserve(false, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM, mapper)
         .startNow()
         .test()
         // Cache then upstream (but no caches)
@@ -215,7 +223,8 @@ class RepoApiTest {
         DEFAULT_OBSERVABLE_UPSTREAM
     )
 
-    repo.testingObserve(true, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM, mapper)
+    createRepo("observable busted fetcher delivers without cache")
+        .testingObserve(true, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM, mapper)
         .startNow()
         .test()
         // Cache then upstream (but no caches)
@@ -251,7 +260,8 @@ class RepoApiTest {
         DEFAULT_SINGLE_UPSTREAM_OBSERVABLE
     )
 
-    repo.testingGet(false, DEFAULT_SINGLE_KEY, DEFAULT_SINGLE_UPSTREAM_OBSERVABLE, mapper)
+    createRepo("single memory hit priority")
+        .testingGet(false, DEFAULT_SINGLE_KEY, DEFAULT_SINGLE_UPSTREAM_OBSERVABLE, mapper)
         .startNow()
         .test()
         // Cache or upstream
@@ -279,7 +289,8 @@ class RepoApiTest {
         DEFAULT_SINGLE_UPSTREAM_OBSERVABLE
     )
 
-    repo.testingGet(true, DEFAULT_SINGLE_KEY, DEFAULT_SINGLE_UPSTREAM_OBSERVABLE, mapper)
+    createRepo("single busted memory hit priority")
+        .testingGet(true, DEFAULT_SINGLE_KEY, DEFAULT_SINGLE_UPSTREAM_OBSERVABLE, mapper)
         .startNow()
         .test()
         // Cache or upstream (but no caches)
@@ -311,7 +322,8 @@ class RepoApiTest {
         DEFAULT_SINGLE_UPSTREAM_OBSERVABLE
     )
 
-    repo.testingGet(false, DEFAULT_SINGLE_KEY, DEFAULT_SINGLE_UPSTREAM_OBSERVABLE, mapper)
+    createRepo("single persister hit priority")
+        .testingGet(false, DEFAULT_SINGLE_KEY, DEFAULT_SINGLE_UPSTREAM_OBSERVABLE, mapper)
         .startNow()
         .test()
         // Cache or upstream
@@ -339,7 +351,8 @@ class RepoApiTest {
         DEFAULT_SINGLE_UPSTREAM_OBSERVABLE
     )
 
-    repo.testingGet(true, DEFAULT_SINGLE_KEY, DEFAULT_SINGLE_UPSTREAM_OBSERVABLE, mapper)
+    createRepo("single busted persister hit priority")
+        .testingGet(true, DEFAULT_SINGLE_KEY, DEFAULT_SINGLE_UPSTREAM_OBSERVABLE, mapper)
         .startNow()
         .test()
         // Cache or upstream (but no caches)
@@ -365,7 +378,8 @@ class RepoApiTest {
         DEFAULT_SINGLE_UPSTREAM_OBSERVABLE
     )
 
-    repo.testingGet(false, DEFAULT_SINGLE_KEY, DEFAULT_SINGLE_UPSTREAM_OBSERVABLE, mapper)
+    createRepo("single fetcher delivers")
+        .testingGet(false, DEFAULT_SINGLE_KEY, DEFAULT_SINGLE_UPSTREAM_OBSERVABLE, mapper)
         .startNow()
         .test()
         // Cache or upstream (but no caches)
@@ -391,7 +405,8 @@ class RepoApiTest {
         DEFAULT_SCHEDULER, DEFAULT_SINGLE_UPSTREAM_OBSERVABLE
     )
 
-    repo.testingGet(true, DEFAULT_SINGLE_KEY, DEFAULT_SINGLE_UPSTREAM_OBSERVABLE, mapper)
+    createRepo("single busted fetcher delivers")
+        .testingGet(true, DEFAULT_SINGLE_KEY, DEFAULT_SINGLE_UPSTREAM_OBSERVABLE, mapper)
         .startNow()
         .test()
         // Cache or upstream (but no caches)
@@ -412,7 +427,7 @@ class RepoApiTest {
     private val DEFAULT_OBSERVABLE_CACHE_EXPECT = arrayListOf("Hello", "World")
     private val DEFAULT_OBSERVABLE_PERSIST_EXPECT = arrayListOf("Persister", "Defaults")
     private val DEFAULT_OBSERVABLE_FETCH_EXPECT = arrayListOf("Upstream", "Payload")
-    private val DEFAULT_OBSERVABLE_UPSTREAM = { _: String ->
+    private val DEFAULT_OBSERVABLE_UPSTREAM = {
       Observable.fromIterable(DEFAULT_OBSERVABLE_FETCH_EXPECT)
     }
 
@@ -420,9 +435,9 @@ class RepoApiTest {
     private const val DEFAULT_SINGLE_CACHE_EXPECT = "Cache"
     private const val DEFAULT_SINGLE_PERSIST_EXPECT = "Persister"
     private const val DEFAULT_SINGLE_FETCH_EXPECT = "Upstream"
-    private val DEFAULT_SINGLE_UPSTREAM = { _: String -> Single.just(DEFAULT_SINGLE_FETCH_EXPECT) }
-    private val DEFAULT_SINGLE_UPSTREAM_OBSERVABLE = { key: String ->
-      DEFAULT_SINGLE_UPSTREAM(key).toObservable()
+    private val DEFAULT_SINGLE_UPSTREAM = { Single.just(DEFAULT_SINGLE_FETCH_EXPECT) }
+    private val DEFAULT_SINGLE_UPSTREAM_OBSERVABLE = {
+      DEFAULT_SINGLE_UPSTREAM().toObservable()
     }
 
     @CheckResult

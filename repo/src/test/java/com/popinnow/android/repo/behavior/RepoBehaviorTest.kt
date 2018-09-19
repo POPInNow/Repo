@@ -33,14 +33,14 @@ import java.util.concurrent.TimeUnit.SECONDS
 class RepoBehaviorTest {
 
   @CheckResult
-  private fun builder(): RepoBuilder {
-    return newRepoBuilder().debug(true)
+  private fun builder(debug: String): RepoBuilder {
+    return newRepoBuilder().debug(debug)
         .scheduler(DEFAULT_SCHEDULER)
   }
 
   @Test
   fun `RepoBehavior Observable no-cache simple get`() {
-    val repo = builder().build()
+    val repo = builder("observable no-cache simple get").build()
 
     repo.observe(false, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM)
         .startNow()
@@ -53,8 +53,9 @@ class RepoBehaviorTest {
 
   @Test
   fun `RepoBehavior Observable memory cache simple get`() {
-    val memoryCache = MemoryCacheImpl(true, 30, SECONDS, 10)
-    val repo = builder()
+    val debug = "observable cache simple get"
+    val memoryCache = MemoryCacheImpl(debug, 30, SECONDS, 10)
+    val repo = builder(debug)
         .memoryCache(memoryCache)
         .build()
 
@@ -72,7 +73,7 @@ class RepoBehaviorTest {
 
   @Test
   fun `RepoBehavior Observable get fills caches`() {
-    val repo = builder()
+    val repo = builder("observable get fills cache")
         .memoryCache()
         .build()
 
@@ -95,7 +96,7 @@ class RepoBehaviorTest {
 
   @Test
   fun `RepoBehavior Observable cached results returned before upstream`() {
-    val repo = builder()
+    val repo = builder("observable cache before upstream")
         .memoryCache()
         .build()
 
@@ -118,7 +119,7 @@ class RepoBehaviorTest {
 
   @Test
   fun `RepoBehavior Observable only previous cached result returned`() {
-    val repo = builder()
+    val repo = builder("observable only previous cache returns")
         .memoryCache()
         .build()
 
@@ -155,7 +156,7 @@ class RepoBehaviorTest {
 
   @Test
   fun `RepoBehavior Single no-cache simple get`() {
-    val repo = builder().build()
+    val repo = builder("single no-cache simple get").build()
 
     repo.get(false, DEFAULT_SINGLE_KEY, DEFAULT_SINGLE_UPSTREAM)
         .startNow()
@@ -169,8 +170,9 @@ class RepoBehaviorTest {
 
   @Test
   fun `RepoBehavior Single memory cache simple get`() {
-    val memoryCache = MemoryCacheImpl(true, 30, SECONDS, 10)
-    val repo = builder()
+    val debug = "single cache simple get"
+    val memoryCache = MemoryCacheImpl(debug, 30, SECONDS, 10)
+    val repo = builder(debug)
         .memoryCache(memoryCache)
         .build()
 
@@ -191,7 +193,7 @@ class RepoBehaviorTest {
 
   @Test
   fun `RepoBehavior Single get fills caches`() {
-    val repo = builder()
+    val repo = builder("single get fills caches")
         .memoryCache()
         .build()
 
@@ -224,14 +226,14 @@ class RepoBehaviorTest {
     private val DEFAULT_OBSERVABLE_CACHE_EXPECT = arrayListOf("Hello", "World")
     private val DEFAULT_OBSERVABLE_PERSIST_EXPECT = arrayListOf("Persister", "Defaults")
     private val DEFAULT_OBSERVABLE_FETCH_EXPECT = arrayListOf("Upstream", "Payload")
-    private val DEFAULT_OBSERVABLE_UPSTREAM = { _: String ->
+    private val DEFAULT_OBSERVABLE_UPSTREAM = {
       Observable.fromIterable(DEFAULT_OBSERVABLE_FETCH_EXPECT)
     }
 
     private const val DEFAULT_SINGLE_KEY = "example-key"
     private val DEFAULT_SINGLE_CACHE_EXPECT = listOf("Hello", "World")
     private val DEFAULT_SINGLE_FETCH_EXPECT = listOf("Upstream", "Payload")
-    private val DEFAULT_SINGLE_UPSTREAM = { _: String -> Single.just(DEFAULT_SINGLE_FETCH_EXPECT) }
+    private val DEFAULT_SINGLE_UPSTREAM = { Single.just(DEFAULT_SINGLE_FETCH_EXPECT) }
   }
 }
 

@@ -68,7 +68,8 @@ class SampleActivity : AppCompatActivity() {
   private val mockDataSourceString = SampleMockDataSourceString()
   private val mockDataSourceInt = SampleMockDataSourceInt()
 
-  private val repo = newRepoBuilder().memoryCache()
+  private val repo = newRepoBuilder()
+      .memoryCache()
       .build()
 
   override fun onCreate(savedInstanceState: Bundle?) {

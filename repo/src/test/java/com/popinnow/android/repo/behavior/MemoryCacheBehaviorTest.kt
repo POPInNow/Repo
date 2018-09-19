@@ -28,10 +28,11 @@ class MemoryCacheBehaviorTest {
 
   @CheckResult
   private fun createCache(
+    debug: String,
     time: Long,
     maxSize: Int = 10
   ): MemoryCache {
-    return MemoryCacheImpl(true, time, SECONDS, maxSize)
+    return MemoryCacheImpl(debug, time, SECONDS, maxSize)
   }
 
   private fun assertCacheIsEmpty(
@@ -95,7 +96,7 @@ class MemoryCacheBehaviorTest {
    */
   @Test
   fun `MemoryCacheBehaviorTest is empty by default`() {
-    val cache = createCache(30)
+    val cache = createCache("is empty default", 30)
     assertCacheIsEmpty(
         cache,
         DEFAULT_KEY
@@ -107,7 +108,7 @@ class MemoryCacheBehaviorTest {
    */
   @Test
   fun `MemoryCacheBehaviorTest maintains cache`() {
-    val cache = createCache(30)
+    val cache = createCache("maintain cache", 30)
 
     // Putting data into the cache fills it
     cache.add(
@@ -136,7 +137,7 @@ class MemoryCacheBehaviorTest {
    */
   @Test
   fun `MemoryCacheBehaviorTest invalidates`() {
-    val cache = createCache(30)
+    val cache = createCache("invalidates", 30)
     // Putting data into the cache fills it
     cache.add(
         DEFAULT_KEY,
@@ -171,7 +172,7 @@ class MemoryCacheBehaviorTest {
    */
   @Test
   fun `MemoryCacheBehaviorTest clears`() {
-    val cache = createCache(30)
+    val cache = createCache("clears", 30)
     // Putting data into the cache fills it
     cache.add(
         DEFAULT_KEY,
@@ -212,7 +213,7 @@ class MemoryCacheBehaviorTest {
    */
   @Test
   fun `MemoryCacheBehaviorTest invalidate is unique`() {
-    val cache = createCache(30)
+    val cache = createCache("invalidate is unique", 30)
     // Putting data into the cache fills it
     cache.add(
         DEFAULT_KEY,
@@ -276,7 +277,7 @@ class MemoryCacheBehaviorTest {
    */
   @Test
   fun `MemoryCacheBehaviorTest size is bounded`() {
-    val cache = createCache(30, maxSize = 2)
+    val cache = createCache("size bound", 30, maxSize = 2)
     // Putting data into the cache fills it
     cache.add(
         DEFAULT_KEY,
@@ -311,7 +312,7 @@ class MemoryCacheBehaviorTest {
    */
   @Test
   fun `MemoryCacheBehaviorTest times out`() {
-    val cache = createCache(1)
+    val cache = createCache("times out", 1)
 
     cache.add(
         DEFAULT_KEY,
@@ -340,7 +341,7 @@ class MemoryCacheBehaviorTest {
    */
   @Test
   fun `MemoryCacheBehaviorTest tracks history`() {
-    val cache = createCache(30)
+    val cache = createCache("tracks history", 30)
     val expect1 = "Hello"
     val expect2 = "World"
 
@@ -362,7 +363,7 @@ class MemoryCacheBehaviorTest {
    */
   @Test
   fun `MemoryCacheBehaviorTest put does not modify stream`() {
-    val cache = createCache(30)
+    val cache = createCache("put does not modify", 30)
     val extraPuts = "Extra"
     val expect1 = "Testing"
     val expect2 = "Puts"
@@ -402,7 +403,7 @@ class MemoryCacheBehaviorTest {
   @Test
   fun `MemoryCacheBehaviorTest get with wrong key type kills cache`() {
 
-    val cache = createCache(30)
+    val cache = createCache("wrong key kills cache", 30)
 
     // Cache is valid with data
     cache.add(DEFAULT_KEY, DEFAULT_EXPECT)
