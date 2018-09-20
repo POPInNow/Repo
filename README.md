@@ -11,7 +11,7 @@ In your `build.gradle`
 
 ```gradle
 dependencies {
-  implementation "com.popinnow.android.repo:repo:0.0.8"
+  implementation "com.popinnow.android.repo:repo:0.0.9"
 }
 ```
 
@@ -32,43 +32,7 @@ The Repo library was built as an education project with two goals in mind.
 - Be easy to adopt with very little code change for a project which already receives data using
   a reactive stream, but may not yet implement a repository pattern to receive that data.
 
-## How
-
-There are two different ways to create a new Repo via the RepoBuilder interface. Depending on if
-you are accessing Repo via `Java` or `Kotlin`, the entry point looks a little different.
-
-Kotlin:
-```kotlin
-fun main(args: Array<String>) {
-  
-  val repo = newRepoBuilder()
-    // Enable memory level caching
-    .memoryCache()
-    // Build Repo instance
-    .build()
-    
-  // Or a Repo with defaults - memory cache enabled with default timeout and debugging off.
-  val repo = newRepo()
-}
-```
-
-Java:
-```java
-class MyClass {
-  
-  public static void main(String... args) {
-    final Repo repo = Repos.newRepoBuilder()
-      // Enable memory level caching
-      .memoryCache()
-      // Build Repo instance
-      .build();
-    
-    // Or a Repo with defaults - memory cache enabled with default timeout and debugging off.
-    final Repo repo = Repos.newRepo();
-  }
-  
-}
-```
+## Quick Start
 
 Applying `Repo` to your existing architecture is simple and rewarding. `Repo` is most useful for  
 data operations where your application requests data from an upstream source and does not do any  
@@ -77,6 +41,7 @@ kind of caching already.
 Let us assume you have, for example, an upstream network source using
 [Retrofit](https://github.com/square/retrofit) that is fetching a `Single`
 
+Before:
 ```kotlin
 interface MyService {
   
@@ -89,9 +54,7 @@ class MyClass {
   
   private val myService = createService(MyService::class.java)
   
-  fun test () {
-    val key = "myservice"
-    
+  fun test() {
     // Fetches from upstream every time
     myService.fetchDataFromUpstream(key)
       .map { transformData(it) }
@@ -101,13 +64,9 @@ class MyClass {
   }
   
 }
-
-
 ```
 
-You can add simple memory caching as well as making sure the repeated requests fire only a single  
-network call by wrapping the call to `MyService.fetchDataFromUpstream` with a `Repo` instance:
-
+After:
 ```kotlin
 interface MyService {
   
@@ -117,16 +76,17 @@ interface MyService {
 }
   
 class MyClass {
-  
-  private val repo = newRepoBuilder()
-    .memoryCache()
-    .build()
     
   private val myService = createService(MyService::class.java)
   
-  fun test () {
+  // Add a Repo which will cache the latest results for arbitrary String data
+  private val repo = newRepoBuilder<String>()
+    .memoryCache()
+    .build()
+  
+  fun test() {
     // Fetches from upstream once, and then from the cache each time after
-    repo.get(bustCache = false, key = "my-service") { myService.fetchDataFromUpstream(key) }
+    repo.get(bustCache = false) { myService.fetchDataFromUpstream(key) }
       .map { transformData(it) }
       .subscribeOn(Schedulers.io())
       .observeOn(AndroidSchedulers.mainThread())
@@ -134,144 +94,158 @@ class MyClass {
   }
   
 }
-
 ```
 
-#### Data Format
+## What is It
 
-`Repo` instances map upstreams to keys, which are represented as a simple string key.
+`Repo` is an implementation of the client side repository pattern, and is implemented in three  
+layers.
 
+`Fetcher` which interacts with and tracks an upstream data source.
+`MemoryCache` which caches data from the `Fetcher` in short term memory storage.
+`Persister` which caches data from the `Fetcher` in long term disk storage (not implemented yet)
+
+## Basics
+
+Creating a new instance of a `Repo` object is through a couple of entry points:
 ```kotlin
-fun test() {
-  val repo = newRepoBuilder().memoryCache().build()
+class MyClass {
   
-  val arg1 = "Hello"
-  val arg2 = "World"
-  repo.get(bustCache = false, key = "some unique string") { upstream(arg1, arg2) }
-    .subscribeOn(Schedulers.io())
-    .subscribeOn(AndroidSchedulers.mainThread())
-    .subscribe()
-}
-```
-
-#### In Flight Caching
-
-Once an upstream request is fired off, the active upstream request will be cached for the duration  
-of its lifetime. This means that subsequent calls to the same data source will not fire additional  
-requests to the upstream data source. Any new calls for the same upstream data will be attached  
-to the existing call, and data will be delivered to all subscribers once the upstream call  
-resolves. At the point of resolution, any new upstreams calls to the data source will fire off a  
-new upstream request with the same in-flight caching behavior.
-
-#### In Memory Caching
-
-A common problem in mobile development is the persistence of data during configuration changes.
-`Repo` provides a simple way to store data at whatever scoped level you prefer by building your
-`Repo` instance with the `memoryCache()` method. By default, this will attach a memory cache
-to the instance which caches requests on write for the next 30 seconds. Any request made to the
-Repo during this period that does not bust the cache will return data from the memory cache.
-
-A call to `Repo.get()` will cache the returned data from upstream Single sources and return either
-the cached data or fresh data from the upstream source. A call to `Repo.get()` will either subscribe  
-the caller to the original upstream source, or subscribe the caller to a stream of cached
-data from the upstream source.
-
-A call to `Repo.observe()` will cache the returned data from upstream Observable sources and return  
-the latest cached data, and then fresh data from the upstream source. A call to `Repo.observe()`  
-will always subscribe the caller to the original upstream source, but will always emit cached data  
-first.
-
-Any side effects directly on the upstream source will not be
-replayed to the caller if the caller is subsribed to the cached observable, but all side effects
-on the subscribed Single or Observable instance will be emitted in both cases.
-
-```kotlin
-fun test() {
-  val repo = newRepoBuilder()
-    .memoryCache()
-    .build()
-  
-  // Logging will only happen on fresh requests from the upstream
-  // Upstream request will only happen if there is no valid cached data
-  repo.get(bustCache, key) { upstreamSingle().doOnSuccess { logUpstream(it) } }
-    .subscribeOn(Schedulers.io())
-    .subscribeOn(AndroidSchedulers.mainThread())
-    .subscribe()
-  
-  // Logging will happen on every call to the Repo instance whether it fetches data
-  // from the upstream source or from the cache interface
-  // Upstream request will only happen if there is no valid cached data
-  repo.get(bustCache, key) { upstreamSingle() }
-    .doOnNext { logEverytime(it) }
-    .subscribeOn(Schedulers.io())
-    .subscribeOn(AndroidSchedulers.mainThread())
-    .subscribe()
+  fun test() {
     
-  // Logging will only happen on fresh requests from the upstream
-  // Upstream request will always happen, and will be delivered after cached data if it exists
-  repo.observe(bustCache, key) { upstreamObservable().doOnNext { logUpstream(it) } }
-    .subscribeOn(Schedulers.io())
-    .subscribeOn(AndroidSchedulers.mainThread())
-    .subscribe()
-    
-  // Logging will happen on every call to the Repo instance whether it fetches data
-  // from the upstream source or from the cache interface
-  // Upstream request will always happen, and will be delivered after cached data if it exists
-  repo.observe(bustCache, key) { upstreamObservable() }
-    .doOnNext { logEverytime(it) }
-    .subscribeOn(Schedulers.io())
-    .subscribeOn(AndroidSchedulers.mainThread())
-    .subscribe()
+    // A new Repo created through a customized RepoBuilder
+    val customRepo = newRepoBuilder<String>()
+      // Enable debugging with a custom log tag
+      .debug("my log tag")
+      // Enable in-memory caching
+      .memoryCache()
+      // Run the upstream requests on a custom Scheduler
+      .scheduler(Schedulers.computation())
+      // Build the Repo!
+      .build()
+      
+    // A new default Repo instance - debugging off and memoryCaching on
+    val defaultRepo = newRepo<Int>() 
+  }
 }
 ```
 
-#### On Disk Caching
+`Repo` instances are intentionally simple, and they only track and manage against a single object.  
+This helps to keep `Repo` very lightweight and fits most general use cases - which is that the  
+developer wants caching of results from a single endpoint or a database table.
 
-On disk caching is not supported yet but will exposed in the future through a `Persister` interface
-which is added to the builder via one of the two Builder entry points.
+For cases where multiple different but similar pieces of data need to be managed, such as caching  
+different Notes or Events based on a Note `id` or Event `id`, a `MultiRepo` interface is provided  
+which effectively provides a Map abstraction over multiple `Repo` instances.
 
-#### Invalidating Requests and Caches
-
-There are various levels of fine grained control you can use to stop requests or invalidate caches.
-
-When you `get` from a Repo instance, you will receive a normal RxJava `Disposable` which should be  
-disposed of as normal. Note that disposing the returned Observable will not stop the actual `upstream`  
-subscription, so any network call will continue to happen in the background.
-
-To actually stop the upstream call, you can use the `Repo.invalidate(String)` method, which will  
-stop the upstream request if any exists and clear any caches for the provided `key`.
-
-To just clear any caches but keep any upstream requests alive, you can call `Repo.invalidateCaches(String)`.
-
-To operate on every key in the Repo, you can use `Repo.clearAll()` which performs similarly to  
-`Repo.invalidate(String)` except that it invalidates everything, or you can use `Repo.clearCaches()`  
-which I hope at this point is also rather self-explanatory.
-
-Please keep in mind that due to the hands off nature of the Repo library, calling `dispose()` on an  
-Observable will not call `invalidate()`, and calling `invalidate()` will not call `dispose()`.
-
-For a complete clean up of `Repo` resources once you are done using them, you would do something like:
 ```kotlin
-fun test() {
-  val repo = newRepoBuilder()
-    .memoryCache()
-    .build()
+class MyMultiClass {
   
-  // Do stuff with repo ...
-  val disposable = repo.get(false, "my-key") { upstream() }
-    .map { it.transform() }
-    .subscibe()
-  
-  // Stop just a single managed request
-  repo.invalidate("my-key")
-  
-  // Or stop everything
-  repo.clearAll()
-  
-  // Make sure to dispose as well!
-  disposable.dispose()
+  fun test() {
+    // Create a new MultiRepo - needs a generator function which will lazily create Repo instances
+    // as needed
+    val noteMultiRepo = newMultiRepo { newRepo<Note>() }
+    
+    noteMultiRepo.get("note-id", bustCache = false) { noteApi.getNote("note-id") }
+      .map { transformNote(it) }
+      .subscribeOn(Schedulers.io())
+      .observeOn(AndroidSchedulers.mainThread())
+      .subscribe()
+      
+    // Create a new MultiRepo - needs a generator function which will lazily create Repo instances
+    // as needed
+    val eventMultiRepo = newMultiRepo { 
+      newRepoBuilder<Event>()
+        .memoryCache(30, TimeUnit.MINUTES)
+        .build()
+    }
+    
+    eventMultiRepo.get("event-id", bustCache = false) { eventDatabase.getEvent("event-id") }
+      .map { broadcastEvent(it) }
+      .subscribeOn(Schedulers.io())
+      .observeOn(AndroidSchedulers.mainThread())
+      .subscribe()
+  }
 }
 ```
+
+### Repo Layers
+
+A `Repo` instance will always have a `Fetcher` implementation, and can optionally have a  
+`MemoryCache` or a `Persister`.
+
+`Repo` does not care what the data format it is interacting with looks like, it only cares that  
+the data comes bundled in either an `RxJava` `Single` or `Observable`.
+
+The default `Fetcher` implementation provides in-flight upstream request debouncing - meaning that  
+if `fetch()` is called while a previous `fetch` call is still attempting to finish, a second call  
+to the upstream will not be made. Instead, the caller will wait for the first `fetch` to finish, and  
+will receive those results. 
+
+The default `MemoryCache` implementation will cache any data put into it for a period of 30 seconds  
+by default. The `MemoryCache` preserves ordering, but is backed by an unbounded data structure - so  
+potentially endless emissions can make the cache extremely large or can in some extreme cases cause  
+out of memory errors. If one is using `MemoryCache` to observe against an endless upstream source,  
+one may need to periodically clear out or replace the cache in order to stay within memory sane  
+constraints.
+
+The default `Persister` is still a work in progress and has not yet been implemented. It is still  
+a work in progress.
+
+### Getting Data from Repo Instances
+
+`Repo` instances are interacted with in two different ways - the `get()` and `observe()` functions.  
+
+`get()` is used for one time operations - such as a REST API call. Data returned from the upstream  
+should be in the form of an Rx `Single`. If there is already data cached in the `Repo`, the latest  
+data will be returned following the "cache-or-upstream" pattern - if cache exists, it will be  
+returned and the upstream will never be hit, else the upstream will be hit and the results cached.
+
+`observe()` is used for potentially long running operations - such as watching for live updates to  
+a database table. Data returned from the upstream should be in the form of an Rx `Observable`. If  
+there is already data cached in the `Repo`, all valid data will be returned following the  
+"cache-then-upstream" pattern - if cache exists, it will be returned first, and the upstream will  
+be hit once the cache is returned.
+
+`MultiRepo` follows the same API but expects an additional `key` argument to identify which `Repo`  
+instance it is interacting with.
+
+### Manipulating Data in Repo Instances
+
+`Repo` instances manipulated in two different ways - the `push()` and `replace()` functions.
+
+`push()` is used to append a single piece of data into the `Repo` instance - it will become the  
+latest valid data and will reset any cache timeouts. A variant exists to push a list of data, named  
+`pushAll()`.
+
+`replace()` is used to replace a single piece of data into the `Repo` instance - it will erase any
+already cached data, reset cache timeouts, and then be inserted, becoming the latest valid data.  
+A variant exists to replace an entire list of data, named `replaceAll()`.
+
+`MultiRepo` follows the same API but expects an additional `key` argument to identify which `Repo`  
+instance it is interacting with.
+
+### Clearing Data in Repo Instances
+
+`Repo` instances are cleared in two different ways - the `clearCaches()` and `clearAll()` functions.
+
+`clearCaches()` will only clear data from the `Repo` instance's caching layer. Any stored data will  
+be cleared out, but any currently active requests through a `Fetcher` to an upstream data source  
+will not be cancelled.
+
+`clearAll()` will clear out data from the `Repo`, and cancel any currently active requests through  
+a `Fetcher` to an upstream data source.
+
+`MultiRepo` follows the same API, but will operate on all of it's held `Repo` instances. To operate  
+on an individual `Repo` held within a `MultiRepo`, the `invalidateCaches()` and `invalidate()`  
+functions are provided - which operate similarly to calling `clearCaches()` or `clearAll()` on the  
+`Repo` instance directly.
+
+## Community
+
+The `Repo` library welcomes contributions of all kinds - it does not claim to be perfect code.  
+Any improvements that can be made to the usability or the efficiency of the project will be greatly  
+appreciated.
 
 ## Credits
 
@@ -280,18 +254,15 @@ at [POPin](https://github.com/POPinNow).
 The Repo library is used internally in the
 [POPin Android application.](https://play.google.com/store/apps/details?id=com.popinnow.gandalf)
 
-
 # Support
 
 Please feel free to make an issue on GitHub, leave as much detail as possible regarding  
 the question or the problem you may be experiencing.
 
-
 # Contributions
 
 Contributions are welcome and encouraged. The project is written entirely in Kotlin and  
 follows the [Square Code Style](https://github.com/square/java-code-styles) for `SquareAndroid`.
-
 
 ## License
 
