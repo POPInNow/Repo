@@ -38,6 +38,7 @@ fun <T : Any> newRepoBuilder(debug: String = ""): RepoBuilder<T> {
  *
  * @return [Repo]
  */
+@JvmOverloads
 @CheckResult
 fun <T : Any> newRepo(debug: String = ""): Repo<T> {
   return newRepoBuilder<T>()
