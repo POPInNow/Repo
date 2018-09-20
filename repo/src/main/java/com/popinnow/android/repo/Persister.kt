@@ -17,7 +17,7 @@
 package com.popinnow.android.repo
 
 import android.support.annotation.CheckResult
-import com.popinnow.android.repo.internal.Invalidatable
+import com.popinnow.android.repo.internal.Clearable
 import io.reactivex.Observable
 
 /**
@@ -25,24 +25,15 @@ import io.reactivex.Observable
  *
  * NOTE: This is not a stable interface. Do not use this.
  *
- * @see Invalidatable
+ * @see Clearable
  */
-interface Persister : Invalidatable {
+interface Persister<T : Any> : Clearable {
 
   @CheckResult
-  fun <T : Any> read(
-    key: String,
-    mapper: (Any) -> T
-  ): Observable<T>
+  fun read(): Observable<T>
 
-  fun write(
-    key: String,
-    value: Any
-  )
+  fun write(value: T)
 
-  fun writeAll(
-    key: String,
-    values: List<Any>
-  )
+  fun writeAll(values: List<T>)
 
 }

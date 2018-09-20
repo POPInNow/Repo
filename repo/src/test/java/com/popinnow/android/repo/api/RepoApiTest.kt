@@ -35,10 +35,10 @@ import org.mockito.junit.MockitoJUnitRunner
 @RunWith(MockitoJUnitRunner::class)
 class RepoApiTest {
 
-  @Mock lateinit var fetcher: Fetcher
-  @Mock lateinit var memoryCache: MemoryCache
-  @Mock lateinit var persister: Persister
-  private lateinit var validator: MockRepoOrderValidator
+  @Mock lateinit var fetcher: Fetcher<String>
+  @Mock lateinit var memoryCache: MemoryCache<String>
+  @Mock lateinit var persister: Persister<String>
+  private lateinit var validator: MockRepoOrderValidator<String>
 
   @Before
   fun setup() {
@@ -47,7 +47,7 @@ class RepoApiTest {
   }
 
   @CheckResult
-  private fun createRepo(debug: String): RepoImpl {
+  private fun createRepo(debug: String): RepoImpl<String> {
     return RepoImpl(fetcher, memoryCache, persister, DEFAULT_SCHEDULER, debug)
   }
 
@@ -56,19 +56,11 @@ class RepoApiTest {
    */
   @Test
   fun `RepoApi Observable memory hit takes priority`() {
-    val mapper = generateMapper<String>()
-    validator.onVisitMemoryReturn(
-        DEFAULT_OBSERVABLE_KEY,
-        Observable.fromIterable(DEFAULT_OBSERVABLE_CACHE_EXPECT),
-        mapper
-    )
+    validator.onVisitMemoryReturn(Observable.fromIterable(DEFAULT_OBSERVABLE_CACHE_EXPECT))
     validator.onVisitPersisterReturn(
-        DEFAULT_OBSERVABLE_KEY,
-        Observable.error<String>(AssertionError("Persister should be missed")),
-        mapper
+        Observable.error<String>(AssertionError("Persister should be missed"))
     )
     validator.onVisitUpstreamReturn(
-        DEFAULT_OBSERVABLE_KEY,
         Observable.fromIterable(DEFAULT_OBSERVABLE_FETCH_EXPECT),
         DEFAULT_SCHEDULER,
         DEFAULT_OBSERVABLE_UPSTREAM
@@ -76,7 +68,7 @@ class RepoApiTest {
 
     // Testing function
     createRepo("observable memory hit priority")
-        .testingObserve(false, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM, mapper)
+        .testingObserve(false, DEFAULT_OBSERVABLE_UPSTREAM)
         .startNow()
         .test()
         // Cache then upstream
@@ -94,17 +86,16 @@ class RepoApiTest {
    */
   @Test
   fun `RepoApi Observable busted memory hit takes priority`() {
-    val mapper = generateMapper<String>()
-    validator.onVisitMemoryReturn(DEFAULT_OBSERVABLE_KEY, Observable.empty(), mapper)
-    validator.onVisitPersisterReturn(DEFAULT_OBSERVABLE_KEY, Observable.empty(), mapper)
+    validator.onVisitMemoryReturn(Observable.empty())
+    validator.onVisitPersisterReturn(Observable.empty())
     validator.onVisitUpstreamReturn(
-        DEFAULT_OBSERVABLE_KEY, Observable.fromIterable(DEFAULT_OBSERVABLE_FETCH_EXPECT),
+        Observable.fromIterable(DEFAULT_OBSERVABLE_FETCH_EXPECT),
         DEFAULT_SCHEDULER,
         DEFAULT_OBSERVABLE_UPSTREAM
     )
 
     createRepo("observable busted memory hit priority")
-        .testingObserve(true, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM, mapper)
+        .testingObserve(true, DEFAULT_OBSERVABLE_UPSTREAM)
         .startNow()
         .test()
         // Cache then upstream (but cache is busted)
@@ -122,22 +113,16 @@ class RepoApiTest {
    */
   @Test
   fun `RepoApi Observable persister hit takes priority`() {
-    val mapper = generateMapper<String>()
-    validator.onVisitMemoryReturn(DEFAULT_OBSERVABLE_KEY, Observable.empty(), mapper)
-    validator.onVisitPersisterReturn(
-        DEFAULT_OBSERVABLE_KEY,
-        Observable.fromIterable(DEFAULT_OBSERVABLE_PERSIST_EXPECT),
-        mapper
-    )
+    validator.onVisitMemoryReturn(Observable.empty())
+    validator.onVisitPersisterReturn(Observable.fromIterable(DEFAULT_OBSERVABLE_PERSIST_EXPECT))
     validator.onVisitUpstreamReturn(
-        DEFAULT_OBSERVABLE_KEY,
         Observable.fromIterable(DEFAULT_OBSERVABLE_FETCH_EXPECT),
         DEFAULT_SCHEDULER,
         DEFAULT_OBSERVABLE_UPSTREAM
     )
 
     createRepo("observable persister hit priority")
-        .testingObserve(false, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM, mapper)
+        .testingObserve(false, DEFAULT_OBSERVABLE_UPSTREAM)
         .startNow()
         .test()
         // Cache then upstream
@@ -155,18 +140,16 @@ class RepoApiTest {
    */
   @Test
   fun `RepoApi Observable busted persister hit takes priority`() {
-    val mapper = generateMapper<String>()
-    validator.onVisitMemoryReturn(DEFAULT_OBSERVABLE_KEY, Observable.empty(), mapper)
-    validator.onVisitPersisterReturn(DEFAULT_OBSERVABLE_KEY, Observable.empty(), mapper)
+    validator.onVisitMemoryReturn(Observable.empty())
+    validator.onVisitPersisterReturn(Observable.empty())
     validator.onVisitUpstreamReturn(
-        DEFAULT_OBSERVABLE_KEY,
         Observable.fromIterable(DEFAULT_OBSERVABLE_FETCH_EXPECT),
         DEFAULT_SCHEDULER,
         DEFAULT_OBSERVABLE_UPSTREAM
     )
 
     createRepo("observable busted persister hit priority")
-        .testingObserve(true, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM, mapper)
+        .testingObserve(true, DEFAULT_OBSERVABLE_UPSTREAM)
         .startNow()
         .test()
         // Cache then upstream
@@ -184,18 +167,16 @@ class RepoApiTest {
    */
   @Test
   fun `RepoApi Observable fetcher delivers even without caching layer`() {
-    val mapper = generateMapper<String>()
-    validator.onVisitMemoryReturn(DEFAULT_OBSERVABLE_KEY, Observable.empty(), mapper)
-    validator.onVisitPersisterReturn(DEFAULT_OBSERVABLE_KEY, Observable.empty(), mapper)
+    validator.onVisitMemoryReturn(Observable.empty())
+    validator.onVisitPersisterReturn(Observable.empty())
     validator.onVisitUpstreamReturn(
-        DEFAULT_OBSERVABLE_KEY,
         Observable.fromIterable(DEFAULT_OBSERVABLE_FETCH_EXPECT),
         DEFAULT_SCHEDULER,
         DEFAULT_OBSERVABLE_UPSTREAM
     )
 
     createRepo("observable fetcher delivers without cache")
-        .testingObserve(false, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM, mapper)
+        .testingObserve(false, DEFAULT_OBSERVABLE_UPSTREAM)
         .startNow()
         .test()
         // Cache then upstream (but no caches)
@@ -213,18 +194,16 @@ class RepoApiTest {
    */
   @Test
   fun `RepoApi Observable busted fetcher delivers even without caching layer`() {
-    val mapper = generateMapper<String>()
-    validator.onVisitMemoryReturn(DEFAULT_OBSERVABLE_KEY, Observable.empty(), mapper)
-    validator.onVisitPersisterReturn(DEFAULT_OBSERVABLE_KEY, Observable.empty(), mapper)
+    validator.onVisitMemoryReturn(Observable.empty())
+    validator.onVisitPersisterReturn(Observable.empty())
     validator.onVisitUpstreamReturn(
-        DEFAULT_OBSERVABLE_KEY,
         Observable.fromIterable(DEFAULT_OBSERVABLE_FETCH_EXPECT),
         DEFAULT_SCHEDULER,
         DEFAULT_OBSERVABLE_UPSTREAM
     )
 
     createRepo("observable busted fetcher delivers without cache")
-        .testingObserve(true, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM, mapper)
+        .testingObserve(true, DEFAULT_OBSERVABLE_UPSTREAM)
         .startNow()
         .test()
         // Cache then upstream (but no caches)
@@ -242,26 +221,18 @@ class RepoApiTest {
    */
   @Test
   fun `RepoApi Single memory hit takes priority`() {
-    val mapper = generateMapper<String>()
-    validator.onVisitMemoryReturn(
-        DEFAULT_SINGLE_KEY,
-        Observable.just(DEFAULT_SINGLE_CACHE_EXPECT),
-        mapper
-    )
+    validator.onVisitMemoryReturn(Observable.just(DEFAULT_SINGLE_CACHE_EXPECT))
     validator.onVisitPersisterReturn(
-        DEFAULT_SINGLE_KEY,
-        Observable.error<String>(AssertionError("Persister should be missed")),
-        mapper
+        Observable.error<String>(AssertionError("Persister should be missed"))
     )
     validator.onVisitUpstreamReturn(
-        DEFAULT_SINGLE_KEY,
         Observable.error<String>(AssertionError("Fetcher should be missed")),
         DEFAULT_SCHEDULER,
         DEFAULT_SINGLE_UPSTREAM_OBSERVABLE
     )
 
     createRepo("single memory hit priority")
-        .testingGet(false, DEFAULT_SINGLE_KEY, DEFAULT_SINGLE_UPSTREAM_OBSERVABLE, mapper)
+        .testingGet(false, DEFAULT_SINGLE_UPSTREAM_OBSERVABLE)
         .startNow()
         .test()
         // Cache or upstream
@@ -279,18 +250,16 @@ class RepoApiTest {
    */
   @Test
   fun `RepoApi Single busted memory hit takes priority`() {
-    val mapper = generateMapper<String>()
-    validator.onVisitMemoryReturn(DEFAULT_SINGLE_KEY, Observable.empty(), mapper)
-    validator.onVisitPersisterReturn(DEFAULT_SINGLE_KEY, Observable.empty(), mapper)
+    validator.onVisitMemoryReturn(Observable.empty())
+    validator.onVisitPersisterReturn(Observable.empty())
     validator.onVisitUpstreamReturn(
-        DEFAULT_SINGLE_KEY,
         Observable.just(DEFAULT_SINGLE_FETCH_EXPECT),
         DEFAULT_SCHEDULER,
         DEFAULT_SINGLE_UPSTREAM_OBSERVABLE
     )
 
     createRepo("single busted memory hit priority")
-        .testingGet(true, DEFAULT_SINGLE_KEY, DEFAULT_SINGLE_UPSTREAM_OBSERVABLE, mapper)
+        .testingGet(true, DEFAULT_SINGLE_UPSTREAM_OBSERVABLE)
         .startNow()
         .test()
         // Cache or upstream (but no caches)
@@ -308,22 +277,16 @@ class RepoApiTest {
    */
   @Test
   fun `RepoApi Single persister hit takes priority`() {
-    val mapper = generateMapper<String>()
-    validator.onVisitMemoryReturn(DEFAULT_SINGLE_KEY, Observable.empty(), mapper)
-    validator.onVisitPersisterReturn(
-        DEFAULT_SINGLE_KEY,
-        Observable.just(DEFAULT_SINGLE_PERSIST_EXPECT),
-        mapper
-    )
+    validator.onVisitMemoryReturn(Observable.empty())
+    validator.onVisitPersisterReturn(Observable.just(DEFAULT_SINGLE_PERSIST_EXPECT))
     validator.onVisitUpstreamReturn(
-        DEFAULT_SINGLE_KEY,
         Observable.error<String>(AssertionError("Fetcher should be missed")),
         DEFAULT_SCHEDULER,
         DEFAULT_SINGLE_UPSTREAM_OBSERVABLE
     )
 
     createRepo("single persister hit priority")
-        .testingGet(false, DEFAULT_SINGLE_KEY, DEFAULT_SINGLE_UPSTREAM_OBSERVABLE, mapper)
+        .testingGet(false, DEFAULT_SINGLE_UPSTREAM_OBSERVABLE)
         .startNow()
         .test()
         // Cache or upstream
@@ -341,18 +304,16 @@ class RepoApiTest {
    */
   @Test
   fun `RepoApi Single busted persister hit takes priority`() {
-    val mapper = generateMapper<String>()
-    validator.onVisitMemoryReturn(DEFAULT_SINGLE_KEY, Observable.empty(), mapper)
-    validator.onVisitPersisterReturn(DEFAULT_SINGLE_KEY, Observable.empty(), mapper)
+    validator.onVisitMemoryReturn(Observable.empty())
+    validator.onVisitPersisterReturn(Observable.empty())
     validator.onVisitUpstreamReturn(
-        DEFAULT_SINGLE_KEY,
         Observable.just(DEFAULT_SINGLE_FETCH_EXPECT),
         DEFAULT_SCHEDULER,
         DEFAULT_SINGLE_UPSTREAM_OBSERVABLE
     )
 
     createRepo("single busted persister hit priority")
-        .testingGet(true, DEFAULT_SINGLE_KEY, DEFAULT_SINGLE_UPSTREAM_OBSERVABLE, mapper)
+        .testingGet(true, DEFAULT_SINGLE_UPSTREAM_OBSERVABLE)
         .startNow()
         .test()
         // Cache or upstream (but no caches)
@@ -370,16 +331,16 @@ class RepoApiTest {
    */
   @Test
   fun `RepoApi Single fetcher delivers even without caching layer`() {
-    val mapper = generateMapper<String>()
-    validator.onVisitMemoryReturn(DEFAULT_SINGLE_KEY, Observable.empty(), mapper)
-    validator.onVisitPersisterReturn(DEFAULT_SINGLE_KEY, Observable.empty(), mapper)
+    validator.onVisitMemoryReturn(Observable.empty())
+    validator.onVisitPersisterReturn(Observable.empty())
     validator.onVisitUpstreamReturn(
-        DEFAULT_SINGLE_KEY, Observable.just(DEFAULT_SINGLE_FETCH_EXPECT), DEFAULT_SCHEDULER,
+        Observable.just(DEFAULT_SINGLE_FETCH_EXPECT),
+        DEFAULT_SCHEDULER,
         DEFAULT_SINGLE_UPSTREAM_OBSERVABLE
     )
 
     createRepo("single fetcher delivers")
-        .testingGet(false, DEFAULT_SINGLE_KEY, DEFAULT_SINGLE_UPSTREAM_OBSERVABLE, mapper)
+        .testingGet(false, DEFAULT_SINGLE_UPSTREAM_OBSERVABLE)
         .startNow()
         .test()
         // Cache or upstream (but no caches)
@@ -397,16 +358,16 @@ class RepoApiTest {
    */
   @Test
   fun `RepoApi Single busted fetcher delivers even without caching layer`() {
-    val mapper = generateMapper<String>()
-    validator.onVisitMemoryReturn(DEFAULT_SINGLE_KEY, Observable.empty(), mapper)
-    validator.onVisitPersisterReturn(DEFAULT_SINGLE_KEY, Observable.empty(), mapper)
+    validator.onVisitMemoryReturn(Observable.empty())
+    validator.onVisitPersisterReturn(Observable.empty())
     validator.onVisitUpstreamReturn(
-        DEFAULT_SINGLE_KEY, Observable.just(DEFAULT_SINGLE_FETCH_EXPECT),
-        DEFAULT_SCHEDULER, DEFAULT_SINGLE_UPSTREAM_OBSERVABLE
+        Observable.just(DEFAULT_SINGLE_FETCH_EXPECT),
+        DEFAULT_SCHEDULER,
+        DEFAULT_SINGLE_UPSTREAM_OBSERVABLE
     )
 
     createRepo("single busted fetcher delivers")
-        .testingGet(true, DEFAULT_SINGLE_KEY, DEFAULT_SINGLE_UPSTREAM_OBSERVABLE, mapper)
+        .testingGet(true, DEFAULT_SINGLE_UPSTREAM_OBSERVABLE)
         .startNow()
         .test()
         // Cache or upstream (but no caches)
@@ -423,7 +384,6 @@ class RepoApiTest {
 
     private val DEFAULT_SCHEDULER = Schedulers.trampoline()
 
-    private const val DEFAULT_OBSERVABLE_KEY = "example-key-observe"
     private val DEFAULT_OBSERVABLE_CACHE_EXPECT = arrayListOf("Hello", "World")
     private val DEFAULT_OBSERVABLE_PERSIST_EXPECT = arrayListOf("Persister", "Defaults")
     private val DEFAULT_OBSERVABLE_FETCH_EXPECT = arrayListOf("Upstream", "Payload")
@@ -431,21 +391,12 @@ class RepoApiTest {
       Observable.fromIterable(DEFAULT_OBSERVABLE_FETCH_EXPECT)
     }
 
-    private const val DEFAULT_SINGLE_KEY = "example-key-get"
     private const val DEFAULT_SINGLE_CACHE_EXPECT = "Cache"
     private const val DEFAULT_SINGLE_PERSIST_EXPECT = "Persister"
     private const val DEFAULT_SINGLE_FETCH_EXPECT = "Upstream"
     private val DEFAULT_SINGLE_UPSTREAM = { Single.just(DEFAULT_SINGLE_FETCH_EXPECT) }
     private val DEFAULT_SINGLE_UPSTREAM_OBSERVABLE = {
       DEFAULT_SINGLE_UPSTREAM().toObservable()
-    }
-
-    @CheckResult
-    private fun <T : Any> generateMapper(): (Any) -> T {
-      return mapper@{ item: Any ->
-        @Suppress("UNCHECKED_CAST")
-        return@mapper item as T
-      }
     }
   }
 }

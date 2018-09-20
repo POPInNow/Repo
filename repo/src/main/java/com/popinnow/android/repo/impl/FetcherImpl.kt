@@ -18,57 +18,53 @@ package com.popinnow.android.repo.impl
 
 import android.support.annotation.CheckResult
 import com.popinnow.android.repo.Fetcher
-import com.popinnow.android.repo.internal.Invalidatable
 import io.reactivex.Observable
 import io.reactivex.Scheduler
 import io.reactivex.disposables.Disposable
+import io.reactivex.disposables.Disposables
 import io.reactivex.subjects.ReplaySubject
-import io.reactivex.subjects.Subject
-import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Default implementation of the SingleFetcher interface
  *
  * The SingleFetcher will memoryCache any in flight upstream requests until they have completed.
  */
-internal class FetcherImpl internal constructor(
+internal class FetcherImpl<T : Any> internal constructor(
   debug: String
-) : Fetcher, Invalidatable {
+) : Fetcher<T> {
 
   private val logger = Logger("Fetcher[$debug]", debug.isNotBlank())
-  private val inFlight: ConcurrentHashMap<String, Subject<*>> = ConcurrentHashMap()
-  private val disposables: ConcurrentHashMap<String, Disposable> = ConcurrentHashMap()
 
-  override fun <T : Any> fetch(
-    key: String,
+  @Volatile private var inFlight: Observable<T>? = null
+  @Volatile private var disposable: Disposable = Disposables.disposed()
+
+  override fun fetch(
     upstream: () -> Observable<T>,
     scheduler: Scheduler
   ): Observable<T> {
     return Observable.defer<T> {
       // We can't use the getOrPut() extension because it may run the upstream fetch even though
       // it guarantees no double data insertions.
-      @Suppress("UNCHECKED_CAST")
-      val cachedRequest: Observable<T>? = inFlight[key] as? Observable<T>
+      val cachedRequest: Observable<T>? = inFlight
 
       if (cachedRequest == null) {
-        logger.log { "Attempting upstream: $key" }
-        return@defer fetchUpstream(key, upstream, scheduler)
+        logger.log { "Attempting upstream" }
+        return@defer fetchUpstream(upstream, scheduler)
       } else {
-        logger.log { "Attaching in flight: $key" }
+        logger.log { "Attaching in flight" }
         return@defer cachedRequest
       }
     }
         // Once the fetch has ended, we can clear the in flight cache and the upstream disposable
         // We do not use the terminate event since the public consumer can fall off, but we still
         // want the request to stay in flight if one exists.
-        .doOnNext { invalidateCaches(key) }
-        .doOnError { invalidate(key) }
-        .doOnNext { logger.log { "--> Emit[$key]: $it" } }
+        .doOnNext { clearCaches() }
+        .doOnError { clearAll() }
+        .doOnNext { logger.log { "--> Emit: $it" } }
   }
 
   @CheckResult
-  private fun <T : Any> fetchUpstream(
-    key: String,
+  private fun fetchUpstream(
     upstream: () -> Observable<T>,
     scheduler: Scheduler
   ): Observable<T> {
@@ -77,12 +73,14 @@ internal class FetcherImpl internal constructor(
         .toSerialized()
 
     // One last check to be sure we are not clobbering an in flight
-    @Suppress("UNCHECKED_CAST")
-    val old: Observable<T>? = inFlight.putIfAbsent(key, subject) as? Observable<T>
+    val old: Observable<T>? = inFlight
     if (old != null) {
-      logger.log { "Upstream attempt provides in flight request: $key" }
+      logger.log { "Upstream attempt provides in flight request" }
       return old
     }
+
+    // Set the new in flight
+    inFlight = subject
 
     // We subscribe here internally so that the actual returned subject is not opinionated about
     // the scheduler it is running on.
@@ -91,8 +89,8 @@ internal class FetcherImpl internal constructor(
     // scheduler independence is not guaranteed. If you need exact operations to happen on exact
     // schedulers critical to your application, you may wish to implement your own stricter
     // implementation of the Fetcher interface.
-    cancelInFlight(key)
-    disposables[key] = upstream()
+    cancelInFlight()
+    disposable = upstream()
         // We must tell the original stream source to subscribe on schedulers outside of the normal
         // returned flow else if the returned stream is terminated prematurely, the source will
         // emit on a dead thread.
@@ -101,7 +99,7 @@ internal class FetcherImpl internal constructor(
         .subscribeOn(scheduler)
         .subscribe(
             {
-              logger.log { "----> Upstream emit[$key]: $it" }
+              logger.log { "----> Upstream emit: $it" }
               subject.onNext(it)
             },
             { subject.onError(it) },
@@ -109,38 +107,23 @@ internal class FetcherImpl internal constructor(
             { subject.onSubscribe(it) }
         )
 
-    logger.log { "Provides new request: $key" }
+    logger.log { "Provides new request" }
     return subject
   }
 
-  private fun cancelInFlight(key: String) {
-    logger.log { "Cancel in flight: $key" }
-    disposables.remove(key)
-        ?.dispose()
-  }
-
-  override fun invalidateCaches(key: String) {
-    logger.log { "Invalidate cache: $key" }
-    inFlight.remove(key)
+  private fun cancelInFlight() {
+    logger.log { "Cancel in flight" }
+    if (!disposable.isDisposed) {
+      disposable.dispose()
+    }
   }
 
   override fun clearAll() {
     clearCaches()
-    disposables.apply {
-      for (disposable in values) {
-        disposable.dispose()
-      }
-      clear()
-    }
-  }
-
-  override fun invalidate(key: String) {
-    logger.log { "Invalidate called" }
-    invalidateCaches(key)
-    cancelInFlight(key)
+    cancelInFlight()
   }
 
   override fun clearCaches() {
-    inFlight.clear()
+    inFlight = null
   }
 }

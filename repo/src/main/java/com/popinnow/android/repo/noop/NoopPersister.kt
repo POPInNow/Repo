@@ -16,37 +16,32 @@
 
 package com.popinnow.android.repo.noop
 
+import android.support.annotation.CheckResult
 import com.popinnow.android.repo.Persister
 import io.reactivex.Observable
 
 /**
  * A Persister implementation that does nothing.
  */
-internal object NoopPersister : Persister {
+internal object NoopPersister : Persister<Any> {
 
-  override fun <T : Any> read(
-    key: String,
-    mapper: (Any) -> T
-  ): Observable<T> {
+  override fun read(): Observable<Any> {
     return Observable.empty()
   }
 
-  override fun write(
-    key: String,
-    value: Any
-  ) {
+  override fun write(value: Any) {
   }
 
-  override fun writeAll(
-    key: String,
-    values: List<Any>
-  ) {
-  }
-
-  override fun invalidate(key: String) {
+  override fun writeAll(values: List<Any>) {
   }
 
   override fun clearAll() {
+  }
+
+  @CheckResult
+  internal fun <T : Any> typedInstance(): Persister<T> {
+    @Suppress("UNCHECKED_CAST")
+    return this as Persister<T>
   }
 
 }

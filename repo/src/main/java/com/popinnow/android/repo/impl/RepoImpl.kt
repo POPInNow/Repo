@@ -28,18 +28,18 @@ import io.reactivex.Scheduler
 import io.reactivex.Single
 import java.util.concurrent.atomic.AtomicBoolean
 
-internal class RepoImpl internal constructor(
-  private val fetcher: Fetcher,
-  private val memoryCache: MemoryCache,
-  private val persister: Persister,
+internal class RepoImpl<T : Any> internal constructor(
+  private val fetcher: Fetcher<T>,
+  private val memoryCache: MemoryCache<T>,
+  private val persister: Persister<T>,
   private val scheduler: Scheduler,
   debug: String
-) : Repo {
+) : Repo<T> {
 
   private val logger by lazy { Logger("RepoImpl[$debug]", debug.isNotBlank()) }
 
   @CheckResult
-  private fun <T : Any> fetchCacheThenUpstream(
+  private fun fetchCacheThenUpstream(
     upstream: Observable<T>,
     cache: Observable<T>,
     persist: Observable<T>
@@ -49,7 +49,7 @@ internal class RepoImpl internal constructor(
   }
 
   @CheckResult
-  private fun <T : Any> fetchCacheOrUpstream(
+  private fun fetchCacheOrUpstream(
     upstream: Observable<T>,
     cache: Observable<T>,
     persist: Observable<T>
@@ -60,37 +60,35 @@ internal class RepoImpl internal constructor(
         .toObservable()
   }
 
-  private fun <T : Any> fetch(
+  private fun fetch(
     fetchCacheAndUpstream: Boolean,
     bustCache: Boolean,
-    key: String,
-    upstream: () -> Observable<T>,
-    mapper: (Any) -> T
+    upstream: () -> Observable<T>
   ): Observable<T> {
     return Observable.defer {
-      val freshData = fetcher.fetch(key, upstream, scheduler)
+      val freshData = fetcher.fetch(upstream, scheduler)
           // When the stream begins emitting, we clear the cache
-          .doOnFirst { justInvalidateBackingCaches(key) }
+          .doOnFirst { justInvalidateBackingCaches() }
           // When the upstream is subscribed to and returns data, it should be placed into the caches,
           // but subscribing to the caches should not reset the cached data.
-          .doOnNext { internalPut(key, it) }
+          .doOnNext { internalPut(it) }
 
       if (bustCache) {
         logger.log { "Busting cache to fetch from upstream" }
-        justInvalidateBackingCaches(key)
+        justInvalidateBackingCaches()
       } else {
         logger.log { "Fetching from repository" }
       }
 
-      val memory: Observable<T> = memoryCache.get(key, mapper)
-      val persist: Observable<T> = persister.read(key, mapper)
+      val memory: Observable<T> = memoryCache.get()
+      val persist: Observable<T> = persister.read()
       if (fetchCacheAndUpstream) {
         return@defer fetchCacheThenUpstream(freshData, memory, persist)
       } else {
         return@defer fetchCacheOrUpstream(freshData, memory, persist)
       }
     }
-        .doOnError { invalidate(key) }
+        .doOnError { clearAll() }
   }
 
   @CheckResult
@@ -109,123 +107,84 @@ internal class RepoImpl internal constructor(
    * Exposed as internal so that it can be tested.
    */
   @VisibleForTesting
-  internal fun <T : Any> testingGet(
+  internal fun testingGet(
     bustCache: Boolean,
-    key: String,
-    upstream: () -> Observable<T>,
-    mapper: (Any) -> T
+    upstream: () -> Observable<T>
   ): Single<T> {
-    return fetch(false, bustCache, key, upstream, mapper).singleOrError()
+    return fetch(false, bustCache, upstream).singleOrError()
   }
 
   /**
    * Exposed as internal so that it can be tested.
    */
   @VisibleForTesting
-  internal fun <T : Any> testingObserve(
+  internal fun testingObserve(
     bustCache: Boolean,
-    key: String,
-    upstream: () -> Observable<T>,
-    mapper: (Any) -> T
+    upstream: () -> Observable<T>
   ): Observable<T> {
-    return fetch(true, bustCache, key, upstream, mapper)
+    return fetch(true, bustCache, upstream)
   }
 
-  @CheckResult
-  private fun <T : Any> mapper(item: Any): T {
-    @Suppress("UNCHECKED_CAST")
-    return item as T
-  }
-
-  override fun <T : Any> get(
+  override fun get(
     bustCache: Boolean,
-    key: String,
     upstream: () -> Single<T>
   ): Single<T> {
     val realUpstream = { upstream().toObservable() }
-    return fetch(false, bustCache, key, realUpstream, this::mapper).singleOrError()
+    return fetch(false, bustCache, realUpstream).singleOrError()
   }
 
-  override fun <T : Any> observe(
+  override fun observe(
     bustCache: Boolean,
-    key: String,
     upstream: () -> Observable<T>
   ): Observable<T> {
-    return fetch(true, bustCache, key, upstream, this::mapper)
+    return fetch(true, bustCache, upstream)
   }
 
-  private fun justInvalidateBackingCaches(key: String) {
-    memoryCache.invalidate(key)
-    persister.invalidate(key)
+  private fun justInvalidateBackingCaches() {
+    memoryCache.clearAll()
+    persister.clearAll()
   }
 
-  private fun internalPut(
-    key: String,
-    value: Any
-  ) {
-    logger.log { "Put data: $key $value" }
+  private fun internalPut(value: T) {
+    logger.log { "Put data: $value" }
 
     // Store data directly into caches
-    memoryCache.add(key, value)
-    persister.write(key, value)
+    memoryCache.add(value)
+    persister.write(value)
 
     // Cancel fetcher in flights
-    fetcher.invalidateCaches(key)
+    fetcher.clearCaches()
   }
 
-  private fun internalPutAll(
-    key: String,
-    values: List<Any>
-  ) {
-    logger.log { "Put data: $key $values" }
+  private fun internalPutAll(values: List<T>) {
+    logger.log { "Put data: $values" }
 
     // Store data directly into caches
-    memoryCache.addAll(key, values)
-    persister.writeAll(key, values)
+    memoryCache.addAll(values)
+    persister.writeAll(values)
 
     // Cancel fetcher in flights
-    fetcher.invalidateCaches(key)
+    fetcher.clearCaches()
   }
 
-  override fun push(
-    key: String,
-    value: Any
-  ) {
-    internalPut(key, value)
+  override fun push(value: T) {
+    internalPut(value)
   }
 
-  override fun pushAll(
-    key: String,
-    values: List<Any>
-  ) {
-    internalPutAll(key, values)
+  override fun pushAll(values: List<T>) {
+    internalPutAll(values)
   }
 
-  override fun replace(
-    key: String,
-    value: Any
-  ) {
-    justInvalidateBackingCaches(key)
-    internalPut(key, value)
+  override fun replace(value: T) {
+    justInvalidateBackingCaches()
+    internalPut(value)
   }
 
   override fun replaceAll(
-    key: String,
-    values: List<Any>
+    values: List<T>
   ) {
-    justInvalidateBackingCaches(key)
-    internalPutAll(key, values)
-  }
-
-  override fun invalidateCaches(key: String) {
-    logger.log { "Invalidating caches: $key" }
-    justInvalidateBackingCaches(key)
-    fetcher.invalidateCaches(key)
-  }
-
-  override fun invalidate(key: String) {
-    invalidateCaches(key)
-    fetcher.invalidate(key)
+    justInvalidateBackingCaches()
+    internalPutAll(values)
   }
 
   override fun clearCaches() {

@@ -22,22 +22,18 @@ import com.popinnow.android.repo.Persister
 import io.reactivex.Observable
 import io.reactivex.Scheduler
 
-internal class MockRepoOrderValidator internal constructor(
-  private val memoryCache: MemoryCache,
-  private val persister: Persister,
-  private val fetcher: Fetcher
+internal class MockRepoOrderValidator<T : Any> internal constructor(
+  private val memoryCache: MemoryCache<T>,
+  private val persister: Persister<T>,
+  private val fetcher: Fetcher<T>
 ) {
 
   internal var memoryVisited = false
   internal var persisterVisited = false
   internal var upstreamVisited = false
 
-  internal fun <T : Any> onVisitMemoryReturn(
-    key: String,
-    observable: Observable<T>,
-    mapper: (Any) -> T
-  ) {
-    Mocks.whenever(memoryCache.get(key, mapper))
+  internal fun onVisitMemoryReturn(observable: Observable<T>) {
+    Mocks.whenever(memoryCache.get())
         .thenReturn(observable
             .doOnSubscribe {
               // Memory should be visited first
@@ -53,12 +49,8 @@ internal class MockRepoOrderValidator internal constructor(
             })
   }
 
-  internal fun <T : Any> onVisitPersisterReturn(
-    key: String,
-    observable: Observable<T>,
-    mapper: (Any) -> T
-  ) {
-    Mocks.whenever(persister.read(key, mapper))
+  internal fun onVisitPersisterReturn(observable: Observable<T>) {
+    Mocks.whenever(persister.read())
         .thenReturn(observable
             .doOnSubscribe {
               if (memoryVisited && !persisterVisited && !upstreamVisited) {
@@ -75,13 +67,12 @@ internal class MockRepoOrderValidator internal constructor(
             })
   }
 
-  internal fun <T : Any> onVisitUpstreamReturn(
-    key: String,
+  internal fun onVisitUpstreamReturn(
     observable: Observable<T>,
     scheduler: Scheduler,
     upstream: () -> Observable<T>
   ) {
-    Mocks.whenever(fetcher.fetch(key, upstream, scheduler))
+    Mocks.whenever(fetcher.fetch(upstream, scheduler))
         .thenReturn(observable
             .doOnSubscribe {
               // Caching should be visited first

@@ -31,21 +31,20 @@ import io.reactivex.Single
  */
 class SampleApplication : Application() {
 
-  private val repo = newRepo()
+  private val observableRepo = newRepo<Int>()
+  private val singleRepo = newRepo<String>()
 
   private val mockDataSourceString = SampleMockDataSourceString()
   private val mockDataSourceInt = SampleMockDataSourceInt()
 
   fun clearRepos() {
-    repo.clearCaches()
+    observableRepo.clearAll()
+    singleRepo.clearAll()
   }
 
   @CheckResult
-  fun getWithObservableRepo(
-    bustCache: Boolean,
-    key: String
-  ): Observable<Int> {
-    return repo.observe(bustCache, key) {
+  fun getWithObservableRepo(bustCache: Boolean): Observable<Int> {
+    return observableRepo.observe(bustCache) {
       Observable.just(mockDataSourceInt.getCount(bustCache))
           .doOnSubscribe {
             Logger.debug(
@@ -61,11 +60,8 @@ class SampleApplication : Application() {
   }
 
   @CheckResult
-  fun getWithSingleRepo(
-    bustCache: Boolean,
-    key: String
-  ): Single<String> {
-    return repo.get(bustCache, key) {
+  fun getWithSingleRepo(bustCache: Boolean): Single<String> {
+    return singleRepo.get(bustCache) {
       Single.just(mockDataSourceString.getCharacter(bustCache))
           .doOnSubscribe {
             Logger.debug(

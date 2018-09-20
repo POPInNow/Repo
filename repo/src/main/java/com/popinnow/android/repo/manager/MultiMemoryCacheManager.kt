@@ -14,28 +14,19 @@
  * limitations under the License.
  */
 
-package com.popinnow.android.repo.internal
+package com.popinnow.android.repo.manager
 
-/**
- * CacheInvalidator is like Invalidateable but for caches which are separate from in-flight data
- *
- * @see Invalidatable
- */
-interface CacheInvalidator : Invalidatable {
+import android.support.annotation.CheckResult
 
-  /**
-   * Invalidates all caches for a given key.
-   *
-   * @param key The key for this request.
-   *
-   * @see invalidate
-   */
-  fun invalidateCaches(key: String)
+// TODO Document
+interface MultiMemoryCacheManager {
 
-  /**
-   * Invalidates all caches for a all keys.
-   *
-   * @see clearAll
-   */
-  fun clearCaches()
+  @CheckResult
+  fun size(): Int
+
+  @CheckResult
+  fun maxSize(): Int
+
+  fun trimToSize(maxSize: Int)
+
 }

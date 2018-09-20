@@ -16,34 +16,23 @@
 
 package com.popinnow.android.repo.noop
 
+import android.support.annotation.CheckResult
 import com.popinnow.android.repo.MemoryCache
 import io.reactivex.Observable
 
 /**
  * A MemoryCache implementation that does nothing.
  */
-internal object NoopCache : MemoryCache {
+internal object NoopCache : MemoryCache<Any> {
 
-  override fun <T : Any> get(
-    key: String,
-    mapper: (Any) -> T
-  ): Observable<T> {
+  override fun get(): Observable<Any> {
     return Observable.empty()
   }
 
-  override fun add(
-    key: String,
-    value: Any
-  ) {
+  override fun add(value: Any) {
   }
 
-  override fun addAll(
-    key: String,
-    values: List<Any>
-  ) {
-  }
-
-  override fun invalidate(key: String) {
+  override fun addAll(values: List<Any>) {
   }
 
   override fun clearAll() {
@@ -53,11 +42,10 @@ internal object NoopCache : MemoryCache {
     return 0
   }
 
-  override fun maxSize(): Int {
-    return 0
-  }
-
-  override fun trimToSize(maxSize: Int) {
+  @CheckResult
+  internal fun <T : Any> typedInstance(): MemoryCache<T> {
+    @Suppress("UNCHECKED_CAST")
+    return this as MemoryCache<T>
   }
 
 }

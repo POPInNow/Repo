@@ -19,6 +19,7 @@
 package com.popinnow.android.repo
 
 import android.support.annotation.CheckResult
+import com.popinnow.android.repo.impl.MultiRepoImpl
 import com.popinnow.android.repo.impl.RepoBuilderImpl
 
 /**
@@ -27,7 +28,7 @@ import com.popinnow.android.repo.impl.RepoBuilderImpl
  * @return [RepoBuilder]
  */
 @CheckResult
-fun newRepoBuilder(): RepoBuilder {
+fun <T : Any> newRepoBuilder(): RepoBuilder<T> {
   return RepoBuilderImpl()
 }
 
@@ -37,8 +38,18 @@ fun newRepoBuilder(): RepoBuilder {
  * @return [Repo]
  */
 @CheckResult
-fun newRepo(): Repo {
-  return newRepoBuilder()
+fun <T : Any> newRepo(): Repo<T> {
+  return newRepoBuilder<T>()
       .memoryCache()
       .build()
+}
+
+/**
+ * Create a new MultiRepo instance
+ *
+ * @return [MultiRepo]
+ */
+@CheckResult
+fun <T : Any> newMultiRepo(generator: () -> Repo<T>): MultiRepo<T> {
+  return MultiRepoImpl(generator)
 }

@@ -14,19 +14,21 @@
  * limitations under the License.
  */
 
-package com.popinnow.android.repo.manager
+package com.popinnow.android.repo.internal
 
-import android.support.annotation.CheckResult
-
-interface MemoryCacheManager {
+/**
+ * CacheInvalidatable is like Invalidatable but for caches which are separate from in-flight data
+ *
+ * @see Invalidatable
+ */
+interface CacheInvalidatable : Invalidatable {
 
   /**
-   * Get the current size of the cache
+   * Invalidates all caches for a given key.
    *
-   * @see [com.popinnow.android.repo.MemoryCache]
-   * @return Size of the memory cache
+   * @param key The key for this request.
+   *
+   * @see invalidate
    */
-  @CheckResult
-  fun size(): Int
-
+  fun invalidateCaches(key: String)
 }

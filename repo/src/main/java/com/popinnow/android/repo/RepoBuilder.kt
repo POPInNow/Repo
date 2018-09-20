@@ -23,49 +23,39 @@ import java.util.concurrent.TimeUnit
 /**
  * Builder to construct Repo objects
  */
-interface RepoBuilder {
+interface RepoBuilder<T : Any> {
 
   @CheckResult
-  fun debug(debug: String): RepoBuilder
+  fun debug(debug: String): RepoBuilder<T>
 
   @CheckResult
-  fun fetcher(fetcher: Fetcher): RepoBuilder
+  fun fetcher(fetcher: Fetcher<T>): RepoBuilder<T>
 
   @CheckResult
-  fun scheduler(scheduler: Scheduler): RepoBuilder
+  fun scheduler(scheduler: Scheduler): RepoBuilder<T>
 
   @CheckResult
-  fun scheduler(scheduler: () -> Scheduler): RepoBuilder
+  fun scheduler(scheduler: () -> Scheduler): RepoBuilder<T>
 
   @CheckResult
-  fun memoryCache(): RepoBuilder
+  fun memoryCache(): RepoBuilder<T>
 
   @CheckResult
   fun memoryCache(
     time: Long,
     timeUnit: TimeUnit
-  ): RepoBuilder
+  ): RepoBuilder<T>
 
   @CheckResult
-  fun memoryCache(maxSize: Int): RepoBuilder
-
-  @CheckResult
-  fun memoryCache(
-    time: Long,
-    timeUnit: TimeUnit,
-    maxSize: Int
-  ): RepoBuilder
-
-  @CheckResult
-  fun memoryCache(cache: MemoryCache): RepoBuilder
+  fun memoryCache(cache: MemoryCache<T>): RepoBuilder<T>
 
   /**
    * TODO: Expose this method once we have decided how the default Persister implementation will work.
    */
 //  @CheckResult
-//  fun persister(TODO): RepoBuilder<T, Built>
+//  fun persister(TODO): RepoBuilder<T>
 
   @CheckResult
-  fun build(): Repo
+  fun build(): Repo<T>
 
 }

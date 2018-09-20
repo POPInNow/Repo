@@ -14,19 +14,22 @@
  * limitations under the License.
  */
 
-package com.popinnow.android.repo.manager
+package com.popinnow.android.repo.internal
 
-import android.support.annotation.CheckResult
-
-interface MemoryCacheManager {
+/**
+ * Clearable interfaces support collections of data.
+ */
+interface CacheClearable {
 
   /**
-   * Get the current size of the cache
-   *
-   * @see [com.popinnow.android.repo.MemoryCache]
-   * @return Size of the memory cache
+   * Clear the collection of data.
    */
-  @CheckResult
-  fun size(): Int
+  fun clearAll()
 
+  /**
+   * Invalidates all caches for a all keys.
+   *
+   * @see clearAll
+   */
+  fun clearCaches()
 }

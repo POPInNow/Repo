@@ -33,16 +33,16 @@ import java.util.concurrent.TimeUnit.SECONDS
 class RepoBehaviorTest {
 
   @CheckResult
-  private fun builder(debug: String): RepoBuilder {
-    return newRepoBuilder().debug(debug)
+  private fun <T : Any> builder(debug: String): RepoBuilder<T> {
+    return newRepoBuilder<T>().debug(debug)
         .scheduler(DEFAULT_SCHEDULER)
   }
 
   @Test
   fun `RepoBehavior Observable no-cache simple get`() {
-    val repo = builder("observable no-cache simple get").build()
+    val repo = builder<String>("observable no-cache simple get").build()
 
-    repo.observe(false, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM)
+    repo.observe(false, DEFAULT_OBSERVABLE_UPSTREAM)
         .startNow()
         .test()
         .assertNoErrors()
@@ -54,15 +54,15 @@ class RepoBehaviorTest {
   @Test
   fun `RepoBehavior Observable memory cache simple get`() {
     val debug = "observable cache simple get"
-    val memoryCache = MemoryCacheImpl(debug, 30, SECONDS, 10)
-    val repo = builder(debug)
+    val memoryCache = MemoryCacheImpl<String>(debug, 30, SECONDS)
+    val repo = builder<String>(debug)
         .memoryCache(memoryCache)
         .build()
 
     // Juice the memory cache
-    DEFAULT_OBSERVABLE_CACHE_EXPECT.forEach { memoryCache.add(DEFAULT_OBSERVABLE_KEY, it) }
+    DEFAULT_OBSERVABLE_CACHE_EXPECT.forEach { memoryCache.add(it) }
 
-    repo.observe(false, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM)
+    repo.observe(false, DEFAULT_OBSERVABLE_UPSTREAM)
         .startNow()
         .test()
         .assertNoErrors()
@@ -73,11 +73,11 @@ class RepoBehaviorTest {
 
   @Test
   fun `RepoBehavior Observable get fills caches`() {
-    val repo = builder("observable get fills cache")
+    val repo = builder<String>("observable get fills cache")
         .memoryCache()
         .build()
 
-    repo.observe(false, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM)
+    repo.observe(false, DEFAULT_OBSERVABLE_UPSTREAM)
         .startNow()
         .test()
         .assertNoErrors()
@@ -85,7 +85,7 @@ class RepoBehaviorTest {
         .assertValueSequence(DEFAULT_OBSERVABLE_FETCH_EXPECT)
         .assertComplete()
 
-    repo.observe(false, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM)
+    repo.observe(false, DEFAULT_OBSERVABLE_UPSTREAM)
         .startNow()
         .test()
         .assertNoErrors()
@@ -96,11 +96,11 @@ class RepoBehaviorTest {
 
   @Test
   fun `RepoBehavior Observable cached results returned before upstream`() {
-    val repo = builder("observable cache before upstream")
+    val repo = builder<String>("observable cache before upstream")
         .memoryCache()
         .build()
 
-    repo.observe(false, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM)
+    repo.observe(false, DEFAULT_OBSERVABLE_UPSTREAM)
         .startNow()
         .test()
         .assertNoErrors()
@@ -108,7 +108,7 @@ class RepoBehaviorTest {
         .assertValueSequence(DEFAULT_OBSERVABLE_FETCH_EXPECT)
         .assertComplete()
 
-    repo.observe(false, DEFAULT_OBSERVABLE_KEY) { Observable.fromArray("New", "Data") }
+    repo.observe(false) { Observable.fromArray("New", "Data") }
         .startNow()
         .test()
         .assertNoErrors()
@@ -119,11 +119,11 @@ class RepoBehaviorTest {
 
   @Test
   fun `RepoBehavior Observable only previous cached result returned`() {
-    val repo = builder("observable only previous cache returns")
+    val repo = builder<String>("observable only previous cache returns")
         .memoryCache()
         .build()
 
-    repo.observe(false, DEFAULT_OBSERVABLE_KEY, DEFAULT_OBSERVABLE_UPSTREAM)
+    repo.observe(false, DEFAULT_OBSERVABLE_UPSTREAM)
         .startNow()
         .test()
         .assertNoErrors()
@@ -135,7 +135,7 @@ class RepoBehaviorTest {
         "New", "Data", "But", "I", "Wonder", "How", "Long", "Its", "Going", "To", "Be", "Before",
         "We", "Start", "Running", "Out", "of", "Memory"
     )
-    repo.observe(false, DEFAULT_OBSERVABLE_KEY) { Observable.fromIterable(data) }
+    repo.observe(false) { Observable.fromIterable(data) }
         .startNow()
         .test()
         .assertNoErrors()
@@ -143,9 +143,7 @@ class RepoBehaviorTest {
         .assertValueSequence(DEFAULT_OBSERVABLE_FETCH_EXPECT + data)
         .assertComplete()
 
-    repo.observe(false, DEFAULT_OBSERVABLE_KEY) {
-      Observable.fromIterable(DEFAULT_OBSERVABLE_PERSIST_EXPECT)
-    }
+    repo.observe(false) { Observable.fromIterable(DEFAULT_OBSERVABLE_PERSIST_EXPECT) }
         .startNow()
         .test()
         .assertNoErrors()
@@ -156,9 +154,9 @@ class RepoBehaviorTest {
 
   @Test
   fun `RepoBehavior Single no-cache simple get`() {
-    val repo = builder("single no-cache simple get").build()
+    val repo = builder<List<String>>("single no-cache simple get").build()
 
-    repo.get(false, DEFAULT_SINGLE_KEY, DEFAULT_SINGLE_UPSTREAM)
+    repo.get(false, DEFAULT_SINGLE_UPSTREAM)
         .startNow()
         .test()
         .assertNoErrors()
@@ -171,17 +169,15 @@ class RepoBehaviorTest {
   @Test
   fun `RepoBehavior Single memory cache simple get`() {
     val debug = "single cache simple get"
-    val memoryCache = MemoryCacheImpl(debug, 30, SECONDS, 10)
-    val repo = builder(debug)
+    val memoryCache = MemoryCacheImpl<List<String>>(debug, 30, SECONDS)
+    val repo = builder<List<String>>(debug)
         .memoryCache(memoryCache)
         .build()
 
     // Juice the memory cache
-    memoryCache.add(DEFAULT_SINGLE_KEY, DEFAULT_SINGLE_CACHE_EXPECT)
+    memoryCache.add(DEFAULT_SINGLE_CACHE_EXPECT)
 
-    repo.get<List<String>>(false, DEFAULT_SINGLE_KEY) {
-      throw AssertionError("Upstream should be avoided")
-    }
+    repo.get(false) { throw AssertionError("Upstream should be avoided") }
         .startNow()
         .test()
         .assertNoErrors()
@@ -193,11 +189,11 @@ class RepoBehaviorTest {
 
   @Test
   fun `RepoBehavior Single get fills caches`() {
-    val repo = builder("single get fills caches")
+    val repo = builder<List<String>>("single get fills caches")
         .memoryCache()
         .build()
 
-    repo.get(false, DEFAULT_SINGLE_KEY, DEFAULT_SINGLE_UPSTREAM)
+    repo.get(false, DEFAULT_SINGLE_UPSTREAM)
         .startNow()
         .test()
         .assertNoErrors()
@@ -206,9 +202,7 @@ class RepoBehaviorTest {
         .assertValueCount(1)
         .assertComplete()
 
-    repo.get<List<String>>(false, DEFAULT_SINGLE_KEY) {
-      throw AssertionError("Upstream should be avoided")
-    }
+    repo.get(false) { throw AssertionError("Upstream should be avoided") }
         .startNow()
         .test()
         .assertNoErrors()
@@ -222,7 +216,6 @@ class RepoBehaviorTest {
 
     private val DEFAULT_SCHEDULER = Schedulers.trampoline()
 
-    private const val DEFAULT_OBSERVABLE_KEY = "example-key-observe"
     private val DEFAULT_OBSERVABLE_CACHE_EXPECT = arrayListOf("Hello", "World")
     private val DEFAULT_OBSERVABLE_PERSIST_EXPECT = arrayListOf("Persister", "Defaults")
     private val DEFAULT_OBSERVABLE_FETCH_EXPECT = arrayListOf("Upstream", "Payload")
@@ -230,7 +223,6 @@ class RepoBehaviorTest {
       Observable.fromIterable(DEFAULT_OBSERVABLE_FETCH_EXPECT)
     }
 
-    private const val DEFAULT_SINGLE_KEY = "example-key"
     private val DEFAULT_SINGLE_CACHE_EXPECT = listOf("Hello", "World")
     private val DEFAULT_SINGLE_FETCH_EXPECT = listOf("Upstream", "Payload")
     private val DEFAULT_SINGLE_UPSTREAM = { Single.just(DEFAULT_SINGLE_FETCH_EXPECT) }

@@ -22,7 +22,6 @@ import com.popinnow.android.repo.Fetcher
 import com.popinnow.android.repo.impl.FetcherImpl
 import com.popinnow.android.repo.startNow
 import io.reactivex.Observable
-import io.reactivex.functions.BiFunction
 import io.reactivex.schedulers.Schedulers
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -33,17 +32,16 @@ import java.util.concurrent.TimeUnit.SECONDS
 class FetcherBehaviorTest {
 
   @CheckResult
-  private fun createFetcher(tag: String): Fetcher {
+  private fun createFetcher(tag: String): Fetcher<String> {
     return FetcherImpl(tag)
   }
 
   private fun assertFetch(
-    fetcher: Fetcher,
-    key: String,
+    fetcher: Fetcher<String>,
     upstream: () -> Observable<String>,
     values: List<String>
   ) {
-    fetcher.fetch(key, upstream, Schedulers.io())
+    fetcher.fetch(upstream, Schedulers.io())
         .startNow()
         .test()
         // Need await because the fetch runs in background
@@ -59,7 +57,7 @@ class FetcherBehaviorTest {
   @Test
   fun `FetcherBehavior simple get`() {
     val fetcher = createFetcher("simple get")
-    assertFetch(fetcher, DEFAULT_KEY, DEFAULT_UPSTREAM, DEFAULT_EXPECT)
+    assertFetch(fetcher, DEFAULT_UPSTREAM, DEFAULT_EXPECT)
   }
 
   /**
@@ -78,11 +76,11 @@ class FetcherBehaviorTest {
 
     // Set up two basic threads to launch parallel requests
     val r1 = Runnable {
-      assertFetch(fetcher, DEFAULT_KEY, upstream, DEFAULT_EXPECT)
+      assertFetch(fetcher, upstream, DEFAULT_EXPECT)
     }
 
     val r2 = Runnable {
-      assertFetch(fetcher, DEFAULT_KEY, upstream, DEFAULT_EXPECT)
+      assertFetch(fetcher, upstream, DEFAULT_EXPECT)
     }
 
     val t1 = Thread(r1)
@@ -132,7 +130,7 @@ class FetcherBehaviorTest {
     }
 
     fun startFetch() {
-      fetcher.fetch(DEFAULT_KEY, upstream, Schedulers.io())
+      fetcher.fetch(upstream, Schedulers.io())
           .subscribeOn(Schedulers.io())
           .observeOn(Schedulers.trampoline())
           .subscribe()
@@ -143,7 +141,7 @@ class FetcherBehaviorTest {
 
     // After a small delay (mid flight) invalidate the cache
     Thread.sleep(500)
-    fetcher.invalidateCaches(DEFAULT_KEY)
+    fetcher.clearCaches()
 
     // The next fetch on the same key will start a new request
     startFetch()
@@ -165,7 +163,7 @@ class FetcherBehaviorTest {
     val upstream = { DEFAULT_DELAYED.doOnNext { ++counter.count } }
 
     fun startFetch() {
-      fetcher.fetch(DEFAULT_KEY, upstream, Schedulers.io())
+      fetcher.fetch(upstream, Schedulers.io())
           .subscribeOn(Schedulers.io())
           .observeOn(Schedulers.trampoline())
           .subscribe()
@@ -176,7 +174,7 @@ class FetcherBehaviorTest {
 
     // After a small delay (mid flight) invalidate the request
     Thread.sleep(500)
-    fetcher.invalidate(DEFAULT_KEY)
+    fetcher.clearAll()
 
     // The next fetch on the same key will start a new request, and should finish which increments.
     startFetch()
@@ -188,28 +186,8 @@ class FetcherBehaviorTest {
     ) { "Upstream accessed more than expected! ${counter.count}" }
   }
 
-  /**
-   *  Does the fetcher keep unique keys
-   */
-  @Test
-  fun `FetcherBehavior keeps unique keys`() {
-    val fetcher = createFetcher("keep unique keys")
-
-    // Two accesses on the fetcher in parallel do not clobber each others keys
-    Observable.zip(
-        fetcher.fetch("key1", { Observable.just("This", "is") }, Schedulers.io()),
-        fetcher.fetch("key2", { Observable.just("a", "Test") }, Schedulers.io()),
-        BiFunction<String, String, String> { t1, t2 -> t1 + t2 })
-        .test()
-        .awaitDone(5, SECONDS)
-        .assertNoErrors()
-        .assertValueSequence(arrayListOf("Thisa", "isTest"))
-        .assertComplete()
-  }
-
   companion object {
 
-    private const val DEFAULT_KEY = "example-key"
     private val DEFAULT_EXPECT = arrayListOf("Hello", "World")
     private val DEFAULT_UPSTREAM = { Observable.fromIterable(DEFAULT_EXPECT) }
     private val DEFAULT_DELAYED = Observable.just("")

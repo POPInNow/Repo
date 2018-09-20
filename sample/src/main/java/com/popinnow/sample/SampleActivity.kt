@@ -68,7 +68,11 @@ class SampleActivity : AppCompatActivity() {
   private val mockDataSourceString = SampleMockDataSourceString()
   private val mockDataSourceInt = SampleMockDataSourceInt()
 
-  private val repo = newRepoBuilder()
+  private val observableRepo = newRepoBuilder<String>()
+      .memoryCache()
+      .build()
+
+  private val singleRepo = newRepoBuilder<Int>()
       .memoryCache()
       .build()
 
@@ -111,15 +115,14 @@ class SampleActivity : AppCompatActivity() {
 
   private fun setupObservableMockButton() {
     observableMockButton.setOnClickListener { _ ->
-      val key = "observable-mock-key"
       // Cancel the request before launching a new one
       observableMockDisposable.dispose()
-      repo.invalidate(key)
+      observableRepo.clearAll()
 
       // Even though the subscription was disposed, if the cache is not busted you'll see the
       // original data and then see the new counter data
       observableMockDisposable =
-          repo.observe(bustCacheObservableMock, key) {
+          observableRepo.observe(bustCacheObservableMock) {
             Observable.just(mockDataSourceString.getCharacter(bustCacheObservableMock))
                 .doOnSubscribe {
                   Logger.debug(
@@ -156,7 +159,6 @@ class SampleActivity : AppCompatActivity() {
 
   private fun setupObservableApplicationButton() {
     observableApplicationButton.setOnClickListener { v ->
-      val key = "observable-application-key"
       // Cancel the disposable but not the upstream request
       observableApplicationDisposable.dispose()
 
@@ -167,7 +169,7 @@ class SampleActivity : AppCompatActivity() {
       // close and re-open the application. Upstream requests will not be cancelled unless you
       // stop them at the Application exit point.
       observableApplicationDisposable = v.context.getSampleApplication()
-          .getWithObservableRepo(bustCacheObservableApplication, key)
+          .getWithObservableRepo(bustCacheObservableApplication)
           .subscribeOn(Schedulers.computation())
           .observeOn(AndroidSchedulers.mainThread())
           .doOnSubscribe {
@@ -190,14 +192,13 @@ class SampleActivity : AppCompatActivity() {
 
   private fun setupSingleMockButton() {
     singleMockButton.setOnClickListener { _ ->
-      val key = "single-mock-key"
       // Cancel the request before launching a new one
       singleMockDisposable.dispose()
-      repo.invalidate(key)
+      singleRepo.clearAll()
 
       // Even though the subscription was disposed, if the cache is not busted you'll see the
       // original data instead of the new counter data
-      singleMockDisposable = repo.get(bustCacheSingleMock, key) {
+      singleMockDisposable = singleRepo.get(bustCacheSingleMock) {
         Single.just(mockDataSourceInt.getCount(bustCacheSingleMock))
             .doOnSubscribe {
               Logger.debug("SingleMock Source Subscribe on Thread: ${Thread.currentThread().name}")
@@ -223,7 +224,6 @@ class SampleActivity : AppCompatActivity() {
 
   private fun setupSingleApplication() {
     singleApplicationButton.setOnClickListener { v ->
-      val key = "single-application-key"
       // Cancel disposable but not the upstream request
       singleApplicationDisposable.dispose()
 
@@ -234,7 +234,7 @@ class SampleActivity : AppCompatActivity() {
       // close and re-open the application. Upstream requests will not be cancelled unless you
       // stop them at the Application exit point.
       singleApplicationDisposable = v.context.getSampleApplication()
-          .getWithSingleRepo(bustCacheSingleApplication, key)
+          .getWithSingleRepo(bustCacheSingleApplication)
           .subscribeOn(Schedulers.computation())
           .observeOn(AndroidSchedulers.mainThread())
           .doOnSubscribe {
@@ -262,7 +262,8 @@ class SampleActivity : AppCompatActivity() {
     observableMockDisposable.dispose()
     singleMockDisposable.dispose()
 
-    repo.clearAll()
+    observableRepo.clearAll()
+    singleRepo.clearAll()
 
     observableApplicationDisposable.dispose()
     singleApplicationDisposable.dispose()

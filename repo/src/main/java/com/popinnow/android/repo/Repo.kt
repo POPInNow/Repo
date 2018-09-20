@@ -17,7 +17,7 @@
 package com.popinnow.android.repo
 
 import android.support.annotation.CheckResult
-import com.popinnow.android.repo.internal.CacheInvalidator
+import com.popinnow.android.repo.internal.CacheClearable
 import com.popinnow.android.repo.manager.MemoryCacheManager
 import io.reactivex.Observable
 import io.reactivex.Single
@@ -44,7 +44,7 @@ import io.reactivex.Single
  * If caching is enabled for this Repo, the latest emitted item from the upstream data source will
  * be cached.
  */
-interface Repo : CacheInvalidator {
+interface Repo<T : Any> : CacheClearable {
 
   /**
    * Observe data from this Repo, possibly from the provided upstream source.
@@ -53,21 +53,17 @@ interface Repo : CacheInvalidator {
    * always fetch new data from the [upstream]. Any data retrieved from the [upstream] will still
    * be put back into the caches.
    *
-   * The [key] is what controls uniqueness of requests.
-   *
-   * If no cached data exists in the Repo for a given [key], then fresh data will be pulled
+   * If no cached data exists in the Repo, then fresh data will be pulled
    * from the [upstream]. If cached data exists, it will be emitted first, and then the [upstream]
    * will be pulled. Ordering is guaranteed - cached data will always emit first if it exists.
    *
    * @param bustCache Bypass any caching and pull data straight from the upstream source.
-   * @param key The key for this request.
    * @param upstream The lazy upstream data source.
    * @return [Observable]
    */
   @CheckResult
-  fun <T : Any> observe(
+  fun observe(
     bustCache: Boolean,
-    key: String,
     upstream: () -> Observable<T>
   ): Observable<T>
 
@@ -78,21 +74,17 @@ interface Repo : CacheInvalidator {
    * always fetch new data from the [upstream]. Any data retrieved from the [upstream] will still
    * be put back into the caches.
    *
-   * The [key] is what controls uniqueness of requests.
-   *
-   * If no cached data exists in the Repo for a given [key], then fresh data will be pulled
-   * from the [upstream]. If cached data exists, it will be emitted, and the [upstream]
+   * If no cached data exists in the Repo, then fresh data will be pulled
+   * from the [upstream]. If cached data exists, the latest will be emitted, and the [upstream]
    * will never be pulled.
    *
    * @param bustCache Bypass any caching and pull data straight from the upstream source.
-   * @param key The key for this request.
    * @param upstream The lazy upstream data source.
    * @return [Single]
    */
   @CheckResult
-  fun <T : Any> get(
+  fun get(
     bustCache: Boolean,
-    key: String,
     upstream: () -> Single<T>
   ): Single<T>
 
@@ -107,71 +99,33 @@ interface Repo : CacheInvalidator {
   /**
    * Replace data in the Repo with a single item.
    *
-   * @param key The key for this request
    * @param value The data to put into the Repo
    */
-  fun replace(
-    key: String,
-    value: Any
-  )
+  fun replace(value: T)
 
   /**
    * Replace data into the Repo with a list of items.
    *
-   * @param key The key for this request
    * @param values The list data to put into the Repo
    */
-  fun replaceAll(
-    key: String,
-    values: List<Any>
-  )
+  fun replaceAll(values: List<T>)
 
   /**
    * Push data into the Repo.
    *
-   * @param key The key for this request
    * @param value The data to put into the Repo
    */
-  fun push(
-    key: String,
-    value: Any
-  )
+  fun push(value: T)
 
   /**
    * Push a list of data into the Repo.
    *
-   * @param key The key for this request
    * @param values The list data to put into the Repo
    */
-  fun pushAll(
-    key: String,
-    values: List<Any>
-  )
+  fun pushAll(values: List<T>)
 
   /**
-   * Invalidates all caches requests for a given key.
-   *
-   * This will [invalidate] any configured [MemoryCache] or [Persister] for the given [key].
-   * It will not cancel any in-flight requests being performed by a [Fetcher], but will clear
-   * the known cache via [Fetcher.invalidateCaches]
-   *
-   * @param key The key for this request.
-   * @see invalidate
-   */
-  override fun invalidateCaches(key: String)
-
-  /**
-   * Invalidates all caches and in-flight requests for a given key.
-   *
-   * This will [invalidate] any configured [MemoryCache] or [Persister] for the given [key], and
-   * will also cancel any in-flight requests performed by [Fetcher] via [Fetcher.invalidate]
-   *
-   * @param key The key for this request.
-   */
-  override fun invalidate(key: String)
-
-  /**
-   * Invalidates all caches requests for a all keys.
+   * Invalidates all caches requests.
    *
    * This will [clearAll] any configured [MemoryCache] or [Persister].
    * It will not cancel any in-flight requests being performed by a [Fetcher], but will clear
@@ -184,7 +138,7 @@ interface Repo : CacheInvalidator {
   override fun clearCaches()
 
   /**
-   * Invalidates all caches and in-flight requests for a all keys.
+   * Invalidates all caches and in-flight requests.
    *
    * This will [clearAll] any configured [MemoryCache] or [Persister], and
    * will also cancel any in-flight requests performed by [Fetcher] via [Fetcher.clearAll]

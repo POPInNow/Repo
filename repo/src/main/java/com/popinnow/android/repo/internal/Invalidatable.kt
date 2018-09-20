@@ -17,13 +17,13 @@
 package com.popinnow.android.repo.internal
 
 /**
- * Invalidatable interfaces are [Clearable] interfaces with more fine grained control.
+ * Invalidatable interfaces are like [Clearable] interfaces with more fine grained control.
  *
- * An Invalidatable can also invalidate only a specific key of its collection of data.
+ * An Invalidatable can invalidate only a specific key of its collection of data.
  *
  * @see Clearable
  */
-interface Invalidatable : Clearable {
+interface Invalidatable {
 
   /**
    * Invalidate a single key from the collection of data.

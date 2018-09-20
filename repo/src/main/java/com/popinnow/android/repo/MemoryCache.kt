@@ -17,7 +17,7 @@
 package com.popinnow.android.repo
 
 import android.support.annotation.CheckResult
-import com.popinnow.android.repo.internal.Invalidatable
+import com.popinnow.android.repo.internal.Clearable
 import com.popinnow.android.repo.manager.MemoryCacheManager
 import io.reactivex.Observable
 
@@ -27,51 +27,38 @@ import io.reactivex.Observable
  * The default implementation caches items based on time from the point that the item is written
  * to the cache.
  *
- * @see Invalidatable
+ * @see Clearable
  * @see MemoryCacheManager
  */
-interface MemoryCache : Invalidatable, MemoryCacheManager {
+interface MemoryCache<T : Any> : Clearable, MemoryCacheManager {
 
   /**
    * Retrieves data stored in the cache.
    *
-   * If there is no data stored in the cache for the given [key], the cache will return an
-   * [Observable.empty]
+   * If there is no data stored in the cache , the cache will return an [Observable.empty]
    *
-   * @param key The key for this request.
    * @return [Observable]
    */
   @CheckResult
-  fun <T : Any> get(
-    key: String,
-    mapper: (Any) -> T
-  ): Observable<T>
+  fun get(): Observable<T>
 
   /**
    * Adds data into the cache.
    *
-   * If there is data in the cache already for the given [key], new data will be appended.
+   * If there is data in the cache already, new data will be appended.
    *
-   * @param key The key for this request.
    * @param value The data to put into the cache.
    */
-  fun add(
-    key: String,
-    value: Any
-  )
+  fun add(value: T)
 
   /**
    * Adds a list of data into the cache.
    *
-   * If there is data in the cache already for the given [key], new data will be appended.
+   * If there is data in the cache already, new data will be appended.
    *
-   * @param key The key for this request.
    * @param values The list of data to put into the cache.
    */
-  fun addAll(
-    key: String,
-    values: List<Any>
-  )
+  fun addAll(values: List<T>)
 
 }
 
