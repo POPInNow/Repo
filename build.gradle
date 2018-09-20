@@ -52,7 +52,7 @@ buildscript {
 ext {
   // POM info
   POM_GROUP = "com.popinnow.android.repo"
-  POM_VERSION = "0.0.9"
+  POM_VERSION = "0.1.0-SNAPSHOT"
 
   minSdk = 14
   maxSdk = 28
