@@ -14,19 +14,34 @@
  * limitations under the License.
  */
 
-package com.popinnow.android.repo.manager
+package com.popinnow.android.repo.impl.noop
 
 import android.support.annotation.CheckResult
+import com.popinnow.android.repo.Persister
+import io.reactivex.Observable
 
-// TODO Document
-interface MultiMemoryCacheManager {
+/**
+ * A Persister implementation that does nothing.
+ */
+internal object NoopPersister : Persister<Any> {
+
+  override fun read(): Observable<Any> {
+    return Observable.empty()
+  }
+
+  override fun write(value: Any) {
+  }
+
+  override fun writeAll(values: List<Any>) {
+  }
+
+  override fun clearAll() {
+  }
 
   @CheckResult
-  fun size(): Int
-
-  @CheckResult
-  fun maxSize(): Int
-
-  fun trimToSize(maxSize: Int)
+  internal fun <T : Any> typedInstance(): Persister<T> {
+    @Suppress("UNCHECKED_CAST")
+    return this as Persister<T>
+  }
 
 }

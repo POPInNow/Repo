@@ -25,27 +25,69 @@ import java.util.concurrent.TimeUnit
  */
 interface RepoBuilder<T : Any> {
 
+  /**
+   * Turn on debugging messages by setting a log tag
+   *
+   * @param debug log tag
+   * @return [RepoBuilder]
+   */
   @CheckResult
   fun debug(debug: String): RepoBuilder<T>
 
+  /**
+   * Provide a custom Fetcher implementation
+   *
+   * @param fetcher Custom implementation
+   * @return [RepoBuilder]
+   */
   @CheckResult
   fun fetcher(fetcher: Fetcher<T>): RepoBuilder<T>
 
+  /**
+   * Provide a custom scheduler for Fetcher operations
+   *
+   * @param scheduler Custom implementation
+   * @return [RepoBuilder]
+   */
   @CheckResult
   fun scheduler(scheduler: Scheduler): RepoBuilder<T>
 
+  /**
+   * Provide a custom scheduler for Fetcher operations
+   *
+   * @param scheduler Custom implementation
+   * @return [RepoBuilder]
+   */
   @CheckResult
   fun scheduler(scheduler: () -> Scheduler): RepoBuilder<T>
 
+  /**
+   * Enable memory caching
+   *
+   * @return [RepoBuilder]
+   */
   @CheckResult
   fun memoryCache(): RepoBuilder<T>
 
+  /**
+   * Enable memory caching with a custom timeout
+   *
+   * @param time
+   * @param timeUnit
+   * @return [RepoBuilder]
+   */
   @CheckResult
   fun memoryCache(
     time: Long,
     timeUnit: TimeUnit
   ): RepoBuilder<T>
 
+  /**
+   * Enable memory caching using a custom implementation
+   *
+   * @param cache Custom implementation
+   * @return [RepoBuilder]
+   */
   @CheckResult
   fun memoryCache(cache: MemoryCache<T>): RepoBuilder<T>
 
@@ -55,6 +97,10 @@ interface RepoBuilder<T : Any> {
 //  @CheckResult
 //  fun persister(TODO): RepoBuilder<T>
 
+  /**
+   * Create a new Repo instance using the configured [RepoBuilder]
+   * @return [Repo]
+   */
   @CheckResult
   fun build(): Repo<T>
 

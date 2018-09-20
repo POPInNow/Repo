@@ -33,7 +33,7 @@ internal class FetcherImpl<T : Any> internal constructor(
   debug: String
 ) : Fetcher<T> {
 
-  private val logger = Logger("Fetcher[$debug]", debug.isNotBlank())
+  private val logger by lazy { Logger("Fetcher[$debug]", debug.isNotBlank()) }
 
   @Volatile private var inFlight: Observable<T>? = null
   @Volatile private var disposable: Disposable = Disposables.disposed()

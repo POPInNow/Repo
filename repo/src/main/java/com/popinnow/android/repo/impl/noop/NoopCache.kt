@@ -14,19 +14,34 @@
  * limitations under the License.
  */
 
-package com.popinnow.android.repo.manager
+package com.popinnow.android.repo.impl.noop
 
 import android.support.annotation.CheckResult
+import com.popinnow.android.repo.MemoryCache
+import io.reactivex.Observable
 
-interface MemoryCacheManager {
+/**
+ * A MemoryCache implementation that does nothing.
+ */
+internal object NoopCache : MemoryCache<Any> {
 
-  /**
-   * Get the current size of the cache
-   *
-   * @see [com.popinnow.android.repo.MemoryCache]
-   * @return Size of the memory cache
-   */
+  override fun get(): Observable<Any> {
+    return Observable.empty()
+  }
+
+  override fun add(value: Any) {
+  }
+
+  override fun addAll(values: List<Any>) {
+  }
+
+  override fun clearAll() {
+  }
+
   @CheckResult
-  fun size(): Int
+  internal fun <T : Any> typedInstance(): MemoryCache<T> {
+    @Suppress("UNCHECKED_CAST")
+    return this as MemoryCache<T>
+  }
 
 }

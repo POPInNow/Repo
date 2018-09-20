@@ -22,7 +22,6 @@ import com.popinnow.android.repo.Fetcher
 import com.popinnow.android.repo.MemoryCache
 import com.popinnow.android.repo.Persister
 import com.popinnow.android.repo.Repo
-import com.popinnow.android.repo.manager.MemoryCacheManager
 import io.reactivex.Observable
 import io.reactivex.Scheduler
 import io.reactivex.Single
@@ -36,7 +35,7 @@ internal class RepoImpl<T : Any> internal constructor(
   debug: String
 ) : Repo<T> {
 
-  private val logger by lazy { Logger("RepoImpl[$debug]", debug.isNotBlank()) }
+  private val logger by lazy { Logger("Repo[$debug]", debug.isNotBlank()) }
 
   @CheckResult
   private fun fetchCacheThenUpstream(
@@ -197,10 +196,6 @@ internal class RepoImpl<T : Any> internal constructor(
   override fun clearAll() {
     clearCaches()
     fetcher.clearAll()
-  }
-
-  override fun memoryCache(): MemoryCacheManager {
-    return memoryCache
   }
 
 }

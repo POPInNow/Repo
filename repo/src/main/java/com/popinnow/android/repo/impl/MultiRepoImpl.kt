@@ -19,20 +19,18 @@ package com.popinnow.android.repo.impl
 import android.support.annotation.CheckResult
 import com.popinnow.android.repo.MultiRepo
 import com.popinnow.android.repo.Repo
-import com.popinnow.android.repo.manager.MemoryCacheManager
-import com.popinnow.android.repo.manager.MultiMemoryCacheManager
 import io.reactivex.Observable
 import io.reactivex.Single
 
 internal class MultiRepoImpl<T : Any> internal constructor(
-  private val repoGenerator: () -> Repo<T>
+  private val repoGenerator: (String) -> Repo<T>
 ) : MultiRepo<T> {
 
   private val repoMap: MutableMap<String, Repo<T>> by lazy { LinkedHashMap<String, Repo<T>>() }
 
   @CheckResult
   private fun repoForKey(key: String): Repo<T> {
-    return repoMap.getOrPut(key, repoGenerator)
+    return repoMap.getOrPut(key) { repoGenerator(key) }
   }
 
   override fun observe(
@@ -46,14 +44,6 @@ internal class MultiRepoImpl<T : Any> internal constructor(
     bustCache: Boolean,
     upstream: () -> Single<T>
   ): Single<T> = repoForKey(key).get(bustCache, upstream)
-
-  override fun memoryCache(key: String): MemoryCacheManager = repoForKey(key).memoryCache()
-
-  override fun memoryCache(): MultiMemoryCacheManager {
-    TODO(
-        "not implemented"
-    ) //To change body of created functions use File | Settings | File Templates.
-  }
 
   override fun replace(
     key: String,

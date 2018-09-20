@@ -22,8 +22,8 @@ import com.popinnow.android.repo.MemoryCache
 import com.popinnow.android.repo.Persister
 import com.popinnow.android.repo.Repo
 import com.popinnow.android.repo.RepoBuilder
-import com.popinnow.android.repo.noop.NoopCache
-import com.popinnow.android.repo.noop.NoopPersister
+import com.popinnow.android.repo.impl.noop.NoopCache
+import com.popinnow.android.repo.impl.noop.NoopPersister
 import io.reactivex.Scheduler
 import io.reactivex.schedulers.Schedulers
 import java.util.concurrent.TimeUnit

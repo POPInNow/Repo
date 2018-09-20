@@ -21,16 +21,6 @@ internal class Logger internal constructor(
   private val debug: Boolean
 ) {
 
-  fun logError(
-    throwable: Throwable,
-    lazyMessage: () -> String
-  ) {
-    if (debug) {
-      throwable.printStackTrace(System.err)
-      System.err.println("$tag: ${lazyMessage()}")
-    }
-  }
-
   fun log(lazyMessage: () -> String) {
     if (debug) {
       System.out.println("$tag: ${lazyMessage()}")

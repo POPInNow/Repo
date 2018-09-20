@@ -18,7 +18,6 @@ package com.popinnow.android.repo
 
 import android.support.annotation.CheckResult
 import com.popinnow.android.repo.internal.Clearable
-import com.popinnow.android.repo.manager.MemoryCacheManager
 import io.reactivex.Observable
 
 /**
@@ -28,9 +27,8 @@ import io.reactivex.Observable
  * to the cache.
  *
  * @see Clearable
- * @see MemoryCacheManager
  */
-interface MemoryCache<T : Any> : Clearable, MemoryCacheManager {
+interface MemoryCache<T : Any> : Clearable {
 
   /**
    * Retrieves data stored in the cache.

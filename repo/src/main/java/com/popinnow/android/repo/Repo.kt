@@ -18,31 +18,14 @@ package com.popinnow.android.repo
 
 import android.support.annotation.CheckResult
 import com.popinnow.android.repo.internal.CacheClearable
-import com.popinnow.android.repo.manager.MemoryCacheManager
 import io.reactivex.Observable
 import io.reactivex.Single
 
 /**
  * Repo follows the cache-then-upstream model and cache-or-upstream model.
  *
- * This Repo follows the cache-then-upstream model. When requests are made to this Repo
- * the [io.reactivex.Observer] is subscribed to a stream which is sourced from a potentially
- * endless [io.reactivex.Observable]. If any data exists in the cache for this Repo, it will be
- * emitted first. Once any cached data is emitted should it exist, the upstream will be subscribed
- * to and emit as usual.
- *
- * If caching is enabled for this Repo, the latest emitted item from the upstream data source will
- * be cached.
- *
- * This Repo follows the cache-or-upstream model. When requests are made to this Repo
- * the [io.reactivex.Observer] is subscribed to a stream which is sourced from a
- * [io.reactivex.Single]. If any data exists in the cache for this Repo, it will be emitted instead
- * of calling the upstream.
- *
- * If any cached data exists and is emitted, the upstream will never be subscribed to.
- *
- * If caching is enabled for this Repo, the latest emitted item from the upstream data source will
- * be cached.
+ * cache-then-upstream is implemented via the [observe] method
+ * cache-or-upstream is implemented via the [get] method
  */
 interface Repo<T : Any> : CacheClearable {
 
@@ -55,7 +38,9 @@ interface Repo<T : Any> : CacheClearable {
    *
    * If no cached data exists in the Repo, then fresh data will be pulled
    * from the [upstream]. If cached data exists, it will be emitted first, and then the [upstream]
-   * will be pulled. Ordering is guaranteed - cached data will always emit first if it exists.
+   * will be pulled.
+   *
+   * Ordering is guaranteed - cached data will always emit first if it exists.
    *
    * @param bustCache Bypass any caching and pull data straight from the upstream source.
    * @param upstream The lazy upstream data source.
@@ -78,6 +63,8 @@ interface Repo<T : Any> : CacheClearable {
    * from the [upstream]. If cached data exists, the latest will be emitted, and the [upstream]
    * will never be pulled.
    *
+   * Ordering is guaranteed - cached data will always emit instead of the upstream if it exists.
+   *
    * @param bustCache Bypass any caching and pull data straight from the upstream source.
    * @param upstream The lazy upstream data source.
    * @return [Single]
@@ -89,36 +76,32 @@ interface Repo<T : Any> : CacheClearable {
   ): Single<T>
 
   /**
-   * Get a manager that allows the querying of this Repo's [MemoryCache]
-   *
-   * @return [MemoryCacheManager]
-   */
-  @CheckResult
-  fun memoryCache(): MemoryCacheManager
-
-  /**
-   * Replace data in the Repo with a single item.
+   * Replace data in this Repo's caching layer
    *
    * @param value The data to put into the Repo
    */
   fun replace(value: T)
 
   /**
-   * Replace data into the Repo with a list of items.
+   * Replace data in this Repo's caching layer
    *
    * @param values The list data to put into the Repo
    */
   fun replaceAll(values: List<T>)
 
   /**
-   * Push data into the Repo.
+   * Push data into this Repo's caching layer.
+   *
+   * Data will be appended to the end of any data that already is present.
    *
    * @param value The data to put into the Repo
    */
   fun push(value: T)
 
   /**
-   * Push a list of data into the Repo.
+   * Push data into this Repo's caching layer.
+   *
+   * Data will be appended to the end of any data that already is present.
    *
    * @param values The list data to put into the Repo
    */
@@ -142,6 +125,10 @@ interface Repo<T : Any> : CacheClearable {
    *
    * This will [clearAll] any configured [MemoryCache] or [Persister], and
    * will also cancel any in-flight requests performed by [Fetcher] via [Fetcher.clearAll]
+   *
+   * To only clear caches and not in-flight requests, see [clearCaches]
+   *
+   * @see clearCaches
    */
   override fun clearAll()
 }

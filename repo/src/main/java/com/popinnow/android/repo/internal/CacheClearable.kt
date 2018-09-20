@@ -19,12 +19,7 @@ package com.popinnow.android.repo.internal
 /**
  * Clearable interfaces support collections of data.
  */
-interface CacheClearable {
-
-  /**
-   * Clear the collection of data.
-   */
-  fun clearAll()
+interface CacheClearable : Clearable {
 
   /**
    * Invalidates all caches for a all keys.

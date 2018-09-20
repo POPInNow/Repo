@@ -28,7 +28,7 @@ internal class MemoryCacheImpl<T : Any> constructor(
 ) : MemoryCache<T> {
 
   private val ttl = timeUnit.toNanos(time)
-  private val logger = Logger("MemoryCache[$debug]", debug.isNotBlank())
+  private val logger by lazy { Logger("MemoryCache[$debug]", debug.isNotBlank()) }
 
   // Data backing field
   @Volatile private var data: Entry<T>? = null
@@ -102,16 +102,6 @@ internal class MemoryCacheImpl<T : Any> constructor(
   override fun clearAll() {
     logger.log { "Cleared" }
     data = null
-  }
-
-  override fun size(): Int {
-    return data.let {
-      if (it == null) {
-        return@let 0
-      } else {
-        return@let it.data.size
-      }
-    }
   }
 
   private data class Entry<T : Any> internal constructor(

@@ -27,9 +27,10 @@ import com.popinnow.android.repo.impl.RepoBuilderImpl
  *
  * @return [RepoBuilder]
  */
+@JvmOverloads
 @CheckResult
-fun <T : Any> newRepoBuilder(): RepoBuilder<T> {
-  return RepoBuilderImpl()
+fun <T : Any> newRepoBuilder(debug: String = ""): RepoBuilder<T> {
+  return RepoBuilderImpl<T>().debug(debug)
 }
 
 /**
@@ -38,8 +39,9 @@ fun <T : Any> newRepoBuilder(): RepoBuilder<T> {
  * @return [Repo]
  */
 @CheckResult
-fun <T : Any> newRepo(): Repo<T> {
+fun <T : Any> newRepo(debug: String = ""): Repo<T> {
   return newRepoBuilder<T>()
+      .debug(debug)
       .memoryCache()
       .build()
 }
@@ -47,9 +49,14 @@ fun <T : Any> newRepo(): Repo<T> {
 /**
  * Create a new MultiRepo instance
  *
+ * Lazy creates [Repo] instances as they are needed per key.
+ * The [generator] function is passed the key argument and is expected to either
+ * return a new [Repo] instance or throw an exception.
+ *
+ * @param generator Repo generator function
  * @return [MultiRepo]
  */
 @CheckResult
-fun <T : Any> newMultiRepo(generator: () -> Repo<T>): MultiRepo<T> {
+fun <T : Any> newMultiRepo(generator: (String) -> Repo<T>): MultiRepo<T> {
   return MultiRepoImpl(generator)
 }

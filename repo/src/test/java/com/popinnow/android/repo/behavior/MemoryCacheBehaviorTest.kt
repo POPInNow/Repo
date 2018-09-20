@@ -69,21 +69,12 @@ class MemoryCacheBehaviorTest {
         .assertComplete()
   }
 
-  private fun assertCacheSize(
-    cache: MemoryCache<String>,
-    size: Int
-  ) {
-    assert(cache.size() == size) { "Wrong cache size: ${cache.size()}, expected $size" }
-  }
-
   private fun fillCacheWithDummyData(
     cache: MemoryCache<String>,
     size: Int
   ) {
-    val originalCacheSize = cache.size()
     for (i in 1..size) {
       cache.add("data$i")
-      assertCacheSize(cache, originalCacheSize + i)
     }
   }
 
@@ -126,17 +117,11 @@ class MemoryCacheBehaviorTest {
     // So it returns data on query
     assertCacheSingleValue(cache, DEFAULT_EXPECT)
 
-    // Assert the size of the cache is correct
-    assertCacheSize(cache, 1)
-
     // Invalidating the cache then clears it
     cache.clearAll()
 
     // So it does not return
     assertCacheIsEmpty(cache)
-
-    // Assert the size of the cache is correct
-    assertCacheSize(cache, 0)
   }
 
   /**
@@ -151,23 +136,14 @@ class MemoryCacheBehaviorTest {
     // So it returns data on query
     assertCacheSingleValue(cache, DEFAULT_EXPECT)
 
-    // Assert the size of the cache is correct
-    assertCacheSize(cache, 1)
-
     // Put some more data
     fillCacheWithDummyData(cache, 5)
-
-    // Assert the size of the cache is correct
-    assertCacheSize(cache, 6)
 
     // Invalidating the cache then clears it
     cache.clearAll()
 
     // So it does not return
     assertCacheIsEmpty(cache)
-
-    // Assert the size of the cache is correct
-    assertCacheSize(cache, 0)
   }
 
   /**
