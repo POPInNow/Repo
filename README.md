@@ -218,7 +218,7 @@ instance it is interacting with.
 latest valid data and will reset any cache timeouts. A variant exists to push a list of data, named  
 `pushAll()`.
 
-`replace()` is used to replace a single piece of data into the `Repo` instance - it will erase any
+`replace()` is used to replace a single piece of data into the `Repo` instance - it will erase any  
 already cached data, reset cache timeouts, and then be inserted, becoming the latest valid data.  
 A variant exists to replace an entire list of data, named `replaceAll()`.
 
@@ -227,7 +227,7 @@ instance it is interacting with.
 
 ### Clearing Data in Repo Instances
 
-`Repo` instances are cleared in two different ways - the `clearCaches()` and `clearAll()` functions.
+`Repo` instances are cleared in two different ways - the `clearCaches()` and `clearAll()` functions.  
 
 `clearCaches()` will only clear data from the `Repo` instance's caching layer. Any stored data will  
 be cleared out, but any currently active requests through a `Fetcher` to an upstream data source  
