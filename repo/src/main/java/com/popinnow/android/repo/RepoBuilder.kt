@@ -16,7 +16,7 @@
 
 package com.popinnow.android.repo
 
-import android.support.annotation.CheckResult
+import androidx.annotation.CheckResult
 import io.reactivex.Scheduler
 import java.util.concurrent.TimeUnit
 

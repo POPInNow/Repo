@@ -18,7 +18,7 @@
 
 package com.popinnow.android.repo
 
-import android.support.annotation.CheckResult
+import androidx.annotation.CheckResult
 import com.popinnow.android.repo.impl.MultiRepoImpl
 import com.popinnow.android.repo.impl.RepoBuilderImpl
 

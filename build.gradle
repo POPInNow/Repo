@@ -18,7 +18,7 @@
 
 buildscript {
   ext {
-    kotlin_version = '1.2.70'
+    kotlin_version = '1.2.71'
     plugin_version = '3.1.4'
   }
   repositories {
@@ -59,7 +59,7 @@ ext {
 
   // Library
   rxjava = "2.2.2"
-  supportLib = "27.1.1"
+  androidx = "1.0.0"
 
   // Tests
   junit = "4.12"

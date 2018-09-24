@@ -16,7 +16,7 @@
 
 package com.popinnow.android.repo
 
-import android.support.annotation.CheckResult
+import androidx.annotation.CheckResult
 import com.popinnow.android.repo.internal.CacheClearable
 import com.popinnow.android.repo.internal.CacheInvalidatable
 import io.reactivex.Observable

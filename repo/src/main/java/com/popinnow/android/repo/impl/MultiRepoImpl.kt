@@ -16,7 +16,7 @@
 
 package com.popinnow.android.repo.impl
 
-import android.support.annotation.CheckResult
+import androidx.annotation.CheckResult
 import com.popinnow.android.repo.MultiRepo
 import com.popinnow.android.repo.Repo
 import io.reactivex.Observable

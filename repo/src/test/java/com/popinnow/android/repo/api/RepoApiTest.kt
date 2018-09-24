@@ -16,7 +16,7 @@
 
 package com.popinnow.android.repo.api
 
-import android.support.annotation.CheckResult
+import androidx.annotation.CheckResult
 import com.popinnow.android.repo.Fetcher
 import com.popinnow.android.repo.MemoryCache
 import com.popinnow.android.repo.Persister

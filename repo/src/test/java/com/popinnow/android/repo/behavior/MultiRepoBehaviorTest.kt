@@ -16,7 +16,7 @@
 
 package com.popinnow.android.repo.behavior
 
-import android.support.annotation.CheckResult
+import androidx.annotation.CheckResult
 import com.popinnow.android.repo.MultiRepo
 import com.popinnow.android.repo.newMultiRepo
 import com.popinnow.android.repo.newRepoBuilder

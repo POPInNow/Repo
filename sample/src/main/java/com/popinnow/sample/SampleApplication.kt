@@ -18,7 +18,7 @@ package com.popinnow.sample
 
 import android.app.Application
 import android.content.Context
-import android.support.annotation.CheckResult
+import androidx.annotation.CheckResult
 import com.popinnow.android.repo.newRepo
 import io.reactivex.Observable
 import io.reactivex.Single

@@ -16,7 +16,7 @@
 
 package com.popinnow.android.repo.impl.noop
 
-import android.support.annotation.CheckResult
+import androidx.annotation.CheckResult
 import com.popinnow.android.repo.MemoryCache
 import io.reactivex.Observable
 

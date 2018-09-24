@@ -16,7 +16,7 @@
 
 package com.popinnow.android.repo.impl
 
-import android.support.annotation.CheckResult
+import androidx.annotation.CheckResult
 import com.popinnow.android.repo.Fetcher
 import io.reactivex.Observable
 import io.reactivex.Scheduler

@@ -16,8 +16,8 @@
 
 package com.popinnow.android.repo.impl
 
-import android.support.annotation.CheckResult
-import android.support.annotation.VisibleForTesting
+import androidx.annotation.CheckResult
+import androidx.annotation.VisibleForTesting
 import com.popinnow.android.repo.Fetcher
 import com.popinnow.android.repo.MemoryCache
 import com.popinnow.android.repo.Persister

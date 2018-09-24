@@ -16,7 +16,7 @@
 
 package com.popinnow.sample
 
-import android.support.annotation.CheckResult
+import androidx.annotation.CheckResult
 
 class SampleMockDataSourceInt {
 

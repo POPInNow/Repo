@@ -17,9 +17,9 @@
 package com.popinnow.sample
 
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.SwitchCompat
 import android.widget.Button
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.SwitchCompat
 import com.popinnow.android.repo.newRepoBuilder
 import io.reactivex.Observable
 import io.reactivex.Single

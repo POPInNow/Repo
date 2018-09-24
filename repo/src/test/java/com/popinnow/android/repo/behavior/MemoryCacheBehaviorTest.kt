@@ -16,7 +16,7 @@
 
 package com.popinnow.android.repo.behavior
 
-import android.support.annotation.CheckResult
+import androidx.annotation.CheckResult
 import com.popinnow.android.repo.MemoryCache
 import com.popinnow.android.repo.impl.MemoryCacheImpl
 import com.popinnow.android.repo.startNow
