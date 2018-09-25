@@ -62,7 +62,7 @@ artifacts {
 publishing {
   publications {
     Repo(MavenPublication) {
-      artifact bundleRelease
+      artifact bundleReleaseAar
       artifact androidSourcesJar
       artifact androidJavadocsJar
       groupId POM_GROUP
