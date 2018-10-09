@@ -39,7 +39,7 @@ buildscript {
     classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4"
 
     // Dex count
-    classpath 'com.getkeepsafe.dexcount:dexcount-gradle-plugin:0.8.3'
+    classpath 'com.getkeepsafe.dexcount:dexcount-gradle-plugin:0.8.4'
 
     // Gradle version checker
     classpath 'com.github.ben-manes:gradle-versions-plugin:0.20.0'
@@ -63,7 +63,7 @@ ext {
 
   // Tests
   junit = "4.12"
-  mockito = "2.21.0"
+  mockito = "2.23.0"
 
   // Sample
   rxandroid = "2.1.0"
