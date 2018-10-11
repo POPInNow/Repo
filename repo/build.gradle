@@ -112,7 +112,6 @@ bintray {
 dependencies {
   implementation "io.reactivex.rxjava2:rxjava:$rxjava"
   implementation "androidx.annotation:annotation:$androidx"
-  implementation "androidx.core:core:$androidx"
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
   testImplementation "junit:junit:$junit"
