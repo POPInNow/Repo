@@ -21,7 +21,7 @@ internal class Logger internal constructor(
   private val debug: Boolean
 ) {
 
-  fun log(lazyMessage: () -> String) {
+  inline fun log(lazyMessage: () -> String) {
     if (debug) {
       System.out.println("$tag: ${lazyMessage()}")
     }
