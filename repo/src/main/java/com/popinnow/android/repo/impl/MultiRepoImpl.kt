@@ -21,12 +21,13 @@ import com.popinnow.android.repo.MultiRepo
 import com.popinnow.android.repo.Repo
 import io.reactivex.Observable
 import io.reactivex.Single
+import java.util.concurrent.ConcurrentHashMap
 
 internal class MultiRepoImpl<T : Any> internal constructor(
   private val repoGenerator: (String) -> Repo<T>
 ) : MultiRepo<T> {
 
-  private val repoMap: MutableMap<String, Repo<T>> by lazy { LinkedHashMap<String, Repo<T>>() }
+  private val repoMap: MutableMap<String, Repo<T>> by lazy { ConcurrentHashMap<String, Repo<T>>() }
 
   @CheckResult
   private fun repoForKey(key: String): Repo<T> {
