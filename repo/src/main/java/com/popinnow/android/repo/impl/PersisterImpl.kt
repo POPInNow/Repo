@@ -44,6 +44,10 @@ internal class PersisterImpl<T : Any> internal constructor(
 
   private val lock = Any()
 
+  init {
+    logger.log { "Create with TTL: $ttl nano seconds" }
+  }
+
   @CheckResult
   private fun isFileValid(): Boolean {
     synchronized(lock) {
