@@ -33,10 +33,10 @@ internal class PersisterImpl<T : Any> internal constructor(
   debug: String,
   time: Long,
   timeUnit: TimeUnit,
-  private val file: File,
   private val scheduler: Scheduler,
-  private val toJson: (ArrayList<T>) -> String,
-  private val fromJson: (String) -> ArrayList<T>
+  private val file: File,
+  private val serialize: (ArrayList<T>) -> String,
+  private val parse: (String) -> ArrayList<T>
 ) : Persister<T> {
 
   private val ttl = timeUnit.toNanos(time)
@@ -78,7 +78,7 @@ internal class PersisterImpl<T : Any> internal constructor(
             }
 
             try {
-              val data = fromJson(allContents)
+              val data = parse(allContents)
               logger.log { "Map json to data: $data" }
               return data
             } catch (e: Exception) {
@@ -165,7 +165,7 @@ internal class PersisterImpl<T : Any> internal constructor(
           .buffer()
           .use {
             try {
-              val json = toJson(data)
+              val json = serialize(data)
               logger.log { "Map data to json: $json" }
               it.writeUtf8(json)
 

@@ -26,19 +26,29 @@ import com.popinnow.android.repo.impl.noop.NoopCache
 import com.popinnow.android.repo.impl.noop.NoopPersister
 import io.reactivex.Scheduler
 import io.reactivex.schedulers.Schedulers
+import java.io.File
 import java.util.concurrent.TimeUnit
 
 internal class RepoBuilderImpl<T : Any> internal constructor(
   private var fetcher: Fetcher<T>? = null,
-  private var persister: Persister<T>? = null,
   private var scheduler: Scheduler? = null,
   private var debug: String = ""
 ) : RepoBuilder<T> {
 
   private var cacheBuilder = MemoryCacheBuilder<T>(
       enabled = false,
-      time = DEFAULT_TIME,
-      timeUnit = DEFAULT_UNIT,
+      time = DEFAULT_MEMORY_TIME,
+      timeUnit = DEFAULT_MEMORY_UNIT,
+      custom = null
+  )
+
+  private var persisterBuilder = PersisterBuilder<T>(
+      enabled = false,
+      time = DEFAULT_PERSISTER_TIME,
+      timeUnit = DEFAULT_PERSISTER_UNIT,
+      file = null,
+      serialize = null,
+      parse = null,
       custom = null
   )
 
@@ -48,7 +58,7 @@ internal class RepoBuilderImpl<T : Any> internal constructor(
   }
 
   override fun memoryCache(): RepoBuilder<T> {
-    return memoryCache(DEFAULT_TIME, DEFAULT_UNIT)
+    return memoryCache(DEFAULT_MEMORY_TIME, DEFAULT_MEMORY_UNIT)
   }
 
   override fun memoryCache(
@@ -67,9 +77,58 @@ internal class RepoBuilderImpl<T : Any> internal constructor(
   override fun memoryCache(cache: MemoryCache<T>): RepoBuilder<T> {
     this.cacheBuilder.also {
       it.enabled = true
-      it.time = DEFAULT_TIME
-      it.timeUnit = DEFAULT_UNIT
+      it.time = DEFAULT_MEMORY_TIME
+      it.timeUnit = DEFAULT_MEMORY_UNIT
       it.custom = cache
+    }
+    return this
+  }
+
+  override fun persister(
+    time: Long,
+    timeUnit: TimeUnit,
+    file: File,
+    serialize: (ArrayList<T>) -> String,
+    parse: (String) -> ArrayList<T>
+  ): RepoBuilder<T> {
+    this.persisterBuilder.also {
+      it.enabled = true
+      it.time = time
+      it.timeUnit = timeUnit
+      it.file = file
+      it.serialize = serialize
+      it.parse = parse
+      it.custom = null
+    }
+    return this
+  }
+
+  override fun persister(
+    file: File,
+    serialize: (ArrayList<T>) -> String,
+    parse: (String) -> ArrayList<T>
+  ): RepoBuilder<T> {
+    this.persisterBuilder.also {
+      it.enabled = true
+      it.time = DEFAULT_PERSISTER_TIME
+      it.timeUnit = DEFAULT_PERSISTER_UNIT
+      it.file = file
+      it.serialize = serialize
+      it.parse = parse
+      it.custom = null
+    }
+    return this
+  }
+
+  override fun persister(persister: Persister<T>): RepoBuilder<T> {
+    this.persisterBuilder.also {
+      it.enabled = true
+      it.time = DEFAULT_PERSISTER_TIME
+      it.timeUnit = DEFAULT_PERSISTER_UNIT
+      it.file = null
+      it.serialize = null
+      it.parse = null
+      it.custom = persister
     }
     return this
   }
@@ -109,12 +168,38 @@ internal class RepoBuilderImpl<T : Any> internal constructor(
     return cache
   }
 
+  @CheckResult
+  private fun persisterBuilderToPersister(): Persister<T> {
+    val persister: Persister<T>
+    if (this.persisterBuilder.enabled) {
+      val customPersister = this.persisterBuilder.custom
+      if (customPersister == null) {
+        persister = PersisterImpl(
+            debug,
+            this.persisterBuilder.time,
+            this.persisterBuilder.timeUnit,
+            scheduler ?: DEFAULT_SCHEDULER,
+            // If we have gotten here, these variables should be non-null
+            requireNotNull(this.persisterBuilder.file) { "Persister missing 'file'" },
+            requireNotNull(this.persisterBuilder.serialize) { "Persister missing 'serialize'" },
+            requireNotNull(this.persisterBuilder.parse) { "Persister missing 'parse'" }
+        )
+      } else {
+        persister = customPersister
+      }
+    } else {
+      persister = NoopPersister.typedInstance()
+    }
+
+    return persister
+  }
+
   override fun build(): Repo<T> {
     return RepoImpl(
         fetcher ?: FetcherImpl(debug),
         cacheBuilderToCache(),
-        persister ?: NoopPersister.typedInstance(),
-        scheduler ?: Schedulers.io(),
+        persisterBuilderToPersister(),
+        scheduler ?: DEFAULT_SCHEDULER,
         debug
     )
   }
@@ -126,10 +211,25 @@ internal class RepoBuilderImpl<T : Any> internal constructor(
     internal var custom: MemoryCache<T>?
   )
 
+  internal data class PersisterBuilder<T : Any> internal constructor(
+    internal var enabled: Boolean,
+    internal var time: Long,
+    internal var timeUnit: TimeUnit,
+    internal var file: File?,
+    internal var serialize: ((ArrayList<T>) -> String)?,
+    internal var parse: ((String) -> ArrayList<T>)?,
+    internal var custom: Persister<T>?
+  )
+
   companion object {
 
-    private const val DEFAULT_TIME: Long = 30
-    private val DEFAULT_UNIT: TimeUnit = TimeUnit.SECONDS
+    private val DEFAULT_SCHEDULER: Scheduler = Schedulers.io()
+
+    private const val DEFAULT_MEMORY_TIME: Long = 30
+    private val DEFAULT_MEMORY_UNIT: TimeUnit = TimeUnit.SECONDS
+
+    private const val DEFAULT_PERSISTER_TIME: Long = 10
+    private val DEFAULT_PERSISTER_UNIT: TimeUnit = TimeUnit.MINUTES
   }
 
 }

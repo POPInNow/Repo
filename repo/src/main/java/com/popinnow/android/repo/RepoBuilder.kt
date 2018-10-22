@@ -18,6 +18,7 @@ package com.popinnow.android.repo
 
 import androidx.annotation.CheckResult
 import io.reactivex.Scheduler
+import java.io.File
 import java.util.concurrent.TimeUnit
 
 /**
@@ -92,10 +93,47 @@ interface RepoBuilder<T : Any> {
   fun memoryCache(cache: MemoryCache<T>): RepoBuilder<T>
 
   /**
-   * TODO: Expose this method once we have decided how the default Persister implementation will work.
+   * Enable disk persistence
+   *
+   * @param file File to save data to
+   * @param serialize Mapper function to turn a list of data objects into a String
+   * @param parse Mapper function to turn a String into a list of data objects
+   * @return [RepoBuilder]
    */
-//  @CheckResult
-//  fun persister(TODO): RepoBuilder<T>
+  @CheckResult
+  fun persister(
+    file: File,
+    serialize: (ArrayList<T>) -> String,
+    parse: (String) -> ArrayList<T>
+  ): RepoBuilder<T>
+
+  /**
+   * Enable disk persistence
+   *
+   * @param time
+   * @param timeUnit
+   * @param file File to save data to
+   * @param serialize Mapper function to turn a list of data objects into a String
+   * @param parse Mapper function to turn a String into a list of data objects
+   * @return [RepoBuilder]
+   */
+  @CheckResult
+  fun persister(
+    time: Long,
+    timeUnit: TimeUnit,
+    file: File,
+    serialize: (ArrayList<T>) -> String,
+    parse: (String) -> ArrayList<T>
+  ): RepoBuilder<T>
+
+  /**
+   * Enable disk persistence using a custom implementation
+   *
+   * @param persister Custom implementation
+   * @return [RepoBuilder]
+   */
+  @CheckResult
+  fun persister(persister: Persister<T>): RepoBuilder<T>
 
   /**
    * Create a new Repo instance using the configured [RepoBuilder]
