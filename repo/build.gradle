@@ -113,6 +113,7 @@ dependencies {
   implementation "io.reactivex.rxjava2:rxjava:$rxjava"
   implementation "androidx.annotation:annotation:$androidx"
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+  implementation "com.squareup.okio:okio:$okio"
 
   testImplementation "junit:junit:$junit"
   testImplementation "org.mockito:mockito-core:$mockito"
