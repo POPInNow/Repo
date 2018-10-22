@@ -161,6 +161,10 @@ internal class PersisterImpl<T : Any> internal constructor(
   @CheckResult
   private fun writeFile(data: ArrayList<T>): Boolean {
     synchronized(lock) {
+      if (file.createNewFile()) {
+        logger.log { "Created new file: $file" }
+      }
+
       file.sink()
           .buffer()
           .use {
