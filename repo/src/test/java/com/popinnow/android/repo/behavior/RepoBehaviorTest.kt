@@ -64,21 +64,6 @@ class RepoBehaviorTest {
     observableSimpleGet(repo, memoryCache)
   }
 
-  @Test
-  fun `RepoBehavior Observable memory cache with persister simple get`() {
-    val debug = "observable cache with persister simple get"
-    val memoryCache = MemoryCacheImpl<String>(debug, 30, SECONDS)
-    val repo = builder<String>(debug)
-        .memoryCache(memoryCache)
-        .persister(
-            createTempFile(prefix = "repo_test"),
-            TestPersisterMapper()
-        )
-        .build()
-
-    observableSimpleGet(repo, memoryCache)
-  }
-
   private fun observableSimpleGet(
     repo: Repo<String>,
     memoryCache: MemoryCache<String>

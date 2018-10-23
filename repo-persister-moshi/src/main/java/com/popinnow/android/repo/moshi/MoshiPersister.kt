@@ -37,10 +37,10 @@ class MoshiPersister<T : Any> internal constructor(
   type: Class<T>
 ) : PersisterMapper<T> {
 
-  private val adapter: JsonAdapter<ArrayList<T>>
+  private val adapter: JsonAdapter<List<T>>
 
   init {
-    val token = Types.newParameterizedType(ArrayList::class.java, type)
+    val token = Types.newParameterizedType(List::class.java, type)
     adapter = moshi.adapter(token)
   }
 
@@ -49,7 +49,8 @@ class MoshiPersister<T : Any> internal constructor(
   }
 
   override fun parseToObjects(data: String): ArrayList<T> {
-    return adapter.fromJson(data) ?: arrayListOf()
+    val list = adapter.fromJson(data) ?: emptyList()
+    return ArrayList(list)
   }
 
   companion object {

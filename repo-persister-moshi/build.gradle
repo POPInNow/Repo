@@ -43,6 +43,11 @@ dependencies {
   implementation "com.squareup.moshi:moshi:$moshi"
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
   implementation project(":repo")
+
+  testImplementation "junit:junit:$junit"
+  testImplementation "org.mockito:mockito-core:$mockito"
+  testImplementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+  testImplementation project(path: ':repo', configuration: 'archives')
 }
 
 apply from: "$rootDir/publishing.gradle"

@@ -42,7 +42,12 @@ dependencies {
   implementation "androidx.annotation:annotation:$androidx"
   implementation "com.google.code.gson:gson:$gson"
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-  implementation project(":repo")
+  implementation project(':repo')
+
+  testImplementation "junit:junit:$junit"
+  testImplementation "org.mockito:mockito-core:$mockito"
+  implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+  testImplementation project(path: ':repo', configuration: 'archives')
 }
 
 apply from: "$rootDir/publishing.gradle"

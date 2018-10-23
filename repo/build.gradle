@@ -38,17 +38,43 @@ android {
   }
 }
 
+/**
+ * We need to bundle the test classes so that other tests can extend from them
+ */
+task repoDebugTestJar(type: Jar) {
+  classifier = 'test'
+  from "$buildDir/tmp/kotlin-classes/debugUnitTest"
+}
+
+repoDebugTestJar.dependsOn tasks.withType(AbstractCompile).matching {
+  def name = it.name.toLowerCase()
+  name.contains("debug") && name.contains("unit") && name.contains("test")
+}
+
+task repoReleaseTestJar(type: Jar) {
+  classifier = 'test'
+  from "$buildDir/tmp/kotlin-classes/releaseUnitTest"
+}
+
+repoReleaseTestJar.dependsOn tasks.withType(AbstractCompile).matching {
+  def name = it.name.toLowerCase()
+  name.contains("release") && name.contains("unit") && name.contains("test")
+}
+
+artifacts {
+  archives repoDebugTestJar
+  archives repoReleaseTestJar
+}
+
 dependencies {
   implementation "io.reactivex.rxjava2:rxjava:$rxjava"
   implementation "androidx.annotation:annotation:$androidx"
-  implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
   implementation "com.squareup.okio:okio:$okio"
+  implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 
   testImplementation "junit:junit:$junit"
   testImplementation "org.mockito:mockito-core:$mockito"
   testImplementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-  testImplementation "com.squareup.okio:okio:$okio"
-  testImplementation "com.google.code.gson:gson:$gson"
 }
 
 apply from: "$rootDir/publishing.gradle"
