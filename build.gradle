@@ -62,10 +62,13 @@ ext {
   androidx = "1.0.0"
   okio = "2.1.0"
 
+  // Persister
+  moshi = "1.7.0"
+  gson = "2.8.5"
+
   // Tests
   junit = "4.12"
   mockito = "2.23.0"
-  gson = "2.8.5"
 
   // Sample
   rxandroid = "2.1.0"

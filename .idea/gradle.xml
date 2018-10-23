@@ -10,6 +10,7 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/repo" />
             <option value="$PROJECT_DIR$/repo-persister-gson" />
+            <option value="$PROJECT_DIR$/repo-persister-moshi" />
             <option value="$PROJECT_DIR$/sample" />
           </set>
         </option>

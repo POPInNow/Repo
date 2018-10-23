@@ -14,4 +14,4 @@
  * limitations under the License.
  */
 
-include ':repo', ':sample', ':repo-persister-gson'
+include ':repo', ':sample', ':repo-persister-gson', ':repo-persister-moshi'
