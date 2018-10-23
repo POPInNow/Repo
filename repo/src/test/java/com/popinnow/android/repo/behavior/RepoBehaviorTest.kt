@@ -23,8 +23,6 @@ import com.popinnow.android.repo.RepoBuilder
 import com.popinnow.android.repo.impl.MemoryCacheImpl
 import com.popinnow.android.repo.newRepoBuilder
 import com.popinnow.android.repo.startNow
-import com.popinnow.android.repo.toJson
-import com.popinnow.android.repo.toListOfObjects
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
@@ -74,8 +72,7 @@ class RepoBehaviorTest {
         .memoryCache(memoryCache)
         .persister(
             createTempFile(prefix = "repo_test"),
-            { it.toJson() },
-            { it.toListOfObjects() }
+            TestPersisterMapper()
         )
         .build()
 

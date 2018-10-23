@@ -21,12 +21,11 @@ import com.popinnow.android.repo.Persister
 import com.popinnow.android.repo.Persister.PersisterMapper
 import com.popinnow.android.repo.impl.PersisterImpl
 import com.popinnow.android.repo.startNow
-import com.popinnow.android.repo.toJson
-import com.popinnow.android.repo.toListOfObjects
 import io.reactivex.Observable
 import io.reactivex.schedulers.Schedulers
 import okio.appendingSink
 import okio.buffer
+import org.json.JSONArray
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -36,8 +35,14 @@ import java.io.File
 import java.util.UUID
 import java.util.concurrent.TimeUnit.SECONDS
 
+// TODO(peter): We should figure out how to leave this class in the main repo module
+// Ideally we would be able to write all the code into the main repo test module and simply
+// extend the test class into these other implementation modules and provide the implementation
+// specific mapper. Otherwise we have to maintain two separate test files with the same code and
+// slightly changed mapper implementations. This would also mean we are testing against two different
+// things - the mapper implementation and the persister implementation itself, which is not the best.
 @RunWith(MockitoJUnitRunner::class)
-class PersisterBehaviorTest {
+open class PersisterBehaviorTest {
 
   private val tempFiles = LinkedHashSet<File>()
 
@@ -62,23 +67,20 @@ class PersisterBehaviorTest {
   }
 
   @CheckResult
+  open fun provideMapper(): PersisterMapper<String> {
+    return TestPersisterMapper()
+  }
+
+  @CheckResult
   private fun createPersister(
     debug: String,
     time: Long,
     file: File? = null
   ): PersisterImpl<String> {
-    return PersisterImpl(debug, time, SECONDS, Schedulers.trampoline(),
-        file ?: randomFile(),
-        object : PersisterMapper<String> {
-
-          override fun parseToObjects(data: String): ArrayList<String> {
-            return data.toListOfObjects()
-          }
-
-          override fun serializeToString(data: ArrayList<String>): String {
-            return data.toJson()
-          }
-        })
+    return PersisterImpl(
+        debug, time, SECONDS, Schedulers.trampoline(),
+        file ?: randomFile(), provideMapper()
+    )
   }
 
   private fun assertPersisterIsEmpty(
