@@ -20,6 +20,7 @@ import androidx.annotation.CheckResult
 import com.popinnow.android.repo.Fetcher
 import com.popinnow.android.repo.MemoryCache
 import com.popinnow.android.repo.Persister
+import com.popinnow.android.repo.Persister.PersisterMapper
 import com.popinnow.android.repo.Repo
 import com.popinnow.android.repo.RepoBuilder
 import com.popinnow.android.repo.impl.noop.NoopCache
@@ -47,8 +48,7 @@ internal class RepoBuilderImpl<T : Any> internal constructor(
       time = DEFAULT_PERSISTER_TIME,
       timeUnit = DEFAULT_PERSISTER_UNIT,
       file = null,
-      serialize = null,
-      parse = null,
+      mapper = null,
       custom = null
   )
 
@@ -84,23 +84,22 @@ internal class RepoBuilderImpl<T : Any> internal constructor(
     return this
   }
 
-  override fun persister(
-    time: Long,
-    timeUnit: TimeUnit,
-    file: File,
+  @CheckResult
+  private fun mapperFromFunctions(
     serialize: (ArrayList<T>) -> String,
     parse: (String) -> ArrayList<T>
-  ): RepoBuilder<T> {
-    this.persisterBuilder.also {
-      it.enabled = true
-      it.time = time
-      it.timeUnit = timeUnit
-      it.file = file
-      it.serialize = serialize
-      it.parse = parse
-      it.custom = null
+  ): PersisterMapper<T> {
+    return object : PersisterMapper<T> {
+
+      override fun serializeToString(data: ArrayList<T>): String {
+        return serialize(data)
+      }
+
+      override fun parseToObjects(data: String): ArrayList<T> {
+        return parse(data)
+      }
+
     }
-    return this
   }
 
   override fun persister(
@@ -108,13 +107,46 @@ internal class RepoBuilderImpl<T : Any> internal constructor(
     serialize: (ArrayList<T>) -> String,
     parse: (String) -> ArrayList<T>
   ): RepoBuilder<T> {
+    return persister(file, mapperFromFunctions(serialize, parse))
+  }
+
+  override fun persister(
+    file: File,
+    mapper: PersisterMapper<T>
+  ): RepoBuilder<T> {
     this.persisterBuilder.also {
       it.enabled = true
       it.time = DEFAULT_PERSISTER_TIME
       it.timeUnit = DEFAULT_PERSISTER_UNIT
       it.file = file
-      it.serialize = serialize
-      it.parse = parse
+      it.mapper = mapper
+      it.custom = null
+    }
+    return this
+  }
+
+  override fun persister(
+    time: Long,
+    timeUnit: TimeUnit,
+    file: File,
+    serialize: (ArrayList<T>) -> String,
+    parse: (String) -> ArrayList<T>
+  ): RepoBuilder<T> {
+    return persister(time, timeUnit, file, mapperFromFunctions(serialize, parse))
+  }
+
+  override fun persister(
+    time: Long,
+    timeUnit: TimeUnit,
+    file: File,
+    mapper: PersisterMapper<T>
+  ): RepoBuilder<T> {
+    this.persisterBuilder.also {
+      it.enabled = true
+      it.time = time
+      it.timeUnit = timeUnit
+      it.file = file
+      it.mapper = mapper
       it.custom = null
     }
     return this
@@ -126,8 +158,7 @@ internal class RepoBuilderImpl<T : Any> internal constructor(
       it.time = DEFAULT_PERSISTER_TIME
       it.timeUnit = DEFAULT_PERSISTER_UNIT
       it.file = null
-      it.serialize = null
-      it.parse = null
+      it.mapper = null
       it.custom = persister
     }
     return this
@@ -181,8 +212,7 @@ internal class RepoBuilderImpl<T : Any> internal constructor(
             scheduler ?: DEFAULT_SCHEDULER,
             // If we have gotten here, these variables should be non-null
             requireNotNull(this.persisterBuilder.file) { "Persister missing 'file'" },
-            requireNotNull(this.persisterBuilder.serialize) { "Persister missing 'serialize'" },
-            requireNotNull(this.persisterBuilder.parse) { "Persister missing 'parse'" }
+            requireNotNull(this.persisterBuilder.mapper) { "Persister missing 'mapper'" }
         )
       } else {
         persister = customPersister
@@ -216,8 +246,7 @@ internal class RepoBuilderImpl<T : Any> internal constructor(
     internal var time: Long,
     internal var timeUnit: TimeUnit,
     internal var file: File?,
-    internal var serialize: ((ArrayList<T>) -> String)?,
-    internal var parse: ((String) -> ArrayList<T>)?,
+    internal var mapper: PersisterMapper<T>?,
     internal var custom: Persister<T>?
   )
 

@@ -19,6 +19,7 @@ package com.popinnow.android.repo.impl
 import androidx.annotation.CheckResult
 import androidx.annotation.VisibleForTesting
 import com.popinnow.android.repo.Persister
+import com.popinnow.android.repo.Persister.PersisterMapper
 import io.reactivex.Completable
 import io.reactivex.CompletableObserver
 import io.reactivex.Observable
@@ -36,8 +37,7 @@ internal class PersisterImpl<T : Any> internal constructor(
   timeUnit: TimeUnit,
   private val scheduler: Scheduler,
   private val file: File,
-  private val serialize: (ArrayList<T>) -> String,
-  private val parse: (String) -> ArrayList<T>
+  private val mapper: PersisterMapper<T>
 ) : Persister<T> {
 
   private val ttl = timeUnit.toMillis(time)
@@ -85,7 +85,7 @@ internal class PersisterImpl<T : Any> internal constructor(
             }
 
             try {
-              val data = parse(allContents)
+              val data = mapper.parseToObjects(allContents)
               logger.log { "Map json to data: $data" }
               return data
             } catch (e: Exception) {
@@ -204,7 +204,7 @@ internal class PersisterImpl<T : Any> internal constructor(
           .buffer()
           .use {
             try {
-              val json = serialize(data)
+              val json = mapper.serializeToString(data)
               logger.log { "Map data to json: $json" }
               it.writeUtf8(json)
 

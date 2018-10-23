@@ -17,6 +17,7 @@
 package com.popinnow.android.repo
 
 import androidx.annotation.CheckResult
+import com.popinnow.android.repo.Persister.PersisterMapper
 import io.reactivex.Scheduler
 import java.io.File
 import java.util.concurrent.TimeUnit
@@ -110,6 +111,19 @@ interface RepoBuilder<T : Any> {
   /**
    * Enable disk persistence
    *
+   * @param file File to save data to
+   * @param mapper PersisterMapper interface to convert objects to string representations
+   * @return [RepoBuilder]
+   */
+  @CheckResult
+  fun persister(
+    file: File,
+    mapper: PersisterMapper<T>
+  ): RepoBuilder<T>
+
+  /**
+   * Enable disk persistence
+   *
    * @param time
    * @param timeUnit
    * @param file File to save data to
@@ -124,6 +138,23 @@ interface RepoBuilder<T : Any> {
     file: File,
     serialize: (ArrayList<T>) -> String,
     parse: (String) -> ArrayList<T>
+  ): RepoBuilder<T>
+
+  /**
+   * Enable disk persistence
+   *
+   * @param time
+   * @param timeUnit
+   * @param file File to save data to
+   * @param mapper PersisterMapper interface to convert objects to string representations
+   * @return [RepoBuilder]
+   */
+  @CheckResult
+  fun persister(
+    time: Long,
+    timeUnit: TimeUnit,
+    file: File,
+    mapper: PersisterMapper<T>
   ): RepoBuilder<T>
 
   /**

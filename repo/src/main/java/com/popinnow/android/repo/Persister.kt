@@ -36,4 +36,13 @@ interface Persister<T : Any> : Clearable {
 
   fun writeAll(values: List<T>)
 
+  interface PersisterMapper<T : Any> {
+
+    @CheckResult
+    fun serializeToString(data: ArrayList<T>): String
+
+    @CheckResult
+    fun parseToObjects(data: String): ArrayList<T>
+  }
+
 }

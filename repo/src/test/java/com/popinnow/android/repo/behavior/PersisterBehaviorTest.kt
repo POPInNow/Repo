@@ -18,6 +18,7 @@ package com.popinnow.android.repo.behavior
 
 import androidx.annotation.CheckResult
 import com.popinnow.android.repo.Persister
+import com.popinnow.android.repo.Persister.PersisterMapper
 import com.popinnow.android.repo.impl.PersisterImpl
 import com.popinnow.android.repo.startNow
 import com.popinnow.android.repo.toJson
@@ -68,8 +69,16 @@ class PersisterBehaviorTest {
   ): PersisterImpl<String> {
     return PersisterImpl(debug, time, SECONDS, Schedulers.trampoline(),
         file ?: randomFile(),
-        { it.toJson() },
-        { it.toListOfObjects<String>() })
+        object : PersisterMapper<String> {
+
+          override fun parseToObjects(data: String): ArrayList<String> {
+            return data.toListOfObjects()
+          }
+
+          override fun serializeToString(data: ArrayList<String>): String {
+            return data.toJson()
+          }
+        })
   }
 
   private fun assertPersisterIsEmpty(
