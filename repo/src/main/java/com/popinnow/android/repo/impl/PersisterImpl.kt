@@ -17,6 +17,7 @@
 package com.popinnow.android.repo.impl
 
 import androidx.annotation.CheckResult
+import androidx.annotation.VisibleForTesting
 import com.popinnow.android.repo.Persister
 import io.reactivex.Completable
 import io.reactivex.CompletableObserver
@@ -39,13 +40,13 @@ internal class PersisterImpl<T : Any> internal constructor(
   private val parse: (String) -> ArrayList<T>
 ) : Persister<T> {
 
-  private val ttl = timeUnit.toNanos(time)
+  private val ttl = timeUnit.toMillis(time)
   private val logger by lazy { Logger("Persister[$debug]", debug.isNotBlank()) }
 
   private val lock = Any()
 
   init {
-    logger.log { "Create with TTL: $ttl nano seconds" }
+    logger.log { "Create with TTL: $ttl milli seconds" }
   }
 
   @CheckResult
@@ -56,8 +57,10 @@ internal class PersisterImpl<T : Any> internal constructor(
         return false
       }
 
+      // Read last write time from file
+      // Files can only go to millisecond accuracy
       val cachedTime = file.lastModified()
-      val currentTime = System.nanoTime()
+      val currentTime = System.currentTimeMillis()
       if (cachedTime + ttl < currentTime) {
         logger.log { "Cached time is out of bounds. ${cachedTime + ttl} $currentTime" }
         return false
@@ -114,16 +117,33 @@ internal class PersisterImpl<T : Any> internal constructor(
   }
 
   override fun write(value: T) {
-    nonBlockingWriteList(listOf(value), append = true)
+    nonBlockingWriteList(listOf(value), append = true, onWriteComplete = EMPTY_WRITE_CALLBACK)
+  }
+
+  @VisibleForTesting
+  internal fun write(
+    value: T,
+    onWriteComplete: (Boolean) -> Unit
+  ) {
+    nonBlockingWriteList(listOf(value), append = true, onWriteComplete = onWriteComplete)
   }
 
   override fun writeAll(values: List<T>) {
-    nonBlockingWriteList(values, append = true)
+    nonBlockingWriteList(values, append = true, onWriteComplete = EMPTY_WRITE_CALLBACK)
+  }
+
+  @VisibleForTesting
+  internal fun writeAll(
+    values: List<T>,
+    onWriteComplete: (Boolean) -> Unit
+  ) {
+    nonBlockingWriteList(values, append = true, onWriteComplete = onWriteComplete)
   }
 
   private fun nonBlockingWriteList(
     values: List<T>,
-    append: Boolean
+    append: Boolean,
+    onWriteComplete: (Boolean) -> Unit
   ) {
     Completable.fromAction { writeList(values, append) }
         .subscribeOn(scheduler)
@@ -132,6 +152,7 @@ internal class PersisterImpl<T : Any> internal constructor(
         .subscribe(object : CompletableObserver {
           override fun onComplete() {
             logger.log { "Wrote '$values' to $file" }
+            onWriteComplete(true)
           }
 
           override fun onSubscribe(d: Disposable) {
@@ -140,6 +161,7 @@ internal class PersisterImpl<T : Any> internal constructor(
 
           override fun onError(e: Throwable) {
             logger.log { "Failed to write '$values' to $file" }
+            onWriteComplete(false)
           }
         })
   }
@@ -165,10 +187,17 @@ internal class PersisterImpl<T : Any> internal constructor(
   @CheckResult
   private fun writeFile(data: ArrayList<T>): Boolean {
     synchronized(lock) {
-      if (file.createNewFile()) {
-        logger.log { "Created new file: $file" }
-      } else {
-        logger.log { "Failed to create new file: $file" }
+      if (!file.isFile || file.isDirectory) {
+        logger.log { "File provided is a directory" }
+        return false
+      }
+
+      if (!file.exists()) {
+        if (file.createNewFile()) {
+          logger.log { "Created new file: $file" }
+        } else {
+          logger.log { "Failed to create new file: $file" }
+        }
       }
 
       file.sink()
@@ -180,7 +209,8 @@ internal class PersisterImpl<T : Any> internal constructor(
               it.writeUtf8(json)
 
               // Update last modified time which is used as the TTL
-              file.setLastModified(System.nanoTime())
+              // Files can only go to millisecond accuracy
+              file.setLastModified(System.currentTimeMillis())
               return true
             } catch (e: Exception) {
               logger.error(e) { "Error mapping data to json" }
@@ -198,6 +228,11 @@ internal class PersisterImpl<T : Any> internal constructor(
         }
       }
     }
+  }
+
+  companion object {
+
+    private val EMPTY_WRITE_CALLBACK: (Boolean) -> Unit = {}
   }
 
 }

@@ -119,4 +119,5 @@ dependencies {
   testImplementation "org.mockito:mockito-core:$mockito"
   testImplementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
   testImplementation "com.google.code.gson:gson:$gson"
+  testImplementation "com.squareup.okio:okio:$okio"
 }
