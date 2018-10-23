@@ -14,15 +14,20 @@
  * limitations under the License.
  */
 
+@file:Suppress("NOTHING_TO_INLINE")
+
 package com.popinnow.android.repo
 
 import androidx.annotation.CheckResult
+import com.google.gson.GsonBuilder
+import com.google.gson.reflect.TypeToken
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
+import java.lang.reflect.Type
 
 @CheckResult
-fun <T : Any> Observable<T>.startNow(): Observable<T> {
+internal inline fun <T : Any> Observable<T>.startNow(): Observable<T> {
   return this.compose {
     return@compose it
         .subscribeOn(Schedulers.trampoline())
@@ -31,7 +36,7 @@ fun <T : Any> Observable<T>.startNow(): Observable<T> {
 }
 
 @CheckResult
-fun <T : Any> Single<T>.startNow(): Single<T> {
+internal inline fun <T : Any> Single<T>.startNow(): Single<T> {
   return this.compose {
     return@compose it
         .subscribeOn(Schedulers.trampoline())
@@ -39,11 +44,25 @@ fun <T : Any> Single<T>.startNow(): Single<T> {
   }
 }
 
-//@CheckResult
-//fun <T : Any> Flowable<T>.startNow(): Flowable<T> {
-//  return this.compose {
-//    return@compose it
-//        .subscribeOn(Schedulers.trampoline())
-//        .observeOn(Schedulers.trampoline())
-//  }
-//}
+private val gson = GsonBuilder()
+    .setPrettyPrinting()
+    .serializeNulls()
+    .create()
+
+@CheckResult
+internal inline fun <reified T : Any> typedList(): Type {
+  val type = TypeToken.get(T::class.java)
+      .type
+  return TypeToken.getParameterized(ArrayList::class.java, type)
+      .type
+}
+
+@CheckResult
+internal inline fun <reified T : Any> ArrayList<T>.toJson(): String {
+  return gson.toJson(this)
+}
+
+@CheckResult
+internal inline fun <reified T : Any> String.toListOfObjects(): ArrayList<T> {
+  return gson.fromJson(this, typedList<T>())
+}

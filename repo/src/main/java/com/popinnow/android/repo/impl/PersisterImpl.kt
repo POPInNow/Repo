@@ -167,6 +167,8 @@ internal class PersisterImpl<T : Any> internal constructor(
     synchronized(lock) {
       if (file.createNewFile()) {
         logger.log { "Created new file: $file" }
+      } else {
+        logger.log { "Failed to create new file: $file" }
       }
 
       file.sink()

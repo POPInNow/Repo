@@ -17,10 +17,14 @@
 package com.popinnow.android.repo.behavior
 
 import androidx.annotation.CheckResult
+import com.popinnow.android.repo.MemoryCache
+import com.popinnow.android.repo.Repo
 import com.popinnow.android.repo.RepoBuilder
 import com.popinnow.android.repo.impl.MemoryCacheImpl
 import com.popinnow.android.repo.newRepoBuilder
 import com.popinnow.android.repo.startNow
+import com.popinnow.android.repo.toJson
+import com.popinnow.android.repo.toListOfObjects
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
@@ -59,6 +63,29 @@ class RepoBehaviorTest {
         .memoryCache(memoryCache)
         .build()
 
+    observableSimpleGet(repo, memoryCache)
+  }
+
+  @Test
+  fun `RepoBehavior Observable memory cache with persister simple get`() {
+    val debug = "observable cache with persister simple get"
+    val memoryCache = MemoryCacheImpl<String>(debug, 30, SECONDS)
+    val repo = builder<String>(debug)
+        .memoryCache(memoryCache)
+        .persister(
+            createTempFile(prefix = "repo_test"),
+            { it.toJson() },
+            { it.toListOfObjects() }
+        )
+        .build()
+
+    observableSimpleGet(repo, memoryCache)
+  }
+
+  private fun observableSimpleGet(
+    repo: Repo<String>,
+    memoryCache: MemoryCache<String>
+  ) {
     // Juice the memory cache
     DEFAULT_OBSERVABLE_CACHE_EXPECT.forEach { memoryCache.add(it) }
 
@@ -143,12 +170,12 @@ class RepoBehaviorTest {
         .assertValueSequence(DEFAULT_OBSERVABLE_FETCH_EXPECT + data)
         .assertComplete()
 
-    repo.observe(false) { Observable.fromIterable(DEFAULT_OBSERVABLE_PERSIST_EXPECT) }
+    repo.observe(false) { Observable.fromIterable(DEFAULT_OBSERVABLE_CACHE_EXPECT) }
         .startNow()
         .test()
         .assertNoErrors()
         // Cache then upstream
-        .assertValueSequence(data + DEFAULT_OBSERVABLE_PERSIST_EXPECT)
+        .assertValueSequence(data + DEFAULT_OBSERVABLE_CACHE_EXPECT)
         .assertComplete()
   }
 
