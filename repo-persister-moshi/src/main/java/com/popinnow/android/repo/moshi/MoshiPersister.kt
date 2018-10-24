@@ -23,18 +23,32 @@ import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import java.io.File
+import java.lang.reflect.Type
+import java.util.concurrent.TimeUnit
 
+@CheckResult
 fun <T : Any> RepoBuilder<T>.persister(
+  file: File,
   moshi: Moshi,
-  type: Class<T>,
-  file: File
+  type: Class<T>
 ): RepoBuilder<T> {
   return this.persister(file, MoshiPersister.create(moshi, type))
 }
 
-class MoshiPersister<T : Any> internal constructor(
+@CheckResult
+fun <T : Any> RepoBuilder<T>.persister(
+  time: Long,
+  timeUnit: TimeUnit,
+  file: File,
   moshi: Moshi,
   type: Class<T>
+): RepoBuilder<T> {
+  return this.persister(time, timeUnit, file, MoshiPersister.create(moshi, type))
+}
+
+class MoshiPersister<T : Any> internal constructor(
+  moshi: Moshi,
+  type: Type
 ) : PersisterMapper<T> {
 
   private val adapter: JsonAdapter<List<T>>
@@ -60,6 +74,15 @@ class MoshiPersister<T : Any> internal constructor(
     fun <T : Any> create(
       moshi: Moshi,
       type: Class<T>
+    ): PersisterMapper<T> {
+      return MoshiPersister(moshi, type)
+    }
+
+    @JvmStatic
+    @CheckResult
+    fun <T : Any> create(
+      moshi: Moshi,
+      type: Type
     ): PersisterMapper<T> {
       return MoshiPersister(moshi, type)
     }

@@ -23,22 +23,35 @@ import com.popinnow.android.repo.Persister.PersisterMapper
 import com.popinnow.android.repo.RepoBuilder
 import java.io.File
 import java.lang.reflect.Type
+import java.util.concurrent.TimeUnit
 
+@CheckResult
 fun <T : Any> RepoBuilder<T>.persister(
+  file: File,
   gson: Gson,
-  type: Class<T>,
-  file: File
+  type: Class<T>
 ): RepoBuilder<T> {
   return this.persister(file, GsonPersister.create(gson, type))
 }
 
+@CheckResult
+fun <T : Any> RepoBuilder<T>.persister(
+  time: Long,
+  timeUnit: TimeUnit,
+  file: File,
+  gson: Gson,
+  type: Class<T>
+): RepoBuilder<T> {
+  return this.persister(time, timeUnit, file, GsonPersister.create(gson, type))
+}
+
 class GsonPersister<T : Any> internal constructor(
   private val gson: Gson,
-  private val type: Class<T>
+  private val type: Type
 ) : PersisterMapper<T> {
 
   @CheckResult
-  private fun typedList(type: Class<T>): Type {
+  private fun typedList(type: Type): Type {
     val token = TypeToken.get(type)
         .type
     return TypeToken.getParameterized(ArrayList::class.java, token)
@@ -60,6 +73,15 @@ class GsonPersister<T : Any> internal constructor(
     fun <T : Any> create(
       gson: Gson,
       type: Class<T>
+    ): PersisterMapper<T> {
+      return GsonPersister(gson, type)
+    }
+
+    @JvmStatic
+    @CheckResult
+    fun <T : Any> create(
+      gson: Gson,
+      type: Type
     ): PersisterMapper<T> {
       return GsonPersister(gson, type)
     }
