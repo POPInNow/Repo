@@ -160,7 +160,7 @@ internal class PersisterImpl<T : Any> internal constructor(
           }
 
           override fun onError(e: Throwable) {
-            logger.log { "Failed to write '$values' to $file" }
+            logger.error(e) { "Failed to write '$values' to $file" }
             onWriteComplete(false)
           }
         })
