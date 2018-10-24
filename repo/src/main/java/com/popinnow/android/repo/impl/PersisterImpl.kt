@@ -171,7 +171,7 @@ internal class PersisterImpl<T : Any> internal constructor(
     append: Boolean
   ) {
     val existingData: ArrayList<T>
-    if (append) {
+    if (append && isFileValid()) {
       existingData = readFromFile()
     } else {
       existingData = arrayListOf()
