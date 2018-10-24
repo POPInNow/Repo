@@ -160,7 +160,7 @@ internal class PersisterImpl<T : Any> internal constructor(
           }
 
           override fun onError(e: Throwable) {
-            logger.log { "Failed to write '$values' to $file" }
+            logger.error(e) { "Failed to write '$values' to $file" }
             onWriteComplete(false)
           }
         })
@@ -171,7 +171,7 @@ internal class PersisterImpl<T : Any> internal constructor(
     append: Boolean
   ) {
     val existingData: ArrayList<T>
-    if (append) {
+    if (append && isFileValid()) {
       existingData = readFromFile()
     } else {
       existingData = arrayListOf()
@@ -187,17 +187,17 @@ internal class PersisterImpl<T : Any> internal constructor(
   @CheckResult
   private fun writeFile(data: ArrayList<T>): Boolean {
     synchronized(lock) {
-      if (!file.isFile || file.isDirectory) {
-        logger.log { "File provided is a directory" }
-        return false
-      }
-
       if (!file.exists()) {
         if (file.createNewFile()) {
           logger.log { "Created new file: $file" }
         } else {
           logger.log { "Failed to create new file: $file" }
         }
+      }
+
+      if (!file.isFile || file.isDirectory) {
+        logger.log { "File provided is a directory" }
+        return false
       }
 
       file.sink()
@@ -207,6 +207,7 @@ internal class PersisterImpl<T : Any> internal constructor(
               val json = mapper.serializeToString(data)
               logger.log { "Map data to json: $json" }
               it.writeUtf8(json)
+              it.flush()
 
               // Update last modified time which is used as the TTL
               // Files can only go to millisecond accuracy
@@ -217,6 +218,7 @@ internal class PersisterImpl<T : Any> internal constructor(
               return false
             }
           }
+
     }
   }
 

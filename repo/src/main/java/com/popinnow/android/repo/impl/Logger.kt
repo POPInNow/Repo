@@ -32,7 +32,8 @@ internal class Logger internal constructor(
     lazyMessage: () -> String
   ) {
     if (debug) {
-      System.err.println("$tag: ${lazyMessage()} $throwable")
+      System.err.println("$tag: ${lazyMessage()}")
+      System.err.println("$tag: $throwable")
     }
   }
 }
