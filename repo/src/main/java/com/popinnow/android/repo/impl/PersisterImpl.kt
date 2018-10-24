@@ -207,6 +207,7 @@ internal class PersisterImpl<T : Any> internal constructor(
               val json = mapper.serializeToString(data)
               logger.log { "Map data to json: $json" }
               it.writeUtf8(json)
+              it.flush()
 
               // Update last modified time which is used as the TTL
               // Files can only go to millisecond accuracy
@@ -217,6 +218,7 @@ internal class PersisterImpl<T : Any> internal constructor(
               return false
             }
           }
+
     }
   }
 
