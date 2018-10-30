@@ -11,7 +11,15 @@ In your `build.gradle`
 
 ```gradle
 dependencies {
-  implementation "com.popinnow.android.repo:repo:0.1.0"
+  def latestVersion = "0.1.0"
+
+  implementation "com.popinnow.android.repo:repo:$latestVersion"
+
+  // GSON powered persister
+  implementation "com.popinnow.android.repo:repo-persister-gson:$latestVersion"
+
+  // Moshi powered persister
+  implementation "com.popinnow.android.repo:repo-persister-moshi:$latestVersion"
 }
 ```
 
@@ -101,9 +109,9 @@ class MyClass {
 `Repo` is an implementation of the client side repository pattern, and is implemented in three  
 layers.
 
-`Fetcher` which interacts with and tracks an upstream data source.
-`MemoryCache` which caches data from the `Fetcher` in short term memory storage.
-`Persister` which caches data from the `Fetcher` in long term disk storage (not implemented yet)
+`Fetcher` which interacts with and tracks an upstream data source.  
+`MemoryCache` which caches data from the `Fetcher` in short term memory storage.  
+`Persister` which caches data from the `Fetcher` in long term disk storage.  
 
 ## Basics
 
@@ -189,8 +197,12 @@ out of memory errors. If one is using `MemoryCache` to observe against an endles
 one may need to periodically clear out or replace the cache in order to stay within memory sane  
 constraints.
 
-The default `Persister` is still a work in progress and has not yet been implemented. It is still  
-a work in progress.
+The default `Persister` implementation will cache any data put into it for a period of 10 minutes  
+by default. The `Persister` preserves ordering and is backed by a flat file on disk. The `Persister`  
+saves information to disk by serializing data model objects to a `String`. While there is no  
+serializer enforced by default, the library ships with two basic implementations of a serializers,  
+one powered by [GSON](https://github.com/google/gson) and one powered by
+[Moshi](https://github.com/square/moshi).  
 
 ### Getting Data from Repo Instances
 
