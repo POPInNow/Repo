@@ -14,39 +14,27 @@
  * limitations under the License.
  */
 
-package com.popinnow.android.repo.impl
+package com.popinnow.android.repo
 
-import com.popinnow.android.repo.RepoLogger
-import com.popinnow.android.repo.internal.SystemLogger
+import com.popinnow.android.repo.impl.Logger
 
-internal class Logger internal constructor(
-  private val tag: String,
-  private val debug: Boolean
-) {
+interface RepoLogger {
 
-  inline fun log(lazyMessage: () -> String) {
-    if (debug) {
-      logger.log(tag, lazyMessage())
-    }
-  }
+  fun log(
+    tag: String,
+    message: String
+  )
 
-  inline fun error(
+  fun error(
     throwable: Throwable,
-    lazyMessage: () -> String
-  ) {
-    if (debug) {
-      logger.error(throwable, tag, lazyMessage())
-    }
-  }
+    tag: String,
+    message: String
+  )
 
   companion object {
 
-    private var logger: RepoLogger = SystemLogger
-
-    @JvmStatic
-    internal fun setLogger(logger: RepoLogger) {
-      this.logger = logger
+    fun set(logger: RepoLogger) {
+      Logger.setLogger(logger)
     }
-
   }
 }
