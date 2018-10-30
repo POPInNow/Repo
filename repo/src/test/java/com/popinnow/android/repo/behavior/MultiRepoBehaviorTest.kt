@@ -28,7 +28,7 @@ import org.junit.runner.RunWith
 import org.mockito.junit.MockitoJUnitRunner
 
 @RunWith(MockitoJUnitRunner::class)
-class MultiRepoBehaviorTest {
+class MultiRepoBehaviorTest : BaseBehaviorTest() {
 
   @CheckResult
   private fun createRepo(debug: String): MultiRepo<String> {

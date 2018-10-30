@@ -17,7 +17,8 @@
 package com.popinnow.android.repo.impl
 
 import com.popinnow.android.repo.RepoLogger
-import com.popinnow.android.repo.internal.SystemLogger
+import com.popinnow.android.repo.logger.SystemLogger
+import com.popinnow.android.repo.logger.TimberLogger
 
 internal class Logger internal constructor(
   private val tag: String,
@@ -41,7 +42,7 @@ internal class Logger internal constructor(
 
   companion object {
 
-    private var logger: RepoLogger = SystemLogger
+    private var logger: RepoLogger = TimberLogger
 
     @JvmStatic
     internal fun setLogger(logger: RepoLogger) {

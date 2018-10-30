@@ -24,7 +24,7 @@ import io.reactivex.Observable
 import org.junit.Test
 import java.util.concurrent.TimeUnit.SECONDS
 
-class MemoryCacheBehaviorTest {
+class MemoryCacheBehaviorTest: BaseBehaviorTest() {
 
   @CheckResult
   private fun createCache(

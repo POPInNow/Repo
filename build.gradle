@@ -60,6 +60,7 @@ ext {
   // Library
   rxjava = "2.2.2"
   androidx = "1.0.0"
+  timber = "4.7.1"
   okio = "2.1.0"
 
   // Persister

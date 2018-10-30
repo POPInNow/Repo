@@ -32,7 +32,7 @@ import org.mockito.junit.MockitoJUnitRunner
 import java.util.concurrent.TimeUnit.SECONDS
 
 @RunWith(MockitoJUnitRunner::class)
-class RepoBehaviorTest {
+class RepoBehaviorTest: BaseBehaviorTest() {
 
   @CheckResult
   private fun <T : Any> builder(debug: String): RepoBuilder<T> {

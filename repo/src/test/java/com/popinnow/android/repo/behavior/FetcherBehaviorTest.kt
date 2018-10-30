@@ -29,7 +29,7 @@ import org.mockito.junit.MockitoJUnitRunner
 import java.util.concurrent.TimeUnit.SECONDS
 
 @RunWith(MockitoJUnitRunner::class)
-class FetcherBehaviorTest {
+class FetcherBehaviorTest : BaseBehaviorTest() {
 
   @CheckResult
   private fun createFetcher(tag: String): Fetcher<String> {

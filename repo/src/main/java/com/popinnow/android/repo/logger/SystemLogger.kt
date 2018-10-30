@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.popinnow.android.repo.internal
+package com.popinnow.android.repo.logger
 
 import com.popinnow.android.repo.RepoLogger
 

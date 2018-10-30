@@ -32,7 +32,7 @@ import java.io.File
 import java.util.UUID
 import java.util.concurrent.TimeUnit.SECONDS
 
-abstract class PersisterBehaviorTest {
+abstract class PersisterBehaviorTest : BaseBehaviorTest() {
 
   @CheckResult
   abstract fun provideMapper(): PersisterMapper<String>
