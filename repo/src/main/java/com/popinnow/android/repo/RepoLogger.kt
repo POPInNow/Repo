@@ -18,13 +18,31 @@ package com.popinnow.android.repo
 
 import com.popinnow.android.repo.impl.Logger
 
+/**
+ * Public facing API which default Repo implementations use for logging
+ *
+ * Logging can potentially be expensive, and should not be relied upon for logic.
+ */
 interface RepoLogger {
 
+  /**
+   * Log a standard debug message
+   *
+   * @param tag Log tag
+   * @param message Log message
+   */
   fun log(
     tag: String,
     message: String
   )
 
+  /**
+   * Log an error message
+   *
+   * @param throwable Error object
+   * @param tag Log tag
+   * @param message Log message
+   */
   fun error(
     throwable: Throwable,
     tag: String,
@@ -33,6 +51,11 @@ interface RepoLogger {
 
   companion object {
 
+    /**
+     * Set the implementation of the Logger used
+     *
+     * @param logger Logger implementation
+     */
     fun set(logger: RepoLogger) {
       Logger.setLogger(logger)
     }

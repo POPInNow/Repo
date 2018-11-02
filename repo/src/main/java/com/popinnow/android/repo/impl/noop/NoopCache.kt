@@ -38,6 +38,9 @@ internal object NoopCache : MemoryCache<Any> {
   override fun clearAll() {
   }
 
+  /**
+   * Return the Noop cache as a typed cache.
+   */
   @CheckResult
   internal fun <T : Any> typedInstance(): MemoryCache<T> {
     @Suppress("UNCHECKED_CAST")

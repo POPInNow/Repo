@@ -38,6 +38,9 @@ internal object NoopPersister : Persister<Any> {
   override fun clearAll() {
   }
 
+  /**
+   * Return the Noop Persister as a typed persister.
+   */
   @CheckResult
   internal fun <T : Any> typedInstance(): Persister<T> {
     @Suppress("UNCHECKED_CAST")

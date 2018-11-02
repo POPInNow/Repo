@@ -25,6 +25,14 @@ import java.io.File
 import java.lang.reflect.Type
 import java.util.concurrent.TimeUnit
 
+/**
+ * Extension function for providing a GSON backed Persister
+ *
+ * @param file File to persist to
+ * @param gson GSON instance
+ * @param type Data type to persist
+ * @return [RepoBuilder]
+ */
 @CheckResult
 fun <T : Any> RepoBuilder<T>.persister(
   file: File,
@@ -34,6 +42,16 @@ fun <T : Any> RepoBuilder<T>.persister(
   return this.persister(file, GsonPersister.create(gson, type))
 }
 
+/**
+ * Extension function for providing a GSON backed Persister
+ *
+ * @param time
+ * @param timeUnit
+ * @param file File to persist to
+ * @param gson GSON instance
+ * @param type Data type to persist
+ * @return [RepoBuilder]
+ */
 @CheckResult
 fun <T : Any> RepoBuilder<T>.persister(
   time: Long,
@@ -45,6 +63,12 @@ fun <T : Any> RepoBuilder<T>.persister(
   return this.persister(time, timeUnit, file, GsonPersister.create(gson, type))
 }
 
+/**
+ * PersisterMapper implementation which has its serialization of data powered by GSON
+ *
+ * NOTE: The data created by GSON serialization is not guaranteed to be interoperable with
+ * persisted data created by any other [PersisterMapper] implementation.
+ */
 class GsonPersister<T : Any> internal constructor(
   private val gson: Gson,
   private val type: Type
@@ -58,16 +82,35 @@ class GsonPersister<T : Any> internal constructor(
         .type
   }
 
+  /**
+   * Serialize to string using GSON
+   *
+   * @param data
+   * @return [String]
+   */
   override fun serializeToString(data: ArrayList<T>): String {
     return gson.toJson(data)
   }
 
+  /**
+   * Parse from string using GSON
+   *
+   * @param data
+   * @return [ArrayList]
+   */
   override fun parseToObjects(data: String): ArrayList<T> {
     return gson.fromJson(data, typedList(type))
   }
 
   companion object {
 
+    /**
+     * Create a new GsonPersister
+     *
+     * @param gson GSON instance
+     * @param type Data type to persist
+     * @return [PersisterMapper]
+     */
     @JvmStatic
     @CheckResult
     fun <T : Any> create(
@@ -77,6 +120,13 @@ class GsonPersister<T : Any> internal constructor(
       return GsonPersister(gson, type)
     }
 
+    /**
+     * Create a new GsonPersister
+     *
+     * @param gson GSON instance
+     * @param type Data type to persist
+     * @return [PersisterMapper]
+     */
     @JvmStatic
     @CheckResult
     fun <T : Any> create(

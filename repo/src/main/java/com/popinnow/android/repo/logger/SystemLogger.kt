@@ -18,6 +18,9 @@ package com.popinnow.android.repo.logger
 
 import com.popinnow.android.repo.RepoLogger
 
+/**
+ * Logger backed by System.out and System.err
+ */
 object SystemLogger : RepoLogger {
 
   override fun log(

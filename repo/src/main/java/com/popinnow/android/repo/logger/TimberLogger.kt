@@ -20,6 +20,9 @@ import androidx.annotation.CheckResult
 import com.popinnow.android.repo.RepoLogger
 import timber.log.Timber
 
+/**
+ * Logger backed by Timber (which is backed by Android.Log)
+ */
 object TimberLogger : RepoLogger {
 
   @Suppress("NOTHING_TO_INLINE")
