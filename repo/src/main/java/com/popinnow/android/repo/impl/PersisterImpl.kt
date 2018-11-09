@@ -152,7 +152,7 @@ internal class PersisterImpl<T : Any> internal constructor(
         .subscribe(object : CompletableObserver {
           override fun onComplete() {
             logger.log { "Wrote '$values' to $file" }
-            onWriteComplete(true)
+            onWriteComplete(TRUE)
           }
 
           override fun onSubscribe(d: Disposable) {
@@ -161,7 +161,7 @@ internal class PersisterImpl<T : Any> internal constructor(
 
           override fun onError(e: Throwable) {
             logger.error(e) { "Failed to write '$values' to $file" }
-            onWriteComplete(false)
+            onWriteComplete(FALSE)
           }
         })
   }
@@ -211,7 +211,10 @@ internal class PersisterImpl<T : Any> internal constructor(
 
               // Update last modified time which is used as the TTL
               // Files can only go to millisecond accuracy
-              file.setLastModified(System.currentTimeMillis())
+              val time = System.currentTimeMillis()
+              if (file.setLastModified(time)) {
+                logger.log { "Updated TTL time: $time" }
+              }
               return true
             } catch (e: Exception) {
               logger.error(e) { "Error mapping data to json" }
@@ -233,6 +236,10 @@ internal class PersisterImpl<T : Any> internal constructor(
   }
 
   companion object {
+
+    // Use the Java built in Boolean singletons
+    private val TRUE = java.lang.Boolean.TRUE
+    private val FALSE = java.lang.Boolean.FALSE
 
     private val EMPTY_WRITE_CALLBACK: (Boolean) -> Unit = {}
   }
