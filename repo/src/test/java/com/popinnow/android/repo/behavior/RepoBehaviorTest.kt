@@ -226,7 +226,6 @@ class RepoBehaviorTest: BaseBehaviorTest() {
     private val DEFAULT_SCHEDULER = Schedulers.trampoline()
 
     private val DEFAULT_OBSERVABLE_CACHE_EXPECT = arrayListOf("Hello", "World")
-    private val DEFAULT_OBSERVABLE_PERSIST_EXPECT = arrayListOf("Persister", "Defaults")
     private val DEFAULT_OBSERVABLE_FETCH_EXPECT = arrayListOf("Upstream", "Payload")
     private val DEFAULT_OBSERVABLE_UPSTREAM = {
       Observable.fromIterable(DEFAULT_OBSERVABLE_FETCH_EXPECT)

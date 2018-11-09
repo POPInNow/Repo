@@ -114,7 +114,7 @@ class SampleActivity : AppCompatActivity() {
   }
 
   private fun setupObservableMockButton() {
-    observableMockButton.setOnClickListener { _ ->
+    observableMockButton.setOnClickListener {
       // Cancel the request before launching a new one
       observableMockDisposable.dispose()
       observableRepo.clearAll()
@@ -191,7 +191,7 @@ class SampleActivity : AppCompatActivity() {
   }
 
   private fun setupSingleMockButton() {
-    singleMockButton.setOnClickListener { _ ->
+    singleMockButton.setOnClickListener {
       // Cancel the request before launching a new one
       singleMockDisposable.dispose()
       singleRepo.clearAll()

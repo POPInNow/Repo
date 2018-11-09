@@ -176,7 +176,7 @@ abstract class PersisterBehaviorTest : BaseBehaviorTest() {
   @Test
   fun `PersisterBehaviorTest times out`() {
     val persister = createPersister("times out", 1)
-    persister.writeAll(FAKE_DATA_AS_OBJECT) { _ ->
+    persister.writeAll(FAKE_DATA_AS_OBJECT) {
       assertPersisterValues(persister, *FAKE_DATA_AS_OBJECT.toTypedArray())
 
       // After time out passes, persister does not return value
@@ -249,7 +249,7 @@ abstract class PersisterBehaviorTest : BaseBehaviorTest() {
       }
     }
 
-    persister.write(expect1) { _ ->
+    persister.write(expect1) {
       persister.read()
           .doOnSubscribe {
             persisterNextWrite()
