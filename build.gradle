@@ -51,19 +51,19 @@ buildscript {
 ext {
   // POM info
   POM_GROUP = "com.popinnow.android.repo"
-  POM_VERSION = "0.2.0"
+  POM_VERSION = "0.2.1-SNAPSHOT"
 
   minSdk = 14
   maxSdk = 28
 
   // Library
   rxjava = "2.2.3"
-  androidx = "1.0.0"
   timber = "4.7.1"
   okio = "2.1.0"
+  annotation = "1.0.0"
 
   // Persister
-  moshi = "1.7.0"
+  moshi = "1.8.0"
   gson = "2.8.5"
 
   // Tests
@@ -71,6 +71,7 @@ ext {
   mockito = "2.23.0"
 
   // Sample
+  appcompat = "1.0.2"
   rxandroid = "2.1.0"
   retrofit = "2.4.0"
   okhttp = "3.11.0"

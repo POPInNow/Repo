@@ -40,7 +40,7 @@ android {
 dependencies {
   api project(":repo")
 
-  implementation "androidx.appcompat:appcompat:$androidx"
+  implementation "androidx.appcompat:appcompat:$appcompat"
 
   implementation "io.reactivex.rxjava2:rxjava:$rxjava"
   implementation "io.reactivex.rxjava2:rxandroid:$rxandroid"

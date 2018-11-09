@@ -39,7 +39,7 @@ android {
 }
 
 dependencies {
-  implementation "androidx.annotation:annotation:$androidx"
+  implementation "androidx.annotation:annotation:$annotation"
   implementation "com.squareup.moshi:moshi:$moshi"
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
   implementation project(":repo")

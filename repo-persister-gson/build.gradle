@@ -39,7 +39,7 @@ android {
 }
 
 dependencies {
-  implementation "androidx.annotation:annotation:$androidx"
+  implementation "androidx.annotation:annotation:$annotation"
   implementation "com.google.code.gson:gson:$gson"
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
   implementation project(':repo')

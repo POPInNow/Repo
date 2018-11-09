@@ -68,7 +68,7 @@ artifacts {
 
 dependencies {
   implementation "io.reactivex.rxjava2:rxjava:$rxjava"
-  implementation "androidx.annotation:annotation:$androidx"
+  implementation "androidx.annotation:annotation:$annotation"
   implementation "com.squareup.okio:okio:$okio"
   implementation "com.jakewharton.timber:timber:$timber"
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
