@@ -28,10 +28,20 @@ internal class MultiRepoImpl<T : Any> internal constructor(
 ) : MultiRepo<T> {
 
   private val repoMap: MutableMap<String, Repo<T>> by lazy { ConcurrentHashMap<String, Repo<T>>() }
+  private val lock = Any()
 
   @CheckResult
   private fun repoForKey(key: String): Repo<T> {
-    return repoMap.getOrPut(key) { repoGenerator(key) }
+    synchronized(lock) {
+      val stored: Repo<T>? = repoMap[key]
+      if (stored == null) {
+        val value = repoGenerator(key)
+        repoMap[key] = value
+        return value
+      } else {
+        return stored
+      }
+    }
   }
 
   override fun observe(
