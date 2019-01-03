@@ -22,9 +22,10 @@ import com.popinnow.android.repo.impl.MemoryCacheImpl
 import com.popinnow.android.repo.startNow
 import io.reactivex.Observable
 import org.junit.Test
+import java.util.UUID
 import java.util.concurrent.TimeUnit.SECONDS
 
-class MemoryCacheBehaviorTest: BaseBehaviorTest() {
+class MemoryCacheBehaviorTest : BaseBehaviorTest() {
 
   @CheckResult
   private fun createCache(
@@ -98,11 +99,10 @@ class MemoryCacheBehaviorTest: BaseBehaviorTest() {
     cache.add(DEFAULT_EXPECT)
 
     // So it returns data on query
-    assertCacheSingleValue(cache, DEFAULT_EXPECT)
-
-    // As long as it does not time out or clear, it will continue to return data
-    assertCacheSingleValue(cache, DEFAULT_EXPECT)
-
+    val now = System.currentTimeMillis()
+    while (now + 1000 > System.currentTimeMillis()) {
+      assertCacheSingleValue(cache, DEFAULT_EXPECT)
+    }
   }
 
   /**
@@ -169,14 +169,16 @@ class MemoryCacheBehaviorTest: BaseBehaviorTest() {
   @Test
   fun `MemoryCacheBehaviorTest tracks history`() {
     val cache = createCache("tracks history", 30)
-    val expect1 = "Hello"
-    val expect2 = "World"
+    val values = ArrayList<String>()
+    for (i in 0 until 100) {
+      val random = UUID.randomUUID()
+          .toString()
 
-    cache.add(expect1)
-    assertCacheSingleValue(cache, expect1)
+      cache.add(random)
+      values.add(random)
+      assertCacheValues(cache, *values.toTypedArray())
+    }
 
-    cache.add(expect2)
-    assertCacheValues(cache, expect1, expect2)
   }
 
   /**
