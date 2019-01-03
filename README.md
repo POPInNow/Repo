@@ -281,7 +281,7 @@ follows the [Square Code Style](https://github.com/square/java-code-styles) for 
 Apache 2
 
 ```
-Copyright (C) 2018 POP Inc.
+Copyright (C) 2019 POP Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
