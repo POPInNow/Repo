@@ -74,45 +74,23 @@ class FetcherBehaviorTest : BaseBehaviorTest() {
       return@upstream DEFAULT_DELAYED
     }
 
-    // Set up two basic threads to launch parallel requests
-    val r1 = Runnable {
-      assertFetch(fetcher, upstream, DEFAULT_EXPECT)
+    val threads = ArrayList<Thread>()
+    for (i in 0 until 100) {
+      val runnable = Runnable { assertFetch(fetcher, upstream, DEFAULT_EXPECT) }
+      threads.add(Thread(runnable))
     }
 
-    val r2 = Runnable {
-      assertFetch(fetcher, upstream, DEFAULT_EXPECT)
+    for (thread in threads) {
+      thread.start()
     }
 
-    val t1 = Thread(r1)
-    val t2 = Thread(r2)
-
-    var error1: Throwable? = null
-    var error2: Throwable? = null
-
-    t1.setUncaughtExceptionHandler { _, e -> error1 = e }
-    t2.setUncaughtExceptionHandler { _, e -> error2 = e }
-
-    // Two threads launched at the same time will only hit the upstream once while a request is alive
-    t1.start()
-    t2.start()
-
-    t1.join()
-    t2.join()
-
-    // Fail the test if any errors occur on the threads
-    error1.also {
-      if (it != null) {
-        throw it
-      }
+    for (thread in threads) {
+      thread.join()
     }
 
-    error2.also {
-      if (it != null) {
-        throw it
-      }
+    assert(counter.count == 1) {
+      "Upstream hit more than once! ${counter.count}"
     }
-
-    assert(counter.count == 1) { "Upstream accessed directly more than once! ${counter.count}" }
   }
 
   /**
