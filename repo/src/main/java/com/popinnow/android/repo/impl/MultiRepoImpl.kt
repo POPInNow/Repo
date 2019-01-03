@@ -86,7 +86,9 @@ internal class MultiRepoImpl<T : Any> internal constructor(
 
   override fun invalidate(key: String) {
     repoForKey(key).clearAll()
-    repoMap.remove(key)
+    synchronized(lock) {
+      repoMap.remove(key)
+    }
   }
 
   override fun invalidateCaches(key: String) {
@@ -94,18 +96,22 @@ internal class MultiRepoImpl<T : Any> internal constructor(
   }
 
   override fun clearCaches() {
-    val repos = repoMap.values
-    for (repo in repos) {
-      repo.clearCaches()
+    synchronized(lock) {
+      val repos = repoMap.values
+      for (repo in repos) {
+        repo.clearCaches()
+      }
     }
   }
 
   override fun clearAll() {
-    val repos = repoMap.values
-    for (repo in repos) {
-      repo.clearAll()
+    synchronized(lock) {
+      val repos = repoMap.values
+      for (repo in repos) {
+        repo.clearAll()
+      }
+      repoMap.clear()
     }
-    repoMap.clear()
   }
 
 }

@@ -107,8 +107,8 @@ internal class MemoryCacheImpl<T : Any> constructor(
   }
 
   override fun clearAll() {
-    logger.log { "Cleared" }
     synchronized(lock) {
+      logger.log { "Cleared" }
       data = null
     }
   }

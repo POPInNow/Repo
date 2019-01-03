@@ -35,6 +35,7 @@ internal class FetcherImpl<T : Any> internal constructor(
 
   private val logger by lazy { Logger("Fetcher[$debug]", debug.isNotBlank()) }
 
+  private val lock = Any()
   @Volatile private var inFlight: Observable<T>? = null
   @Volatile private var disposable: Disposable = Disposables.disposed()
 
@@ -43,16 +44,18 @@ internal class FetcherImpl<T : Any> internal constructor(
     scheduler: Scheduler
   ): Observable<T> {
     return Observable.defer<T> {
-      // We can't use the getOrPut() extension because it may run the upstream fetch even though
-      // it guarantees no double data insertions.
-      val cachedRequest: Observable<T>? = inFlight
+      synchronized(lock) {
+        // We can't use the getOrPut() extension because it may run the upstream fetch even though
+        // it guarantees no double data insertions.
+        val cachedRequest: Observable<T>? = inFlight
 
-      if (cachedRequest == null) {
-        logger.log { "Attempting upstream" }
-        return@defer fetchUpstream(upstream, scheduler)
-      } else {
-        logger.log { "Attaching in flight" }
-        return@defer cachedRequest
+        if (cachedRequest == null) {
+          logger.log { "Attempting upstream" }
+          return@defer fetchUpstream(upstream, scheduler)
+        } else {
+          logger.log { "Attaching in flight" }
+          return@defer cachedRequest
+        }
       }
     }
         // Once the fetch has ended, we can clear the in flight cache and the upstream disposable
@@ -73,48 +76,52 @@ internal class FetcherImpl<T : Any> internal constructor(
         .toSerialized()
 
     // One last check to be sure we are not clobbering an in flight
-    val old: Observable<T>? = inFlight
-    if (old != null) {
-      logger.log { "Upstream attempt provides in flight request" }
-      return old
+    synchronized(lock) {
+      val old: Observable<T>? = inFlight
+      if (old != null) {
+        logger.log { "Upstream attempt provides in flight request" }
+        return old
+      }
+
+      // Set the new in flight
+      inFlight = subject
+
+      // We subscribe here internally so that the actual returned subject is not opinionated about
+      // the scheduler it is running on.
+      //
+      // NOTE: This is not a completely transparent operation and
+      // scheduler independence is not guaranteed. If you need exact operations to happen on exact
+      // schedulers critical to your application, you may wish to implement your own stricter
+      // implementation of the Fetcher interface.
+      cancelInFlight()
+      disposable = upstream()
+          // We must tell the original stream source to subscribe on schedulers outside of the normal
+          // returned flow else if the returned stream is terminated prematurely, the source will
+          // emit on a dead thread.
+          // We must both observe and subscribe or else emissions on a dead thread are possible.
+          .observeOn(scheduler)
+          .subscribeOn(scheduler)
+          .subscribe(
+              {
+                logger.log { "----> Upstream emit: $it" }
+                subject.onNext(it)
+              },
+              { subject.onError(it) },
+              { subject.onComplete() },
+              { subject.onSubscribe(it) }
+          )
     }
-
-    // Set the new in flight
-    inFlight = subject
-
-    // We subscribe here internally so that the actual returned subject is not opinionated about
-    // the scheduler it is running on.
-    //
-    // NOTE: This is not a completely transparent operation and
-    // scheduler independence is not guaranteed. If you need exact operations to happen on exact
-    // schedulers critical to your application, you may wish to implement your own stricter
-    // implementation of the Fetcher interface.
-    cancelInFlight()
-    disposable = upstream()
-        // We must tell the original stream source to subscribe on schedulers outside of the normal
-        // returned flow else if the returned stream is terminated prematurely, the source will
-        // emit on a dead thread.
-        // We must both observe and subscribe or else emissions on a dead thread are possible.
-        .observeOn(scheduler)
-        .subscribeOn(scheduler)
-        .subscribe(
-            {
-              logger.log { "----> Upstream emit: $it" }
-              subject.onNext(it)
-            },
-            { subject.onError(it) },
-            { subject.onComplete() },
-            { subject.onSubscribe(it) }
-        )
 
     logger.log { "Provides new request" }
     return subject
   }
 
   private fun cancelInFlight() {
-    logger.log { "Cancel in flight" }
-    if (!disposable.isDisposed) {
-      disposable.dispose()
+    synchronized(lock) {
+      if (!disposable.isDisposed) {
+        logger.log { "Cancel in flight" }
+        disposable.dispose()
+      }
     }
   }
 
@@ -124,6 +131,8 @@ internal class FetcherImpl<T : Any> internal constructor(
   }
 
   override fun clearCaches() {
-    inFlight = null
+    synchronized(lock) {
+      inFlight = null
+    }
   }
 }
