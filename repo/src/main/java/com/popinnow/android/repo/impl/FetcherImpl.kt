@@ -40,8 +40,8 @@ internal class FetcherImpl<T : Any> internal constructor(
   @Volatile private var disposable: Disposable = Disposables.disposed()
 
   override fun fetch(
-    upstream: () -> Observable<T>,
-    scheduler: Scheduler
+    scheduler: Scheduler,
+    upstream: () -> Observable<T>
   ): Observable<T> {
     return Observable.defer<T> {
       synchronized(lock) {
@@ -58,11 +58,11 @@ internal class FetcherImpl<T : Any> internal constructor(
         }
       }
     }
-        // Once the fetch has ended, we can clear the in flight cache and the upstream disposable
+        // Once the fetch has ended, we can clear the in flight cache.
         // We do not use the terminate event since the public consumer can fall off, but we still
         // want the request to stay in flight if one exists.
-        .doOnNext { clearCaches() }
-        .doOnError { clearAll() }
+        .doOnNext { clear() }
+        .doOnError { shutdown() }
         .doOnNext { logger.log { "--> Emit: $it" } }
   }
 
@@ -93,7 +93,7 @@ internal class FetcherImpl<T : Any> internal constructor(
       // scheduler independence is not guaranteed. If you need exact operations to happen on exact
       // schedulers critical to your application, you may wish to implement your own stricter
       // implementation of the Fetcher interface.
-      cancelInFlight()
+      cancel()
       disposable = upstream()
           // We must tell the original stream source to subscribe on schedulers outside of the normal
           // returned flow else if the returned stream is terminated prematurely, the source will
@@ -116,7 +116,14 @@ internal class FetcherImpl<T : Any> internal constructor(
     return subject
   }
 
-  private fun cancelInFlight() {
+  override fun clear() {
+    synchronized(lock) {
+      logger.log { "Clear cached in-flight request" }
+      inFlight = null
+    }
+  }
+
+  override fun cancel() {
     synchronized(lock) {
       if (!disposable.isDisposed) {
         logger.log { "Cancel in flight" }
@@ -125,14 +132,8 @@ internal class FetcherImpl<T : Any> internal constructor(
     }
   }
 
-  override fun clearAll() {
-    clearCaches()
-    cancelInFlight()
-  }
-
-  override fun clearCaches() {
-    synchronized(lock) {
-      inFlight = null
-    }
+  override fun shutdown() {
+    cancel()
+    clear()
   }
 }

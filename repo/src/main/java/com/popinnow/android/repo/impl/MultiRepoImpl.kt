@@ -84,32 +84,38 @@ internal class MultiRepoImpl<T : Any> internal constructor(
     repoForKey(key).pushAll(values)
   }
 
-  override fun invalidate(key: String) {
-    repoForKey(key).clearAll()
+  override fun cancel(key: String) {
+    repoForKey(key).cancel()
+  }
+
+  override fun cancel() {
+    synchronized(lock) {
+      repoMap.values.forEach { it.cancel() }
+    }
+  }
+
+  override fun clear(key: String) {
+    repoForKey(key).clear()
+  }
+
+  override fun clear() {
+    synchronized(lock) {
+      repoMap.values.forEach { it.clear() }
+    }
+  }
+
+  override fun shutdown(key: String) {
+    cancel(key)
+    clear(key)
     synchronized(lock) {
       repoMap.remove(key)
     }
   }
 
-  override fun invalidateCaches(key: String) {
-    repoForKey(key).clearCaches()
-  }
-
-  override fun clearCaches() {
+  override fun shutdown() {
+    cancel()
+    clear()
     synchronized(lock) {
-      val repos = repoMap.values
-      for (repo in repos) {
-        repo.clearCaches()
-      }
-    }
-  }
-
-  override fun clearAll() {
-    synchronized(lock) {
-      val repos = repoMap.values
-      for (repo in repos) {
-        repo.clearAll()
-      }
       repoMap.clear()
     }
   }

@@ -102,7 +102,7 @@ internal class PersisterImpl<T : Any> internal constructor(
         val data = readFromFile()
         if (data.isEmpty()) {
           logger.log { "Persister is empty" }
-          clearAll()
+          clear()
           return@defer Observable.empty<T>()
         } else {
           logger.log { "Persister return data: ${ArrayList(data)}" }
@@ -110,7 +110,7 @@ internal class PersisterImpl<T : Any> internal constructor(
         }
       } else {
         logger.log { "Persister is empty" }
-        clearAll()
+        clear()
         return@defer Observable.empty<T>()
       }
     }
@@ -180,7 +180,7 @@ internal class PersisterImpl<T : Any> internal constructor(
     existingData.addAll(values)
     val success = writeFile(existingData)
     if (!success) {
-      clearAll()
+      clear()
     }
   }
 
@@ -225,7 +225,7 @@ internal class PersisterImpl<T : Any> internal constructor(
     }
   }
 
-  override fun clearAll() {
+  override fun clear() {
     synchronized(lock) {
       if (file.exists()) {
         if (file.delete()) {

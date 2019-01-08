@@ -35,7 +35,7 @@ internal object NoopPersister : Persister<Any> {
   override fun writeAll(values: List<Any>) {
   }
 
-  override fun clearAll() {
+  override fun clear() {
   }
 
   /**

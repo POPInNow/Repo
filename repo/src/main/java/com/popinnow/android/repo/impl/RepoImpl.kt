@@ -65,7 +65,7 @@ internal class RepoImpl<T : Any> internal constructor(
     upstream: () -> Observable<T>
   ): Observable<T> {
     return Observable.defer {
-      val freshData = fetcher.fetch(upstream, scheduler)
+      val freshData = fetcher.fetch(scheduler, upstream)
           // When the stream begins emitting, we clear the cache
           .doOnFirst { justInvalidateBackingCaches() }
           // When the upstream is subscribed to and returns data, it should be placed into the caches,
@@ -87,7 +87,7 @@ internal class RepoImpl<T : Any> internal constructor(
         return@defer fetchCacheOrUpstream(freshData, memory, persist)
       }
     }
-        .doOnError { clearAll() }
+        .doOnError { shutdown() }
   }
 
   @CheckResult
@@ -140,8 +140,8 @@ internal class RepoImpl<T : Any> internal constructor(
   }
 
   private fun justInvalidateBackingCaches() {
-    memoryCache.clearAll()
-    persister.clearAll()
+    memoryCache.clear()
+    persister.clear()
   }
 
   private fun internalPut(value: T) {
@@ -152,7 +152,7 @@ internal class RepoImpl<T : Any> internal constructor(
     persister.write(value)
 
     // Cancel fetcher in flights
-    fetcher.clearCaches()
+    fetcher.cancel()
   }
 
   private fun internalPutAll(values: List<T>) {
@@ -163,7 +163,7 @@ internal class RepoImpl<T : Any> internal constructor(
     persister.writeAll(values)
 
     // Cancel fetcher in flights
-    fetcher.clearCaches()
+    fetcher.cancel()
   }
 
   override fun push(value: T) {
@@ -186,16 +186,23 @@ internal class RepoImpl<T : Any> internal constructor(
     internalPutAll(values)
   }
 
-  override fun clearCaches() {
+  override fun clear() {
     logger.log { "Clearing caches" }
-    memoryCache.clearAll()
-    persister.clearAll()
-    fetcher.clearCaches()
+    memoryCache.clear()
+    persister.clear()
+    fetcher.clear()
   }
 
-  override fun clearAll() {
-    clearCaches()
-    fetcher.clearAll()
+  override fun cancel() {
+    logger.log { "Cancelling Fetcher" }
+    fetcher.cancel()
+  }
+
+  override fun shutdown() {
+    clear()
+    fetcher.shutdown()
+
+    logger.log { "Shutting down" }
   }
 
 }

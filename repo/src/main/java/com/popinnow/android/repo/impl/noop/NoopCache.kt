@@ -35,7 +35,7 @@ internal object NoopCache : MemoryCache<Any> {
   override fun addAll(values: List<Any>) {
   }
 
-  override fun clearAll() {
+  override fun clear() {
   }
 
   /**

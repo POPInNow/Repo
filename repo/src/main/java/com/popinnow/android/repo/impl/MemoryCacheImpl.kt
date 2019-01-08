@@ -74,7 +74,7 @@ internal class MemoryCacheImpl<T : Any> constructor(
         }
       } else {
         logger.log { "Memory cache is empty" }
-        clearAll()
+        clear()
         return@defer Observable.empty<T>()
       }
     }
@@ -106,7 +106,7 @@ internal class MemoryCacheImpl<T : Any> constructor(
     }
   }
 
-  override fun clearAll() {
+  override fun clear() {
     synchronized(lock) {
       logger.log { "Cleared" }
       data = null
