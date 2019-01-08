@@ -222,7 +222,7 @@ be hit once the cache is returned.
 `MultiRepo` follows the same API but expects an additional `key` argument to identify which `Repo`  
 instance it is interacting with.
 
-### Manipulating Data in Repo Instances
+### Adding Data into Repo Instances
 
 `Repo` instances manipulated in two different ways - the `push()` and `replace()` functions.
 
@@ -237,20 +237,20 @@ A variant exists to replace an entire list of data, named `replaceAll()`.
 `MultiRepo` follows the same API but expects an additional `key` argument to identify which `Repo`  
 instance it is interacting with.
 
-### Clearing Data in Repo Instances
+### Removing Data in Repo Instances
 
-`Repo` instances are cleared in two different ways - the `clearCaches()` and `clearAll()` functions.  
+Data in `Repo` instances can removed in two different ways - the `canel()` and `clear()` functions.  
 
-`clearCaches()` will only clear data from the `Repo` instance's caching layer. Any stored data will  
+`clear()` will only clear data from the `Repo` instance's caching layer. Any stored data will  
 be cleared out, but any currently active requests through a `Fetcher` to an upstream data source  
-will not be cancelled.
+will not be cancelled. This frees the memory up to be garbage collected, but will not stop requests.
 
-`clearAll()` will clear out data from the `Repo`, and cancel any currently active requests through  
+`cancel()` will clear out data from the `Repo`, and cancel any currently active requests through  
 a `Fetcher` to an upstream data source.
 
 `MultiRepo` follows the same API, but will operate on all of it's held `Repo` instances. To operate  
-on an individual `Repo` held within a `MultiRepo`, the `invalidateCaches()` and `invalidate()`  
-functions are provided - which operate similarly to calling `clearCaches()` or `clearAll()` on the  
+on an individual `Repo` held within a `MultiRepo`, the `clear(String)` and `cancel(String)`  
+functions are provided - which operate similarly to calling `clear()` or `cancel()` on the  
 `Repo` instance directly.
 
 ## Community
