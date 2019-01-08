@@ -151,8 +151,8 @@ internal class RepoImpl<T : Any> internal constructor(
     memoryCache.add(value)
     persister.write(value)
 
-    // Cancel fetcher in flights
-    fetcher.cancel()
+    // Stop the cachd data but keep the actual underlying in-flighgt since we could be mid get()
+    fetcher.clear()
   }
 
   private fun internalPutAll(values: List<T>) {
@@ -163,7 +163,7 @@ internal class RepoImpl<T : Any> internal constructor(
     persister.writeAll(values)
 
     // Cancel fetcher in flights
-    fetcher.cancel()
+    fetcher.clear()
   }
 
   override fun push(value: T) {
