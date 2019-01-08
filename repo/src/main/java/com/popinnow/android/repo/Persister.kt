@@ -59,6 +59,11 @@ interface Persister<T : Any> : Clearable {
   fun writeAll(values: List<T>)
 
   /**
+   * Clears the persister and deletes its backing storage
+   */
+  override fun clear()
+
+  /**
    * The interface which defines the mapping of data from Objects to Strings in a consistent,
    * expected format.
    */

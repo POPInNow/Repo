@@ -17,8 +17,7 @@
 package com.popinnow.android.repo
 
 import androidx.annotation.CheckResult
-import com.popinnow.android.repo.internal.CacheClearable
-import com.popinnow.android.repo.internal.CacheInvalidatable
+import com.popinnow.android.repo.internal.MultiCancellable
 import io.reactivex.Observable
 import io.reactivex.Single
 
@@ -27,7 +26,7 @@ import io.reactivex.Single
  *
  * @see [Repo]
  */
-interface MultiRepo<T : Any> : CacheClearable, CacheInvalidatable {
+interface MultiRepo<T : Any> : MultiCancellable {
 
   /**
    * Observe the [Repo] identified by [key]
@@ -114,32 +113,47 @@ interface MultiRepo<T : Any> : CacheClearable, CacheInvalidatable {
   )
 
   /**
-   * Clears the data for the [Repo] identified by [key]
+   * Cancels any in-flights requests for the [Repo] identified by [key]
    *
-   * @see [Repo.clearAll]
    * @param key Unique key
+   * @see [Repo.cancel]
    */
-  override fun invalidate(key: String)
+  override fun cancel(key: String)
 
   /**
-   * Clears the caching layer for the [Repo] identified by [key]
+   * Clears cached data for the [Repo] identified by [key], but does not stop any in-flight requests
    *
-   * @see [Repo.clearCaches]
    * @param key Unique key
+   * @see [Repo.clear]
    */
-  override fun invalidateCaches(key: String)
+  override fun clear(key: String)
 
   /**
-   * Clears the caching layer for the all [Repo] instances tracked by this [MultiRepo]
+   * Cancels all in-flight requests for all [Repo] objects held by this [MultiRepo]
    *
-   * @see [Repo.clearCaches]
+   * @see [Repo.cancel]
    */
-  override fun clearCaches()
+  override fun cancel()
 
   /**
-   * Clears the data for the all [Repo] instances tracked by this [MultiRepo]
+   * Clears cached data for all [Repo] objects held by this [MultiRepo]
    *
-   * @see [Repo.clearAll]
+   * @see [Repo.cancel]
    */
-  override fun clearAll()
+  override fun clear()
+
+  /**
+   * Calls [cancel] and then [clear] for the [Repo] identified by [key]
+   *
+   * @param key Unique key
+   * @see [Repo.shutdown]
+   */
+  override fun shutdown(key: String)
+
+  /**
+   * Calls [cancel] and then [clear] for all [Repo] objects held by this [MultiRepo]
+   *
+   * @see [Repo.shutdown]
+   */
+  override fun shutdown()
 }

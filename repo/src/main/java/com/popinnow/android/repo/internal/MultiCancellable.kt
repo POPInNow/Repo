@@ -17,18 +17,29 @@
 package com.popinnow.android.repo.internal
 
 /**
- * Invalidatable interfaces are like [Clearable] interfaces with more fine grained control.
+ * [MultiCancellable] are like [Cancellable] interfaces with more fine grained control.
  *
- * An Invalidatable can invalidate only a specific key of its collection of data.
+ * An [MultiCancellable] can cancel a specific key in its collection of data, or its entire collection.
  *
- * @see Clearable
+ * @see Cancellable
  */
-interface Invalidatable {
+interface MultiCancellable : Cancellable, MultiClearable {
 
   /**
-   * Invalidate a single key from the collection of data.
+   * Cancel in flight requests for a given key
    *
-   * @param key The key to remove from the collection of data.
+   * This method does not clear any cached data.
+   *
+   * @param key The key for this request.
+   * @see cancel
    */
-  fun invalidate(key: String)
+  fun cancel(key: String)
+
+  /**
+   * Calls [cancel] and then [clear]
+   *
+   * @see cancel
+   * @see clear
+   */
+  fun shutdown(key: String)
 }

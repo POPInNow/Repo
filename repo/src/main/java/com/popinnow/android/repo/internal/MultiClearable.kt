@@ -17,14 +17,18 @@
 package com.popinnow.android.repo.internal
 
 /**
- * Clearable interfaces support collections of data.
+ * [MultiClearable] interfaces are like [Clearable] interfaces with more fine grained control.
+ *
+ * An [MultiClearable] can clear a specific key of its collection of data, or its entire collection.
+ *
+ * @see Clearable
  */
-interface CacheClearable : Clearable {
+interface MultiClearable : Clearable {
 
   /**
-   * Invalidates all caches for a all keys.
+   * Clear a single key from the collection of data.
    *
-   * @see clearAll
+   * @param key The key to remove from the collection of data.
    */
-  fun clearCaches()
+  fun clear(key: String)
 }

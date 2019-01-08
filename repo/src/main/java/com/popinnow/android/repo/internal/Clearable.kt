@@ -24,6 +24,6 @@ interface Clearable {
   /**
    * Clear the collection of data.
    */
-  fun clearAll()
+  fun clear()
 
 }

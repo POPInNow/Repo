@@ -17,18 +17,24 @@
 package com.popinnow.android.repo.internal
 
 /**
- * CacheInvalidatable is like Invalidatable but for caches which are separate from in-flight data
- *
- * @see Invalidatable
+ * Cancellable interfaces support collections of data
  */
-interface CacheInvalidatable : Invalidatable {
+interface Cancellable : Clearable {
 
   /**
-   * Invalidates all caches for a given key.
+   * Cancel any operations that may currently be in flight
    *
-   * @param key The key for this request.
+   * This method does not clear any cached data.
    *
-   * @see invalidate
+   * @see clear
    */
-  fun invalidateCaches(key: String)
+  fun cancel()
+
+  /**
+   * Calls [cancel] and then [clear]
+   *
+   * @see cancel
+   * @see clear
+   */
+  fun shutdown()
 }

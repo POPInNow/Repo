@@ -25,8 +25,6 @@ import io.reactivex.Observable
  *
  * The default implementation caches items based on time from the point that the item is written
  * to the cache.
- *
- * @see Clearable
  */
 interface MemoryCache<T : Any> : Clearable {
 
@@ -57,6 +55,11 @@ interface MemoryCache<T : Any> : Clearable {
    * @param values The list of data to put into the cache.
    */
   fun addAll(values: List<T>)
+
+  /**
+   * Clears the cache
+   */
+  override fun clear()
 
 }
 

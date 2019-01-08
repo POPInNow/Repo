@@ -17,7 +17,7 @@
 package com.popinnow.android.repo
 
 import androidx.annotation.CheckResult
-import com.popinnow.android.repo.internal.CacheClearable
+import com.popinnow.android.repo.internal.Cancellable
 import io.reactivex.Observable
 import io.reactivex.Single
 
@@ -27,7 +27,7 @@ import io.reactivex.Single
  * cache-then-upstream is implemented via the [observe] method
  * cache-or-upstream is implemented via the [get] method
  */
-interface Repo<T : Any> : CacheClearable {
+interface Repo<T : Any> : Cancellable {
 
   /**
    * Observe data from this Repo, possibly from the provided upstream source.
@@ -108,27 +108,28 @@ interface Repo<T : Any> : CacheClearable {
   fun pushAll(values: List<T>)
 
   /**
-   * Invalidates all caches requests.
+   * Cancels all in-flight requests currently being performed by the [Fetcher] implementation.
    *
-   * This will [clearAll] any configured [MemoryCache] or [Persister].
-   * It will not cancel any in-flight requests being performed by a [Fetcher], but will clear
-   * the known cache via [Fetcher.clearCaches].
+   * Does not clear any [MemoryCache] or [Persister] caches.
    *
-   * To clear all and cancel in-flight requests, see [clearAll]
-   *
-   * @see clearAll
+   * @see [clear]
    */
-  override fun clearCaches()
+  override fun cancel()
 
   /**
-   * Invalidates all caches and in-flight requests.
+   * Clears all [MemoryCache] and [Persister] caches
    *
-   * This will [clearAll] any configured [MemoryCache] or [Persister], and
-   * will also cancel any in-flight requests performed by [Fetcher] via [Fetcher.clearAll]
+   * Does not stop any [Fetcher] in-flight requests
    *
-   * To only clear caches and not in-flight requests, see [clearCaches]
-   *
-   * @see clearCaches
+   * @see [cancel]
    */
-  override fun clearAll()
+  override fun clear()
+
+  /**
+   * Calls [cancel] and then [clear]
+   *
+   * @see [clear]
+   * @see [cancel]
+   */
+  override fun shutdown()
 }
