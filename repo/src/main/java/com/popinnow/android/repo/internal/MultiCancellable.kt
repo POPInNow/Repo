@@ -26,20 +26,10 @@ package com.popinnow.android.repo.internal
 interface MultiCancellable : Cancellable, MultiClearable {
 
   /**
-   * Cancel in flight requests for a given key
-   *
-   * This method does not clear any cached data.
+   * Cancel in flight requests for a given key, and clears the cached data for that key
    *
    * @param key The key for this request.
    * @see cancel
    */
   fun cancel(key: String)
-
-  /**
-   * Calls [cancel] and then [clear]
-   *
-   * @see cancel
-   * @see clear
-   */
-  fun shutdown(key: String)
 }

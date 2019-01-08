@@ -110,8 +110,6 @@ interface Repo<T : Any> : Cancellable {
   /**
    * Cancels all in-flight requests currently being performed by the [Fetcher] implementation.
    *
-   * Does not clear any [MemoryCache] or [Persister] caches.
-   *
    * @see [clear]
    */
   override fun cancel()
@@ -124,12 +122,4 @@ interface Repo<T : Any> : Cancellable {
    * @see [cancel]
    */
   override fun clear()
-
-  /**
-   * Calls [cancel] and then [clear]
-   *
-   * @see [clear]
-   * @see [cancel]
-   */
-  override fun shutdown()
 }

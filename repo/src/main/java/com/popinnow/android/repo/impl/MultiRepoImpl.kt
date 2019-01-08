@@ -91,6 +91,8 @@ internal class MultiRepoImpl<T : Any> internal constructor(
   override fun cancel() {
     synchronized(lock) {
       repoMap.values.forEach { it.cancel() }
+
+      repoMap.clear()
     }
   }
 
@@ -101,21 +103,7 @@ internal class MultiRepoImpl<T : Any> internal constructor(
   override fun clear() {
     synchronized(lock) {
       repoMap.values.forEach { it.clear() }
-    }
-  }
 
-  override fun shutdown(key: String) {
-    cancel(key)
-    clear(key)
-    synchronized(lock) {
-      repoMap.remove(key)
-    }
-  }
-
-  override fun shutdown() {
-    cancel()
-    clear()
-    synchronized(lock) {
       repoMap.clear()
     }
   }

@@ -141,19 +141,4 @@ interface MultiRepo<T : Any> : MultiCancellable {
    * @see [Repo.cancel]
    */
   override fun clear()
-
-  /**
-   * Calls [cancel] and then [clear] for the [Repo] identified by [key]
-   *
-   * @param key Unique key
-   * @see [Repo.shutdown]
-   */
-  override fun shutdown(key: String)
-
-  /**
-   * Calls [cancel] and then [clear] for all [Repo] objects held by this [MultiRepo]
-   *
-   * @see [Repo.shutdown]
-   */
-  override fun shutdown()
 }

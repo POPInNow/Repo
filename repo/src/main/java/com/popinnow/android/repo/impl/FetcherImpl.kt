@@ -62,7 +62,7 @@ internal class FetcherImpl<T : Any> internal constructor(
         // We do not use the terminate event since the public consumer can fall off, but we still
         // want the request to stay in flight if one exists.
         .doOnNext { clear() }
-        .doOnError { shutdown() }
+        .doOnError { cancel() }
         .doOnNext { logger.log { "--> Emit: $it" } }
   }
 
@@ -93,7 +93,7 @@ internal class FetcherImpl<T : Any> internal constructor(
       // scheduler independence is not guaranteed. If you need exact operations to happen on exact
       // schedulers critical to your application, you may wish to implement your own stricter
       // implementation of the Fetcher interface.
-      cancel()
+      cancelInFlight()
       disposable = upstream()
           // We must tell the original stream source to subscribe on schedulers outside of the normal
           // returned flow else if the returned stream is terminated prematurely, the source will
@@ -123,7 +123,7 @@ internal class FetcherImpl<T : Any> internal constructor(
     }
   }
 
-  override fun cancel() {
+  private fun cancelInFlight() {
     synchronized(lock) {
       if (!disposable.isDisposed) {
         logger.log { "Cancel in flight" }
@@ -132,8 +132,8 @@ internal class FetcherImpl<T : Any> internal constructor(
     }
   }
 
-  override fun shutdown() {
-    cancel()
+  override fun cancel() {
+    cancelInFlight()
     clear()
   }
 }

@@ -22,19 +22,9 @@ package com.popinnow.android.repo.internal
 interface Cancellable : Clearable {
 
   /**
-   * Cancel any operations that may currently be in flight
-   *
-   * This method does not clear any cached data.
+   * Cancel any operations that may currently be in flight, and clears any cached data
    *
    * @see clear
    */
   fun cancel()
-
-  /**
-   * Calls [cancel] and then [clear]
-   *
-   * @see cancel
-   * @see clear
-   */
-  fun shutdown()
 }

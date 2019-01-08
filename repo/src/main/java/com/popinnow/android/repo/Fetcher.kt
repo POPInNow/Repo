@@ -53,10 +53,9 @@ interface Fetcher<T : Any> : Cancellable {
   ): Observable<T>
 
   /**
-   * Cancels all in-flight requests to an upstream but does not clear the cache
+   * Cancels all in-flight requests to an upstream and clears the cache
    *
    * @see clear
-   * @see shutdown
    */
   override fun cancel()
 
@@ -64,16 +63,7 @@ interface Fetcher<T : Any> : Cancellable {
    * Clears the cache but does not cancel any in-flight requests to an upstream
    *
    * @see cancel
-   * @see shutdown
    */
   override fun clear()
-
-  /**
-   * Calls [cancel] and then calls [clear]
-   *
-   * @see cancel
-   * @see clear
-   */
-  override fun shutdown()
 
 }
