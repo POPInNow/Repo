@@ -239,7 +239,7 @@ instance it is interacting with.
 
 ### Removing Data in Repo Instances
 
-Data in `Repo` instances can removed in two different ways - the `canel()` and `clear()` functions.  
+Data in `Repo` instances can removed in two different ways - the `cancel()` and `clear()` functions.  
 
 `clear()` will only clear data from the `Repo` instance's caching layer. Any stored data will  
 be cleared out, but any currently active requests through a `Fetcher` to an upstream data source  
