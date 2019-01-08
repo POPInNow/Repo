@@ -117,7 +117,7 @@ class SampleActivity : AppCompatActivity() {
     observableMockButton.setOnClickListener {
       // Cancel the request before launching a new one
       observableMockDisposable.dispose()
-      observableRepo.clearAll()
+      observableRepo.cancel()
 
       // Even though the subscription was disposed, if the cache is not busted you'll see the
       // original data and then see the new counter data
@@ -194,7 +194,7 @@ class SampleActivity : AppCompatActivity() {
     singleMockButton.setOnClickListener {
       // Cancel the request before launching a new one
       singleMockDisposable.dispose()
-      singleRepo.clearAll()
+      singleRepo.cancel()
 
       // Even though the subscription was disposed, if the cache is not busted you'll see the
       // original data instead of the new counter data
@@ -262,8 +262,8 @@ class SampleActivity : AppCompatActivity() {
     observableMockDisposable.dispose()
     singleMockDisposable.dispose()
 
-    observableRepo.clearAll()
-    singleRepo.clearAll()
+    observableRepo.cancel()
+    singleRepo.cancel()
 
     observableApplicationDisposable.dispose()
     singleApplicationDisposable.dispose()
@@ -271,7 +271,7 @@ class SampleActivity : AppCompatActivity() {
     // If you want to tear down all Application level Repos as well, set this flag.
     if (applicationLevelDispose) {
       this.getSampleApplication()
-          .clearRepos()
+          .cancelRepos()
     }
   }
 }
