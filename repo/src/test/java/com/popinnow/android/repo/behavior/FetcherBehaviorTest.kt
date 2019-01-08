@@ -41,7 +41,7 @@ class FetcherBehaviorTest : BaseBehaviorTest() {
     upstream: () -> Observable<String>,
     values: List<String>
   ) {
-    fetcher.fetch(upstream, Schedulers.io())
+    fetcher.fetch(Schedulers.io(), upstream)
         .startNow()
         .test()
         // Need await because the fetch runs in background
@@ -97,8 +97,8 @@ class FetcherBehaviorTest : BaseBehaviorTest() {
    *  Does invalidating the fetcher cache not stop the actual upstream request
    */
   @Test
-  fun `FetcherBehavior invalidateCache does not stop upstream`() {
-    val fetcher = createFetcher("invalidate does not skip upstream")
+  fun `FetcherBehavior clear does not stop upstream`() {
+    val fetcher = createFetcher("clear does not skip upstream")
 
     val counter = Counter(0)
 
@@ -108,7 +108,7 @@ class FetcherBehaviorTest : BaseBehaviorTest() {
     }
 
     fun startFetch() {
-      fetcher.fetch(upstream, Schedulers.io())
+      fetcher.fetch(Schedulers.io(), upstream)
           .subscribeOn(Schedulers.io())
           .observeOn(Schedulers.trampoline())
           .subscribe()
@@ -119,7 +119,7 @@ class FetcherBehaviorTest : BaseBehaviorTest() {
 
     // After a small delay (mid flight) invalidate the cache
     Thread.sleep(500)
-    fetcher.clearCaches()
+    fetcher.clear()
 
     // The next fetch on the same key will start a new request
     startFetch()
@@ -133,15 +133,20 @@ class FetcherBehaviorTest : BaseBehaviorTest() {
    *  Does invalidating the fetcher cache not stop the actual upstream request
    */
   @Test
-  fun `FetcherBehavior invalidate stops upstream`() {
-    val fetcher = createFetcher("invalidate stop upstream")
+  fun `FetcherBehavior cancel stops upstream`() {
+    val fetcher = createFetcher("cancel stop upstream")
 
-    val counter = Counter(0)
+    val completed = Counter(0)
+    val emitted = Counter(0)
 
-    val upstream = { DEFAULT_DELAYED.doOnNext { ++counter.count } }
+    val upstream = {
+      DEFAULT_DELAYED
+          .doOnNext { ++emitted.count }
+          .doOnComplete { ++completed.count }
+    }
 
     fun startFetch() {
-      fetcher.fetch(upstream, Schedulers.io())
+      fetcher.fetch(Schedulers.io(), upstream)
           .subscribeOn(Schedulers.io())
           .observeOn(Schedulers.trampoline())
           .subscribe()
@@ -150,18 +155,21 @@ class FetcherBehaviorTest : BaseBehaviorTest() {
     // Start a fetch,  don't increment the counter yet
     startFetch()
 
-    // After a small delay (mid flight) invalidate the request
+    // After a small delay (mid flight) cancel
     Thread.sleep(500)
-    fetcher.clearAll()
+    fetcher.cancel()
 
-    // The next fetch on the same key will start a new request, and should finish which increments.
-    startFetch()
+    // We should have cancelled the upstream so it should never complete
     Thread.sleep(2000)
 
-    // After both have completed, we should have hit the upstream only once and emitted two values
-    assert(
-        counter.count == DEFAULT_EXPECT.size
-    ) { "Upstream accessed more than expected! ${counter.count}" }
+    // After enough wait, we should have no emits and no completed
+    assert(emitted.count == 0) {
+      "Upstream emit accessed more than expected! ${emitted.count}"
+    }
+
+    assert(completed.count == 0) {
+      "Upstream complete accessed more than expected! ${completed.count}"
+    }
   }
 
   companion object {

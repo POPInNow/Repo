@@ -199,7 +199,7 @@ abstract class PersisterBehaviorTest : BaseBehaviorTest() {
       assertPersisterSingleValue(persister, "Hello")
 
       // Invalidating the persister then clears it
-      persister.clearAll()
+      persister.clear()
 
       // So it does not return
       assertPersisterIsEmpty(persister)
@@ -220,7 +220,7 @@ abstract class PersisterBehaviorTest : BaseBehaviorTest() {
       fillPersisterWithDummyData(persister, 5) {
 
         // Invalidating the persister then clears it
-        persister.clearAll()
+        persister.clear()
 
         // So it does not return
         assertPersisterIsEmpty(persister)

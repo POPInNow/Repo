@@ -118,7 +118,7 @@ class MemoryCacheBehaviorTest : BaseBehaviorTest() {
     assertCacheSingleValue(cache, DEFAULT_EXPECT)
 
     // Invalidating the cache then clears it
-    cache.clearAll()
+    cache.clear()
 
     // So it does not return
     assertCacheIsEmpty(cache)
@@ -140,7 +140,7 @@ class MemoryCacheBehaviorTest : BaseBehaviorTest() {
     fillCacheWithDummyData(cache, 5)
 
     // Invalidating the cache then clears it
-    cache.clearAll()
+    cache.clear()
 
     // So it does not return
     assertCacheIsEmpty(cache)

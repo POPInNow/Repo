@@ -72,7 +72,7 @@ internal class MockRepoOrderValidator<T : Any> internal constructor(
     scheduler: Scheduler,
     upstream: () -> Observable<T>
   ) {
-    Mocks.whenever(fetcher.fetch(upstream, scheduler))
+    Mocks.whenever(fetcher.fetch(scheduler, upstream))
         .thenReturn(observable
             .doOnSubscribe {
               // Caching should be visited first
