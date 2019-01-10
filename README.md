@@ -11,7 +11,7 @@ In your `build.gradle`
 
 ```gradle
 dependencies {
-  def latestVersion = "0.2.1"
+  def latestVersion = "0.3.0"
 
   implementation "com.popinnow.android.repo:repo:$latestVersion"
 
