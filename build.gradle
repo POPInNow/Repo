@@ -59,7 +59,7 @@ ext {
   // Library
   rxjava = "2.2.5"
   timber = "4.7.1"
-  okio = "2.1.0"
+  okio = "2.2.0"
   annotation = "1.0.1"
 
   // Persister
