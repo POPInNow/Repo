@@ -57,9 +57,9 @@ ext {
   maxSdk = 28
 
   // Library
-  rxjava = "2.2.5"
+  rxjava = "2.2.6"
   timber = "4.7.1"
-  okio = "2.2.0"
+  okio = "2.2.1"
   annotation = "1.0.1"
 
   // Persister
