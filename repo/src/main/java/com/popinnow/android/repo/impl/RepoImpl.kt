@@ -35,7 +35,7 @@ internal class RepoImpl<T : Any> internal constructor(
   debug: String
 ) : Repo<T> {
 
-  private val logger by lazy { Logger("Repo[$debug]", debug.isNotBlank()) }
+  private val logger by lazy { Logger("Repo[$debug]") }
 
   @CheckResult
   private fun fetchCacheThenUpstream(

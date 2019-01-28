@@ -28,7 +28,7 @@ internal class MemoryCacheImpl<T : Any> constructor(
 ) : MemoryCache<T> {
 
   private val ttl = timeUnit.toNanos(time)
-  private val logger by lazy { Logger("MemoryCache[$debug]", debug.isNotBlank()) }
+  private val logger by lazy { Logger("MemoryCache[$debug]") }
 
   // Data backing field
   private val lock = Any()

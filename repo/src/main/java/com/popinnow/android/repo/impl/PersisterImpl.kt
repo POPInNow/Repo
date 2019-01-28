@@ -41,7 +41,7 @@ internal class PersisterImpl<T : Any> internal constructor(
 ) : Persister<T> {
 
   private val ttl = timeUnit.toMillis(time)
-  private val logger by lazy { Logger("Persister[$debug]", debug.isNotBlank()) }
+  private val logger by lazy { Logger("Persister[$debug]") }
 
   private val lock = Any()
 

@@ -20,9 +20,10 @@ import com.popinnow.android.repo.RepoLogger
 import com.popinnow.android.repo.logger.TimberLogger
 
 internal class Logger internal constructor(
-  private val tag: String,
-  private val debug: Boolean
+  private val tag: String
 ) {
+
+  private val debug = tag.isNotBlank()
 
   inline fun log(lazyMessage: () -> String) {
     if (debug) {
