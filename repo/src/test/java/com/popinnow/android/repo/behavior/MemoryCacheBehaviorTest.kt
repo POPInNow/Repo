@@ -18,7 +18,9 @@ package com.popinnow.android.repo.behavior
 
 import androidx.annotation.CheckResult
 import com.popinnow.android.repo.MemoryCache
+import com.popinnow.android.repo.impl.Logger
 import com.popinnow.android.repo.impl.MemoryCacheImpl
+import com.popinnow.android.repo.logger.SystemLogger
 import com.popinnow.android.repo.startNow
 import io.reactivex.Observable
 import org.junit.Test
@@ -29,10 +31,10 @@ class MemoryCacheBehaviorTest : BaseBehaviorTest() {
 
   @CheckResult
   private fun createCache(
-    debug: String,
+    tag: String,
     time: Long
   ): MemoryCache<String> {
-    return MemoryCacheImpl(debug, time, SECONDS)
+    return MemoryCacheImpl(Logger.create(tag, true, SystemLogger), time, SECONDS)
   }
 
   private fun assertCacheIsEmpty(

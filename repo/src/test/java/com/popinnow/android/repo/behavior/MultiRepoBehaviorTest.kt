@@ -31,9 +31,9 @@ import org.mockito.junit.MockitoJUnitRunner
 class MultiRepoBehaviorTest : BaseBehaviorTest() {
 
   @CheckResult
-  private fun createRepo(debug: String): MultiRepo<String> {
+  private fun createRepo(tag: String): MultiRepo<String> {
     return newMultiRepo {
-      newRepoBuilder<String>(debug)
+      newRepoBuilder<String>(tag)
           .scheduler(DEFAULT_SCHEDULER)
           .build()
     }

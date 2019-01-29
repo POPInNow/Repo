@@ -16,8 +16,6 @@
 
 package com.popinnow.android.repo
 
-import com.popinnow.android.repo.impl.Logger
-
 /**
  * Public facing API which default Repo implementations use for logging
  *
@@ -48,16 +46,4 @@ interface RepoLogger {
     tag: String,
     message: String
   )
-
-  companion object {
-
-    /**
-     * Set the implementation of the Logger used
-     *
-     * @param logger Logger implementation
-     */
-    fun set(logger: RepoLogger) {
-      Logger.setLogger(logger)
-    }
-  }
 }

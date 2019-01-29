@@ -30,10 +30,8 @@ import io.reactivex.subjects.ReplaySubject
  * The SingleFetcher will memoryCache any in flight upstream requests until they have completed.
  */
 internal class FetcherImpl<T : Any> internal constructor(
-  debug: String
+  private val logger: Logger
 ) : Fetcher<T> {
-
-  private val logger by lazy { Logger("Fetcher[$debug]") }
 
   private val lock = Any()
   @Volatile private var inFlight: Observable<T>? = null

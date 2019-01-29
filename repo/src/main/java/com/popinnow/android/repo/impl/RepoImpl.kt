@@ -32,10 +32,8 @@ internal class RepoImpl<T : Any> internal constructor(
   private val memoryCache: MemoryCache<T>,
   private val persister: Persister<T>,
   private val scheduler: Scheduler,
-  debug: String
+  private val logger: Logger
 ) : Repo<T> {
-
-  private val logger by lazy { Logger("Repo[$debug]") }
 
   @CheckResult
   private fun fetchCacheThenUpstream(

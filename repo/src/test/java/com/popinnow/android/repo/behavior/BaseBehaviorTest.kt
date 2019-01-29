@@ -16,19 +16,10 @@
 
 package com.popinnow.android.repo.behavior
 
-import com.popinnow.android.repo.impl.Logger
-import com.popinnow.android.repo.logger.SystemLogger
-import org.junit.Before
 import org.junit.runner.RunWith
 import org.mockito.junit.MockitoJUnitRunner
 
 @RunWith(MockitoJUnitRunner::class)
 abstract class BaseBehaviorTest {
-
-  @Before
-  fun setup() {
-    // Set the logger to Jvm System one
-    Logger.setLogger(SystemLogger)
-  }
 
 }

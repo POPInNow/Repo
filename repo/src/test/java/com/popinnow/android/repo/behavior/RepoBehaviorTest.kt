@@ -20,7 +20,9 @@ import androidx.annotation.CheckResult
 import com.popinnow.android.repo.MemoryCache
 import com.popinnow.android.repo.Repo
 import com.popinnow.android.repo.RepoBuilder
+import com.popinnow.android.repo.impl.Logger
 import com.popinnow.android.repo.impl.MemoryCacheImpl
+import com.popinnow.android.repo.logger.SystemLogger
 import com.popinnow.android.repo.newRepoBuilder
 import com.popinnow.android.repo.startNow
 import io.reactivex.Observable
@@ -32,7 +34,7 @@ import org.mockito.junit.MockitoJUnitRunner
 import java.util.concurrent.TimeUnit.SECONDS
 
 @RunWith(MockitoJUnitRunner::class)
-class RepoBehaviorTest: BaseBehaviorTest() {
+class RepoBehaviorTest : BaseBehaviorTest() {
 
   @CheckResult
   private fun <T : Any> builder(debug: String): RepoBuilder<T> {
@@ -55,9 +57,11 @@ class RepoBehaviorTest: BaseBehaviorTest() {
 
   @Test
   fun `RepoBehavior Observable memory cache simple get`() {
-    val debug = "observable cache simple get"
-    val memoryCache = MemoryCacheImpl<String>(debug, 30, SECONDS)
-    val repo = builder<String>(debug)
+    val tag = "observable cache simple get"
+    val memoryCache = MemoryCacheImpl<String>(
+        Logger.create(tag, true, SystemLogger), 30, SECONDS
+    )
+    val repo = builder<String>(tag)
         .memoryCache(memoryCache)
         .build()
 
@@ -177,9 +181,11 @@ class RepoBehaviorTest: BaseBehaviorTest() {
 
   @Test
   fun `RepoBehavior Single memory cache simple get`() {
-    val debug = "single cache simple get"
-    val memoryCache = MemoryCacheImpl<List<String>>(debug, 30, SECONDS)
-    val repo = builder<List<String>>(debug)
+    val tag = "single cache simple get"
+    val memoryCache = MemoryCacheImpl<List<String>>(
+        Logger.create(tag, true, SystemLogger), 30, SECONDS
+    )
+    val repo = builder<List<String>>(tag)
         .memoryCache(memoryCache)
         .build()
 

@@ -20,6 +20,8 @@ import androidx.annotation.CheckResult
 import com.popinnow.android.repo.Counter
 import com.popinnow.android.repo.Fetcher
 import com.popinnow.android.repo.impl.FetcherImpl
+import com.popinnow.android.repo.impl.Logger
+import com.popinnow.android.repo.logger.SystemLogger
 import com.popinnow.android.repo.startNow
 import io.reactivex.Observable
 import io.reactivex.schedulers.Schedulers
@@ -33,7 +35,7 @@ class FetcherBehaviorTest : BaseBehaviorTest() {
 
   @CheckResult
   private fun createFetcher(tag: String): Fetcher<String> {
-    return FetcherImpl(tag)
+    return FetcherImpl(Logger.create(tag, true, SystemLogger))
   }
 
   private fun assertFetch(

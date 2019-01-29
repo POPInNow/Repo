@@ -16,14 +16,15 @@
 
 package com.popinnow.android.repo.impl
 
+import androidx.annotation.CheckResult
 import com.popinnow.android.repo.RepoLogger
 import com.popinnow.android.repo.logger.TimberLogger
 
-internal class Logger internal constructor(
-  private val tag: String
+internal class Logger private constructor(
+  private val tag: String,
+  private val debug: Boolean,
+  private val logger: RepoLogger
 ) {
-
-  private val debug = tag.isNotBlank()
 
   inline fun log(lazyMessage: () -> String) {
     if (debug) {
@@ -42,11 +43,14 @@ internal class Logger internal constructor(
 
   companion object {
 
-    private var logger: RepoLogger = TimberLogger
-
     @JvmStatic
-    internal fun setLogger(logger: RepoLogger) {
-      this.logger = logger
+    @CheckResult
+    fun create(
+      tag: String,
+      debug: Boolean,
+      logger: RepoLogger = TimberLogger
+    ): Logger {
+      return Logger(tag, debug, logger)
     }
 
   }

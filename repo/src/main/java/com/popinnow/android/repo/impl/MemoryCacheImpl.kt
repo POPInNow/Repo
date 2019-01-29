@@ -22,13 +22,12 @@ import io.reactivex.Observable
 import java.util.concurrent.TimeUnit
 
 internal class MemoryCacheImpl<T : Any> constructor(
-  debug: String,
+  private val logger: Logger,
   time: Long,
   timeUnit: TimeUnit
 ) : MemoryCache<T> {
 
   private val ttl = timeUnit.toNanos(time)
-  private val logger by lazy { Logger("MemoryCache[$debug]") }
 
   // Data backing field
   private val lock = Any()

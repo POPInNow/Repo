@@ -20,7 +20,9 @@ import androidx.annotation.CheckResult
 import com.popinnow.android.repo.Fetcher
 import com.popinnow.android.repo.MemoryCache
 import com.popinnow.android.repo.Persister
+import com.popinnow.android.repo.impl.Logger
 import com.popinnow.android.repo.impl.RepoImpl
+import com.popinnow.android.repo.logger.SystemLogger
 import com.popinnow.android.repo.startNow
 import io.reactivex.Observable
 import io.reactivex.Single
@@ -47,8 +49,11 @@ class RepoApiTest {
   }
 
   @CheckResult
-  private fun createRepo(debug: String): RepoImpl<String> {
-    return RepoImpl(fetcher, memoryCache, persister, DEFAULT_SCHEDULER, debug)
+  private fun createRepo(tag: String): RepoImpl<String> {
+    return RepoImpl(
+        fetcher, memoryCache, persister, DEFAULT_SCHEDULER,
+        Logger.create(tag, true, SystemLogger)
+    )
   }
 
   /**

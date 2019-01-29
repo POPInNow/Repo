@@ -32,7 +32,7 @@ import java.io.File
 import java.util.concurrent.TimeUnit
 
 internal class PersisterImpl<T : Any> internal constructor(
-  debug: String,
+  private val logger: Logger,
   time: Long,
   timeUnit: TimeUnit,
   private val scheduler: Scheduler,
@@ -41,7 +41,6 @@ internal class PersisterImpl<T : Any> internal constructor(
 ) : Persister<T> {
 
   private val ttl = timeUnit.toMillis(time)
-  private val logger by lazy { Logger("Persister[$debug]") }
 
   private val lock = Any()
 

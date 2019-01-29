@@ -185,7 +185,7 @@ internal class RepoBuilderImpl<T : Any> internal constructor(
       val customCache = this.cacheBuilder.custom
       if (customCache == null) {
         cache = MemoryCacheImpl(
-            debug,
+            Logger.create("MemoryCache[$debug]", debug.isNotBlank()),
             this.cacheBuilder.time,
             this.cacheBuilder.timeUnit
         )
@@ -206,7 +206,7 @@ internal class RepoBuilderImpl<T : Any> internal constructor(
       val customPersister = this.persisterBuilder.custom
       if (customPersister == null) {
         persister = PersisterImpl(
-            debug,
+            Logger.create("Persister[$debug]", debug.isNotBlank()),
             this.persisterBuilder.time,
             this.persisterBuilder.timeUnit,
             scheduler ?: DEFAULT_SCHEDULER,
@@ -226,11 +226,11 @@ internal class RepoBuilderImpl<T : Any> internal constructor(
 
   override fun build(): Repo<T> {
     return RepoImpl(
-        fetcher ?: FetcherImpl(debug),
+        fetcher ?: FetcherImpl(Logger.create("Fetcher[$debug]", debug.isNotBlank())),
         cacheBuilderToCache(),
         persisterBuilderToPersister(),
         scheduler ?: DEFAULT_SCHEDULER,
-        debug
+        Logger.create("Repo[$debug]", debug.isNotBlank())
     )
   }
 

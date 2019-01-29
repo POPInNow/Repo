@@ -19,7 +19,9 @@ package com.popinnow.android.repo.behavior
 import androidx.annotation.CheckResult
 import com.popinnow.android.repo.Persister
 import com.popinnow.android.repo.Persister.PersisterMapper
+import com.popinnow.android.repo.impl.Logger
 import com.popinnow.android.repo.impl.PersisterImpl
+import com.popinnow.android.repo.logger.SystemLogger
 import com.popinnow.android.repo.startNow
 import io.reactivex.Observable
 import io.reactivex.schedulers.Schedulers
@@ -61,12 +63,13 @@ abstract class PersisterBehaviorTest : BaseBehaviorTest() {
 
   @CheckResult
   private fun createPersister(
-    debug: String,
+    tag: String,
     time: Long,
     file: File? = null
   ): PersisterImpl<String> {
     return PersisterImpl(
-        debug, time, SECONDS, Schedulers.trampoline(),
+        Logger.create(tag, true, SystemLogger),
+        time, SECONDS, Schedulers.trampoline(),
         file ?: randomFile(), provideMapper()
     )
   }
