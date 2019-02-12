@@ -31,11 +31,17 @@ android {
     // Ship with Proguard files
     consumerProguardFiles 'proguard-rules.pro'
   }
+
   buildTypes {
     release {
       minifyEnabled false
       proguardFiles 'proguard-rules.pro'
     }
+  }
+
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_1_8
+    targetCompatibility JavaVersion.VERSION_1_8
   }
 
   // TODO replace with https://issuetracker.google.com/issues/72050365 once released.
@@ -49,7 +55,6 @@ dependencies {
   implementation "com.google.code.gson:gson:$gson"
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
   implementation project(':repo')
-
   testImplementation "junit:junit:$junit"
   testImplementation "org.mockito:mockito-core:$mockito"
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"

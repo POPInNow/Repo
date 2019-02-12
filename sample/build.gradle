@@ -22,7 +22,8 @@ android {
   compileSdkVersion rootProject.ext.maxSdk
 
   defaultConfig {
-    minSdkVersion rootProject.ext.minSdk
+    // For okhttp
+    minSdkVersion 21
     targetSdkVersion rootProject.ext.maxSdk
     applicationId "com.popinnow.sample"
     versionCode 1
@@ -34,6 +35,11 @@ android {
       minifyEnabled false
       proguardFiles 'proguard-rules.pro'
     }
+  }
+
+  compileOptions {
+    sourceCompatibility JavaVersion.VERSION_1_8
+    targetCompatibility JavaVersion.VERSION_1_8
   }
 }
 
