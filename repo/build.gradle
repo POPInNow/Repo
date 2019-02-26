@@ -83,6 +83,7 @@ dependencies {
   implementation "com.squareup.okio:okio:$okio"
   implementation "com.jakewharton.timber:timber:$timber"
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+
   testImplementation "junit:junit:$junit"
   testImplementation "org.mockito:mockito-core:$mockito"
   testImplementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
