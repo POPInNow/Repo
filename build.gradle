@@ -57,10 +57,10 @@ ext {
   maxSdk = 28
 
   // Library
-  rxjava = "2.2.6"
+  rxjava = "2.2.7"
   timber = "4.7.1"
   okio = "2.2.2"
-  annotation = "1.0.1"
+  annotation = "1.0.2"
 
   // Persister
   moshi = "1.8.0"
@@ -68,7 +68,7 @@ ext {
 
   // Tests
   junit = "4.12"
-  mockito = "2.24.5"
+  mockito = "2.25.0"
 
   // Sample
   appcompat = "1.0.2"
