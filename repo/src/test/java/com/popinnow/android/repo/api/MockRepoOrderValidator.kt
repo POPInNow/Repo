@@ -34,37 +34,37 @@ internal class MockRepoOrderValidator<T : Any> internal constructor(
 
   internal fun onVisitMemoryReturn(observable: Observable<T>) {
     Mocks.whenever(memoryCache.get())
-        .thenReturn(observable
-            .doOnSubscribe {
-              // Memory should be visited first
-              if (!memoryVisited) {
-                memoryVisited = true
-              } else {
-                if (memoryVisited) {
-                  throw AssertionError("Memory visited twice")
-                } else {
-                  throw AssertionError("Memory should be visited before Persister or Upstream")
-                }
-              }
-            })
+        .then {
+          // Memory should be visited first
+          if (!memoryVisited) {
+            memoryVisited = true
+          } else {
+            if (memoryVisited) {
+              throw AssertionError("Memory visited twice")
+            } else {
+              throw AssertionError("Memory should be visited before Persister or Upstream")
+            }
+          }
+          return@then observable
+        }
   }
 
   internal fun onVisitPersisterReturn(observable: Observable<T>) {
     Mocks.whenever(persister.read())
-        .thenReturn(observable
-            .doOnSubscribe {
-              if (memoryVisited && !persisterVisited && !upstreamVisited) {
-                persisterVisited = true
-              } else {
-                if (persisterVisited) {
-                  throw AssertionError("Persister visited twice")
-                } else {
-                  throw AssertionError(
-                      "Persister should be visited after Memory before Upstream"
-                  )
-                }
-              }
-            })
+        .then {
+          if (memoryVisited && !persisterVisited && !upstreamVisited) {
+            persisterVisited = true
+          } else {
+            if (persisterVisited) {
+              throw AssertionError("Persister visited twice")
+            } else {
+              throw AssertionError(
+                  "Persister should be visited after Memory before Upstream"
+              )
+            }
+          }
+          return@then observable
+        }
   }
 
   internal fun onVisitUpstreamReturn(
@@ -73,19 +73,19 @@ internal class MockRepoOrderValidator<T : Any> internal constructor(
     upstream: () -> Observable<T>
   ) {
     Mocks.whenever(fetcher.fetch(scheduler, upstream))
-        .thenReturn(observable
-            .doOnSubscribe {
-              // Caching should be visited first
-              if ((memoryVisited && !upstreamVisited) || (persisterVisited && !upstreamVisited)) {
-                upstreamVisited = true
-              } else {
-                if (upstreamVisited) {
-                  throw AssertionError("Upstream visited twice")
-                } else {
-                  throw AssertionError("Upstream should be visited after Persister and Memory")
-                }
-              }
-            })
+        .then {
+          // Caching should be visited first
+          if ((memoryVisited && !upstreamVisited) || (persisterVisited && !upstreamVisited)) {
+            upstreamVisited = true
+          } else {
+            if (upstreamVisited) {
+              throw AssertionError("Upstream visited twice")
+            } else {
+              throw AssertionError("Upstream should be visited after Persister and Memory")
+            }
+          }
+          return@then observable
+        }
   }
 
 }
