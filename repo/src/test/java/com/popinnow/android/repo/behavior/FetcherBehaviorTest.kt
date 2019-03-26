@@ -16,7 +16,6 @@
 
 package com.popinnow.android.repo.behavior
 
-import androidx.annotation.CheckResult
 import com.popinnow.android.repo.Counter
 import com.popinnow.android.repo.Fetcher
 import com.popinnow.android.repo.impl.FetcherImpl
@@ -25,14 +24,34 @@ import com.popinnow.android.repo.logger.SystemLogger
 import com.popinnow.android.repo.startNow
 import io.reactivex.Observable
 import io.reactivex.schedulers.Schedulers
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
 import java.util.concurrent.TimeUnit.SECONDS
 
 class FetcherBehaviorTest : BaseBehaviorTest() {
 
-  @CheckResult
-  private fun createFetcher(tag: String): Fetcher<String> {
-    return FetcherImpl(Logger.create(tag, true, SystemLogger))
+  private var _fetcher: Fetcher<String>? = null
+  private val fetcher: Fetcher<String>
+    get() = requireNotNull(_fetcher)
+
+  private fun shutdown() {
+    _fetcher?.shutdown()
+    _fetcher = null
+  }
+
+  @Before
+  fun before() {
+    shutdown()
+  }
+
+  @After
+  fun after() {
+    shutdown()
+  }
+
+  private fun createFetcher(tag: String) {
+    _fetcher = FetcherImpl(Logger.create(tag, true, SystemLogger))
   }
 
   private fun assertFetch(
@@ -55,7 +74,7 @@ class FetcherBehaviorTest : BaseBehaviorTest() {
    */
   @Test
   fun `FetcherBehavior simple get`() {
-    val fetcher = createFetcher("simple get")
+    createFetcher("simple get")
     assertFetch(fetcher, DEFAULT_UPSTREAM, DEFAULT_EXPECT)
   }
 
@@ -64,7 +83,7 @@ class FetcherBehaviorTest : BaseBehaviorTest() {
    */
   @Test
   fun `FetcherBehavior attaches in flight requests`() {
-    val fetcher = createFetcher("attach in flight")
+    createFetcher("attach in flight")
 
     val counter = Counter(0)
 
@@ -97,7 +116,7 @@ class FetcherBehaviorTest : BaseBehaviorTest() {
    */
   @Test
   fun `FetcherBehavior clear does not stop upstream`() {
-    val fetcher = createFetcher("clear does not skip upstream")
+    createFetcher("clear does not skip upstream")
 
     val counter = Counter(0)
 
@@ -133,7 +152,7 @@ class FetcherBehaviorTest : BaseBehaviorTest() {
    */
   @Test
   fun `FetcherBehavior shutdown stops upstream`() {
-    val fetcher = createFetcher("shutdown stop upstream")
+    createFetcher("shutdown stop upstream")
 
     val completed = Counter(0)
     val emitted = Counter(0)

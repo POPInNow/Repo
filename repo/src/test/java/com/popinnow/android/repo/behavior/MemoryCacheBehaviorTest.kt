@@ -16,30 +16,47 @@
 
 package com.popinnow.android.repo.behavior
 
-import androidx.annotation.CheckResult
 import com.popinnow.android.repo.MemoryCache
 import com.popinnow.android.repo.impl.Logger
 import com.popinnow.android.repo.impl.MemoryCacheImpl
 import com.popinnow.android.repo.logger.SystemLogger
 import com.popinnow.android.repo.startNow
 import io.reactivex.Observable
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
 import java.util.UUID
 import java.util.concurrent.TimeUnit.SECONDS
 
 class MemoryCacheBehaviorTest : BaseBehaviorTest() {
 
-  @CheckResult
+  private var _cache: MemoryCache<String>? = null
+  private val cache: MemoryCache<String>
+    get() = requireNotNull(_cache)
+
+  private fun shutdown() {
+    _cache?.clear()
+    _cache = null
+  }
+
+  @Before
+  fun before() {
+    shutdown()
+  }
+
+  @After
+  fun after() {
+    shutdown()
+  }
+
   private fun createCache(
     tag: String,
     time: Long
-  ): MemoryCache<String> {
-    return MemoryCacheImpl(Logger.create(tag, true, SystemLogger), time, SECONDS)
+  ) {
+    _cache = MemoryCacheImpl(Logger.create(tag, true, SystemLogger), time, SECONDS)
   }
 
-  private fun assertCacheIsEmpty(
-    cache: MemoryCache<String>
-  ) {
+  private fun assertCacheIsEmpty(cache: MemoryCache<String>) {
     cache.get()
         .startNow()
         .test()
@@ -86,7 +103,7 @@ class MemoryCacheBehaviorTest : BaseBehaviorTest() {
    */
   @Test
   fun `MemoryCacheBehaviorTest is empty by default`() {
-    val cache = createCache("is empty default", 30)
+    createCache("is empty default", 30)
     assertCacheIsEmpty(cache)
   }
 
@@ -95,7 +112,7 @@ class MemoryCacheBehaviorTest : BaseBehaviorTest() {
    */
   @Test
   fun `MemoryCacheBehaviorTest maintains cache`() {
-    val cache = createCache("maintain cache", 30)
+    createCache("maintain cache", 30)
 
     // Putting data into the cache fills it
     cache.add(DEFAULT_EXPECT)
@@ -112,7 +129,7 @@ class MemoryCacheBehaviorTest : BaseBehaviorTest() {
    */
   @Test
   fun `MemoryCacheBehaviorTest invalidates`() {
-    val cache = createCache("invalidates", 30)
+    createCache("invalidates", 30)
     // Putting data into the cache fills it
     cache.add(DEFAULT_EXPECT)
 
@@ -131,7 +148,7 @@ class MemoryCacheBehaviorTest : BaseBehaviorTest() {
    */
   @Test
   fun `MemoryCacheBehaviorTest clears`() {
-    val cache = createCache("clears", 30)
+    createCache("clears", 30)
     // Putting data into the cache fills it
     cache.add(DEFAULT_EXPECT)
 
@@ -153,7 +170,7 @@ class MemoryCacheBehaviorTest : BaseBehaviorTest() {
    */
   @Test
   fun `MemoryCacheBehaviorTest times out`() {
-    val cache = createCache("times out", 1)
+    createCache("times out", 1)
 
     cache.add(DEFAULT_EXPECT)
     assertCacheSingleValue(cache, DEFAULT_EXPECT)
@@ -170,7 +187,7 @@ class MemoryCacheBehaviorTest : BaseBehaviorTest() {
    */
   @Test
   fun `MemoryCacheBehaviorTest tracks history`() {
-    val cache = createCache("tracks history", 30)
+    createCache("tracks history", 30)
     val values = ArrayList<String>()
     for (i in 0 until 100) {
       val random = UUID.randomUUID()
@@ -188,7 +205,7 @@ class MemoryCacheBehaviorTest : BaseBehaviorTest() {
    */
   @Test
   fun `MemoryCacheBehaviorTest put does not modify stream`() {
-    val cache = createCache("put does not modify", 30)
+    createCache("put does not modify", 30)
     val extraPuts = "Extra"
     val expect1 = "Testing"
     val expect2 = "Puts"
