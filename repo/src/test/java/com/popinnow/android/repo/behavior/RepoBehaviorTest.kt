@@ -17,11 +17,11 @@
 package com.popinnow.android.repo.behavior
 
 import androidx.annotation.CheckResult
-import com.popinnow.android.repo.MemoryCache
-import com.popinnow.android.repo.Repo
+import com.popinnow.android.repo.Persister.PersisterMapper
 import com.popinnow.android.repo.RepoBuilder
 import com.popinnow.android.repo.impl.Logger
 import com.popinnow.android.repo.impl.MemoryCacheImpl
+import com.popinnow.android.repo.impl.PersisterImpl
 import com.popinnow.android.repo.logger.SystemLogger
 import com.popinnow.android.repo.newRepoBuilder
 import com.popinnow.android.repo.startNow
@@ -29,14 +29,35 @@ import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
 import org.junit.Test
+import java.io.File
 import java.util.concurrent.TimeUnit.SECONDS
 
-class RepoBehaviorTest : BaseBehaviorTest() {
+abstract class RepoBehaviorTest : FileBehaviorTests() {
+
+  @CheckResult
+  protected abstract fun provideObserveMapper(): PersisterMapper<String>
+
+  @CheckResult
+  protected abstract fun provideGetMapper(): PersisterMapper<List<String>>
 
   @CheckResult
   private fun <T : Any> builder(debug: String): RepoBuilder<T> {
     return newRepoBuilder<T>().debug(debug, SystemLogger)
         .scheduler(DEFAULT_SCHEDULER)
+  }
+
+  @CheckResult
+  private fun <T : Any> createPersister(
+    tag: String,
+    time: Long,
+    mapper: PersisterMapper<T>,
+    file: File? = null
+  ): PersisterImpl<T> {
+    return PersisterImpl(
+        Logger.create(tag, true, SystemLogger),
+        time, SECONDS, Schedulers.trampoline(),
+        file ?: randomFile(), mapper
+    )
   }
 
   @Test
@@ -62,13 +83,6 @@ class RepoBehaviorTest : BaseBehaviorTest() {
         .memoryCache(memoryCache)
         .build()
 
-    observableSimpleGet(repo, memoryCache)
-  }
-
-  private fun observableSimpleGet(
-    repo: Repo<String>,
-    memoryCache: MemoryCache<String>
-  ) {
     // Juice the memory cache
     DEFAULT_OBSERVABLE_CACHE_EXPECT.forEach { memoryCache.add(it) }
 
@@ -83,8 +97,10 @@ class RepoBehaviorTest : BaseBehaviorTest() {
 
   @Test
   fun `RepoBehavior Observable get fills caches`() {
-    val repo = builder<String>("observable get fills cache")
+    val tag = "observable get fills cache"
+    val repo = builder<String>(tag)
         .memoryCache()
+        .persister(createPersister(tag, 30, provideObserveMapper()))
         .build()
 
     repo.observe(false, DEFAULT_OBSERVABLE_UPSTREAM)
@@ -106,8 +122,10 @@ class RepoBehaviorTest : BaseBehaviorTest() {
 
   @Test
   fun `RepoBehavior Observable cached results returned before upstream`() {
-    val repo = builder<String>("observable cache before upstream")
+    val tag = "observable cache before upstream"
+    val repo = builder<String>(tag)
         .memoryCache()
+        .persister(createPersister(tag, 30, provideObserveMapper()))
         .build()
 
     repo.observe(false, DEFAULT_OBSERVABLE_UPSTREAM)
@@ -129,8 +147,10 @@ class RepoBehaviorTest : BaseBehaviorTest() {
 
   @Test
   fun `RepoBehavior Observable only previous cached result returned`() {
-    val repo = builder<String>("observable only previous cache returns")
+    val tag = "observable only previous cache returns"
+    val repo = builder<String>(tag)
         .memoryCache()
+        .persister(createPersister(tag, 30, provideObserveMapper()))
         .build()
 
     repo.observe(false, DEFAULT_OBSERVABLE_UPSTREAM)
@@ -201,8 +221,10 @@ class RepoBehaviorTest : BaseBehaviorTest() {
 
   @Test
   fun `RepoBehavior Single get fills caches`() {
-    val repo = builder<List<String>>("single get fills caches")
+    val tag = "single get fills caches"
+    val repo = builder<List<String>>(tag)
         .memoryCache()
+        .persister(createPersister(tag, 30, provideGetMapper()))
         .build()
 
     repo.get(false, DEFAULT_SINGLE_UPSTREAM)

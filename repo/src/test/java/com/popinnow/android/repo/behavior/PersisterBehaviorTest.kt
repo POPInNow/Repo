@@ -27,39 +27,14 @@ import io.reactivex.Observable
 import io.reactivex.schedulers.Schedulers
 import okio.appendingSink
 import okio.buffer
-import org.junit.After
-import org.junit.Before
 import org.junit.Test
 import java.io.File
-import java.util.UUID
 import java.util.concurrent.TimeUnit.SECONDS
 
-abstract class PersisterBehaviorTest : BaseBehaviorTest() {
+abstract class PersisterBehaviorTest : FileBehaviorTests() {
 
   @CheckResult
-  abstract fun provideMapper(): PersisterMapper<String>
-
-  private val tempFiles = LinkedHashSet<File>()
-
-  @CheckResult
-  private fun randomFile(): File {
-    val filePrefix = UUID.randomUUID()
-        .toString()
-    val file = createTempFile("test$filePrefix")
-    tempFiles.add(file)
-    return file
-  }
-
-  @Before
-  @After
-  fun beforeTests() {
-    tempFiles.forEach {
-      if (it.exists()) {
-        it.delete()
-      }
-    }
-    tempFiles.clear()
-  }
+  protected abstract fun provideMapper(): PersisterMapper<String>
 
   @CheckResult
   private fun createPersister(
