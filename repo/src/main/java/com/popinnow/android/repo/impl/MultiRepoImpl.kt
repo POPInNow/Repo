@@ -56,34 +56,6 @@ internal class MultiRepoImpl<T : Any> internal constructor(
     upstream: () -> Single<T>
   ): Single<T> = repoForKey(key).get(bustCache, upstream)
 
-  override fun replace(
-    key: String,
-    value: T
-  ) {
-    repoForKey(key).replace(value)
-  }
-
-  override fun replaceAll(
-    key: String,
-    values: List<T>
-  ) {
-    repoForKey(key).replaceAll(values)
-  }
-
-  override fun push(
-    key: String,
-    value: T
-  ) {
-    repoForKey(key).push(value)
-  }
-
-  override fun pushAll(
-    key: String,
-    values: List<T>
-  ) {
-    repoForKey(key).pushAll(values)
-  }
-
   override fun cancel(key: String) {
     repoForKey(key).cancel()
   }

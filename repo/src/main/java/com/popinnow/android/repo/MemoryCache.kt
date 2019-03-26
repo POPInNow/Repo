@@ -48,15 +48,6 @@ interface MemoryCache<T : Any> : Clearable {
   fun add(value: T)
 
   /**
-   * Adds a list of data into the cache.
-   *
-   * If there is data in the cache already, new data will be appended.
-   *
-   * @param values The list of data to put into the cache.
-   */
-  fun addAll(values: List<T>)
-
-  /**
    * Clears the cache
    */
   override fun clear()

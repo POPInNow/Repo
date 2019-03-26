@@ -125,10 +125,6 @@ internal class PersisterImpl<T : Any> internal constructor(
     nonBlockingWriteList(listOf(value), append = true, onWriteComplete = onWriteComplete)
   }
 
-  override fun writeAll(values: List<T>) {
-    nonBlockingWriteList(values, append = true, onWriteComplete = EMPTY_WRITE_CALLBACK)
-  }
-
   @VisibleForTesting
   internal fun writeAll(
     values: List<T>,

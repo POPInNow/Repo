@@ -81,10 +81,6 @@ internal class MemoryCacheImpl<T : Any> constructor(
     addToCache { it.add(value) }
   }
 
-  override fun addAll(values: List<T>) {
-    addToCache { it.addAll(values) }
-  }
-
   private inline fun addToCache(addToList: (ArrayList<T>) -> Unit) {
     synchronized(lock) {
       val list: ArrayList<T>

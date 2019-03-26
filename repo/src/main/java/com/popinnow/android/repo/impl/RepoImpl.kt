@@ -153,37 +153,6 @@ internal class RepoImpl<T : Any> internal constructor(
     fetcher.clear()
   }
 
-  private fun internalPutAll(values: List<T>) {
-    logger.log { "Put data: $values" }
-
-    // Store data directly into caches
-    memoryCache.addAll(values)
-    persister.writeAll(values)
-
-    // Cancel fetcher in flights
-    fetcher.clear()
-  }
-
-  override fun push(value: T) {
-    internalPut(value)
-  }
-
-  override fun pushAll(values: List<T>) {
-    internalPutAll(values)
-  }
-
-  override fun replace(value: T) {
-    justInvalidateBackingCaches()
-    internalPut(value)
-  }
-
-  override fun replaceAll(
-    values: List<T>
-  ) {
-    justInvalidateBackingCaches()
-    internalPutAll(values)
-  }
-
   override fun clear() {
     logger.log { "Clearing caches" }
     memoryCache.clear()

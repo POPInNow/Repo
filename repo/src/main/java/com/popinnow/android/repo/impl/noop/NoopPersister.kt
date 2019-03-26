@@ -32,9 +32,6 @@ internal object NoopPersister : Persister<Any> {
   override fun write(value: Any) {
   }
 
-  override fun writeAll(values: List<Any>) {
-  }
-
   override fun clear() {
   }
 

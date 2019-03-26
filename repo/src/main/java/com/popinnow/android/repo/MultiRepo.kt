@@ -61,58 +61,6 @@ interface MultiRepo<T : Any> : MultiCancellable {
   ): Single<T>
 
   /**
-   * Replaces data in the caching layer for the [Repo] identified by [key]
-   *
-   * @see [Repo.replace]
-   * @param key Unique key
-   * @param value The data to put into the Repo
-   */
-  fun replace(
-    key: String,
-    value: T
-  )
-
-  /**
-   * Replaces data in the caching layer for the [Repo] identified by [key]
-   *
-   * @see [Repo.replaceAll]
-   * @param key Unique key
-   * @param values The data to put into the Repo
-   */
-  fun replaceAll(
-    key: String,
-    values: List<T>
-  )
-
-  /**
-   * Pushes data into the caching layer for the [Repo] identified by [key]
-   *
-   * Data will be appended to the end of any data that already is present.
-   *
-   * @see [Repo.push]
-   * @param key Unique key
-   * @param value The data to put into the Repo
-   */
-  fun push(
-    key: String,
-    value: T
-  )
-
-  /**
-   * Pushes data into the caching layer for the [Repo] identified by [key]
-   *
-   * Data will be appended to the end of any data that already is present.
-   *
-   * @see [Repo.pushAll]
-   * @param key Unique key
-   * @param values The data to put into the Repo
-   */
-  fun pushAll(
-    key: String,
-    values: List<T>
-  )
-
-  /**
    * Cancels any in-flights requests for the [Repo] identified by [key]
    *
    * @param key Unique key

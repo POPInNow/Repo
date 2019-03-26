@@ -76,38 +76,6 @@ interface Repo<T : Any> : Cancellable {
   ): Single<T>
 
   /**
-   * Replace data in this Repo's caching layer
-   *
-   * @param value The data to put into the Repo
-   */
-  fun replace(value: T)
-
-  /**
-   * Replace data in this Repo's caching layer
-   *
-   * @param values The list data to put into the Repo
-   */
-  fun replaceAll(values: List<T>)
-
-  /**
-   * Push data into this Repo's caching layer.
-   *
-   * Data will be appended to the end of any data that already is present.
-   *
-   * @param value The data to put into the Repo
-   */
-  fun push(value: T)
-
-  /**
-   * Push data into this Repo's caching layer.
-   *
-   * Data will be appended to the end of any data that already is present.
-   *
-   * @param values The list data to put into the Repo
-   */
-  fun pushAll(values: List<T>)
-
-  /**
    * Cancels all in-flight requests currently being performed by the [Fetcher] implementation.
    *
    * @see [clear]

@@ -50,15 +50,6 @@ interface Persister<T : Any> : Clearable {
   fun write(value: T)
 
   /**
-   * Adds a list of data into the persister.
-   *
-   * If there is data in the persister already, new data will be appended.
-   *
-   * @param values The list of data to put into the persister.
-   */
-  fun writeAll(values: List<T>)
-
-  /**
    * Clears the persister and deletes its backing storage
    */
   override fun clear()
