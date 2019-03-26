@@ -27,6 +27,8 @@ import io.reactivex.Observable
 import io.reactivex.schedulers.Schedulers
 import okio.appendingSink
 import okio.buffer
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
 import java.io.File
 import java.util.concurrent.TimeUnit.SECONDS
@@ -36,13 +38,31 @@ abstract class PersisterBehaviorTest : FileBehaviorTests() {
   @CheckResult
   protected abstract fun provideMapper(): PersisterMapper<String>
 
-  @CheckResult
+  private var _persister: PersisterImpl<String>? = null
+  private val persister: PersisterImpl<String>
+    get() = requireNotNull(_persister)
+
+  private fun shutdown() {
+    _persister?.clear()
+    _persister = null
+  }
+
+  @Before
+  fun before() {
+    shutdown()
+  }
+
+  @After
+  fun after() {
+    shutdown()
+  }
+
   private fun createPersister(
     tag: String,
     time: Long,
     file: File? = null
-  ): PersisterImpl<String> {
-    return PersisterImpl(
+  ) {
+    _persister = PersisterImpl(
         Logger.create(tag, true, SystemLogger),
         time, SECONDS, Schedulers.trampoline(),
         file ?: randomFile(), provideMapper()
@@ -119,7 +139,7 @@ abstract class PersisterBehaviorTest : FileBehaviorTests() {
    */
   @Test
   fun `PersisterBehaviorTest new file is empty by default`() {
-    val persister = createPersister("new file empty default", 30)
+    createPersister("new file empty default", 30)
     assertPersisterIsEmpty(persister)
   }
 
@@ -132,7 +152,7 @@ abstract class PersisterBehaviorTest : FileBehaviorTests() {
     // Populate a file with stuff
     val file = populateFile(FAKE_DATA_AS_STRING)
 
-    val persister = createPersister("existing file persists data", 30, file)
+    createPersister("existing file persists data", 30, file)
     assertPersisterValues(persister, *FAKE_DATA_AS_OBJECT.toTypedArray())
   }
 
@@ -141,7 +161,7 @@ abstract class PersisterBehaviorTest : FileBehaviorTests() {
    */
   @Test
   fun `PersisterBehaviorTest maintains persistence`() {
-    val persister = createPersister("maintains persistence", 30)
+    createPersister("maintains persistence", 30)
     persister.writeAll(FAKE_DATA_AS_OBJECT) {
       assertPersisterValues(persister, *FAKE_DATA_AS_OBJECT.toTypedArray())
       assertPersisterValues(persister, *FAKE_DATA_AS_OBJECT.toTypedArray())
@@ -153,7 +173,7 @@ abstract class PersisterBehaviorTest : FileBehaviorTests() {
    */
   @Test
   fun `PersisterBehaviorTest times out`() {
-    val persister = createPersister("times out", 1)
+    createPersister("times out", 1)
     persister.writeAll(FAKE_DATA_AS_OBJECT) {
       assertPersisterValues(persister, *FAKE_DATA_AS_OBJECT.toTypedArray())
 
@@ -171,7 +191,7 @@ abstract class PersisterBehaviorTest : FileBehaviorTests() {
    */
   @Test
   fun `PersisterBehaviorTest invalidates`() {
-    val persister = createPersister("invalidates", 30)
+    createPersister("invalidates", 30)
     persister.write("Hello") {
       // So it returns data on query
       assertPersisterSingleValue(persister, "Hello")
@@ -189,7 +209,7 @@ abstract class PersisterBehaviorTest : FileBehaviorTests() {
    */
   @Test
   fun `PersisterBehaviorTest clears`() {
-    val persister = createPersister("clears", 30)
+    createPersister("clears", 30)
     persister.writeAll(FAKE_DATA_AS_OBJECT) {
       // So it returns data on query
       assertPersisterValues(persister, *FAKE_DATA_AS_OBJECT.toTypedArray())
@@ -211,7 +231,7 @@ abstract class PersisterBehaviorTest : FileBehaviorTests() {
    */
   @Test
   fun `PersisterBehaviorTest write does not modify stream`() {
-    val persister = createPersister("write does not modify", 30)
+    createPersister("write does not modify", 30)
     val expect1 = "Testing"
     val expect2 = "Puts"
 

@@ -18,6 +18,7 @@ package com.popinnow.android.repo.behavior
 
 import androidx.annotation.CheckResult
 import com.popinnow.android.repo.Persister.PersisterMapper
+import com.popinnow.android.repo.Repo
 import com.popinnow.android.repo.RepoBuilder
 import com.popinnow.android.repo.impl.Logger
 import com.popinnow.android.repo.impl.MemoryCacheImpl
@@ -28,11 +29,39 @@ import com.popinnow.android.repo.startNow
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
 import java.io.File
 import java.util.concurrent.TimeUnit.SECONDS
 
 abstract class RepoBehaviorTest : FileBehaviorTests() {
+
+  private var _repo: Repo<String>? = null
+  private val repo: Repo<String>
+    get() = requireNotNull(_repo)
+
+  private var _listRepo: Repo<List<String>>? = null
+  private val listRepo: Repo<List<String>>
+    get() = requireNotNull(_listRepo)
+
+  private fun shutdown() {
+    _repo?.shutdown()
+    _repo = null
+
+    _listRepo?.shutdown()
+    _listRepo = null
+  }
+
+  @Before
+  fun before() {
+    shutdown()
+  }
+
+  @After
+  fun after() {
+    shutdown()
+  }
 
   @CheckResult
   protected abstract fun provideObserveMapper(): PersisterMapper<String>
@@ -62,7 +91,7 @@ abstract class RepoBehaviorTest : FileBehaviorTests() {
 
   @Test
   fun `RepoBehavior Observable no-cache simple get`() {
-    val repo = builder<String>("observable no-cache simple get").build()
+    _repo = builder<String>("observable no-cache simple get").build()
 
     repo.observe(false, DEFAULT_OBSERVABLE_UPSTREAM)
         .startNow()
@@ -79,7 +108,7 @@ abstract class RepoBehaviorTest : FileBehaviorTests() {
     val memoryCache = MemoryCacheImpl<String>(
         Logger.create(tag, true, SystemLogger), 30, SECONDS
     )
-    val repo = builder<String>(tag)
+    _repo = builder<String>(tag)
         .memoryCache(memoryCache)
         .build()
 
@@ -98,7 +127,7 @@ abstract class RepoBehaviorTest : FileBehaviorTests() {
   @Test
   fun `RepoBehavior Observable get fills caches`() {
     val tag = "observable get fills cache"
-    val repo = builder<String>(tag)
+    _repo = builder<String>(tag)
         .memoryCache()
         .persister(createPersister(tag, 30, provideObserveMapper()))
         .build()
@@ -123,7 +152,7 @@ abstract class RepoBehaviorTest : FileBehaviorTests() {
   @Test
   fun `RepoBehavior Observable cached results returned before upstream`() {
     val tag = "observable cache before upstream"
-    val repo = builder<String>(tag)
+    _repo = builder<String>(tag)
         .memoryCache()
         .persister(createPersister(tag, 30, provideObserveMapper()))
         .build()
@@ -148,7 +177,7 @@ abstract class RepoBehaviorTest : FileBehaviorTests() {
   @Test
   fun `RepoBehavior Observable only previous cached result returned`() {
     val tag = "observable only previous cache returns"
-    val repo = builder<String>(tag)
+    _repo = builder<String>(tag)
         .memoryCache()
         .persister(createPersister(tag, 30, provideObserveMapper()))
         .build()
@@ -184,9 +213,9 @@ abstract class RepoBehaviorTest : FileBehaviorTests() {
 
   @Test
   fun `RepoBehavior Single no-cache simple get`() {
-    val repo = builder<List<String>>("single no-cache simple get").build()
+    _listRepo = builder<List<String>>("single no-cache simple get").build()
 
-    repo.get(false, DEFAULT_SINGLE_UPSTREAM)
+    listRepo.get(false, DEFAULT_SINGLE_UPSTREAM)
         .startNow()
         .test()
         .assertNoErrors()
@@ -202,14 +231,14 @@ abstract class RepoBehaviorTest : FileBehaviorTests() {
     val memoryCache = MemoryCacheImpl<List<String>>(
         Logger.create(tag, true, SystemLogger), 30, SECONDS
     )
-    val repo = builder<List<String>>(tag)
+    _listRepo = builder<List<String>>(tag)
         .memoryCache(memoryCache)
         .build()
 
     // Juice the memory cache
     memoryCache.add(DEFAULT_SINGLE_CACHE_EXPECT)
 
-    repo.get(false) { throw AssertionError("Upstream should be avoided") }
+    listRepo.get(false) { throw AssertionError("Upstream should be avoided") }
         .startNow()
         .test()
         .assertNoErrors()
@@ -222,12 +251,12 @@ abstract class RepoBehaviorTest : FileBehaviorTests() {
   @Test
   fun `RepoBehavior Single get fills caches`() {
     val tag = "single get fills caches"
-    val repo = builder<List<String>>(tag)
+    _listRepo = builder<List<String>>(tag)
         .memoryCache()
         .persister(createPersister(tag, 30, provideGetMapper()))
         .build()
 
-    repo.get(false, DEFAULT_SINGLE_UPSTREAM)
+    listRepo.get(false, DEFAULT_SINGLE_UPSTREAM)
         .startNow()
         .test()
         .assertNoErrors()
@@ -236,7 +265,7 @@ abstract class RepoBehaviorTest : FileBehaviorTests() {
         .assertValueCount(1)
         .assertComplete()
 
-    repo.get(false) { throw AssertionError("Upstream should be avoided") }
+    listRepo.get(false) { throw AssertionError("Upstream should be avoided") }
         .startNow()
         .test()
         .assertNoErrors()

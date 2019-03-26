@@ -16,7 +16,6 @@
 
 package com.popinnow.android.repo.behavior
 
-import androidx.annotation.CheckResult
 import com.popinnow.android.repo.MultiRepo
 import com.popinnow.android.repo.logger.SystemLogger
 import com.popinnow.android.repo.newMultiRepo
@@ -24,13 +23,33 @@ import com.popinnow.android.repo.newRepoBuilder
 import com.popinnow.android.repo.startNow
 import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
 
 class MultiRepoBehaviorTest : BaseBehaviorTest() {
 
-  @CheckResult
-  private fun createRepo(tag: String): MultiRepo<String> {
-    return newMultiRepo {
+  private var _repo: MultiRepo<String>? = null
+  private val repo: MultiRepo<String>
+    get() = requireNotNull(_repo)
+
+  private fun shutdown() {
+    _repo?.clear()
+    _repo = null
+  }
+
+  @Before
+  fun before() {
+    shutdown()
+  }
+
+  @After
+  fun after() {
+    shutdown()
+  }
+
+  private fun createRepo(tag: String) {
+    _repo = newMultiRepo {
       newRepoBuilder<String>(tag, SystemLogger)
           .scheduler(DEFAULT_SCHEDULER)
           .build()
@@ -39,7 +58,7 @@ class MultiRepoBehaviorTest : BaseBehaviorTest() {
 
   @Test
   fun `MultiRepoApi keeps different keys`() {
-    val repo = createRepo("keeps different keys")
+    createRepo("keeps different keys")
     var upstreamVisited = 0
 
     repo.get("key1", false) {
