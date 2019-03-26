@@ -57,7 +57,7 @@ ext {
   maxSdk = 28
 
   // Library
-  rxjava = "2.2.7"
+  rxjava = "2.2.8"
   timber = "4.7.1"
   okio = "2.2.2"
   annotation = "1.0.2"
@@ -68,13 +68,13 @@ ext {
 
   // Tests
   junit = "4.12"
-  mockito = "2.25.0"
+  mockito = "2.25.1"
 
   // Sample
   appcompat = "1.0.2"
   rxandroid = "2.1.1"
   retrofit = "2.5.0"
-  okhttp = "3.13.1"
+  okhttp = "3.14.0"
 }
 
 allprojects {
