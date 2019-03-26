@@ -41,27 +41,27 @@ internal class FetcherImpl<T : Any> internal constructor(
     scheduler: Scheduler,
     upstream: () -> Observable<T>
   ): Observable<T> {
-    return Observable.defer<T> {
-      synchronized(lock) {
-        // We can't use the getOrPut() extension because it may run the upstream fetch even though
-        // it guarantees no double data insertions.
-        val cachedRequest: Observable<T>? = inFlight
+    synchronized(lock) {
+      // We can't use the getOrPut() extension because it may run the upstream fetch even though
+      // it guarantees no double data insertions.
+      val cachedRequest: Observable<T>? = inFlight
 
-        if (cachedRequest == null) {
-          logger.log { "Attempting upstream" }
-          return@defer fetchUpstream(upstream, scheduler)
-        } else {
-          logger.log { "Attaching in flight" }
-          return@defer cachedRequest
-        }
+      val source: Observable<T>
+      if (cachedRequest == null) {
+        logger.log { "Attempting upstream" }
+        source = fetchUpstream(upstream, scheduler)
+      } else {
+        logger.log { "Attaching in flight" }
+        source = cachedRequest
       }
+      // Once the fetch has ended, we can clear the in flight cache.
+      // We do not use the terminate event since the public consumer can fall off, but we still
+      // want the request to stay in flight if one exists.
+      return source
+          .doOnNext { clear() }
+          .doOnError { cancel() }
+          .doOnNext { logger.log { "--> Emit: $it" } }
     }
-        // Once the fetch has ended, we can clear the in flight cache.
-        // We do not use the terminate event since the public consumer can fall off, but we still
-        // want the request to stay in flight if one exists.
-        .doOnNext { clear() }
-        .doOnError { cancel() }
-        .doOnNext { logger.log { "--> Emit: $it" } }
   }
 
   @CheckResult

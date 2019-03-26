@@ -96,22 +96,20 @@ internal class PersisterImpl<T : Any> internal constructor(
   }
 
   override fun read(): Observable<T> {
-    return Observable.defer {
-      if (isFileValid()) {
-        val data = readFromFile()
-        if (data.isEmpty()) {
-          logger.log { "Persister is empty" }
-          clear()
-          return@defer Observable.empty<T>()
-        } else {
-          logger.log { "Persister return data: ${ArrayList(data)}" }
-          return@defer Observable.fromIterable(data)
-        }
-      } else {
+    if (isFileValid()) {
+      val data = readFromFile()
+      if (data.isEmpty()) {
         logger.log { "Persister is empty" }
         clear()
-        return@defer Observable.empty<T>()
+        return Observable.empty<T>()
+      } else {
+        logger.log { "Persister return data: ${ArrayList(data)}" }
+        return Observable.fromIterable(data)
       }
+    } else {
+      logger.log { "Persister is empty" }
+      clear()
+      return Observable.empty<T>()
     }
   }
 

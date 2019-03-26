@@ -64,18 +64,16 @@ internal class MemoryCacheImpl<T : Any> constructor(
   }
 
   override fun get(): Observable<T> {
-    return Observable.defer {
-      if (hasCachedData()) {
-        synchronized(lock) {
-          val list = ArrayList(requireNotNull(data).data)
-          logger.log { "Memory cache return data: ${ArrayList(list)}" }
-          return@defer Observable.fromIterable(list)
-        }
-      } else {
-        logger.log { "Memory cache is empty" }
-        clear()
-        return@defer Observable.empty<T>()
+    if (hasCachedData()) {
+      synchronized(lock) {
+        val list = ArrayList(requireNotNull(data).data)
+        logger.log { "Memory cache return data: ${ArrayList(list)}" }
+        return Observable.fromIterable(list)
       }
+    } else {
+      logger.log { "Memory cache is empty" }
+      clear()
+      return Observable.empty<T>()
     }
   }
 

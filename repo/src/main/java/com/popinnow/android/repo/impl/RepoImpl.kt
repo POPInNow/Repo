@@ -63,7 +63,7 @@ internal class RepoImpl<T : Any> internal constructor(
     upstream: () -> Observable<T>
   ): Observable<T> {
     return Observable.defer {
-      val freshData = fetcher.fetch(scheduler, upstream)
+      val freshData = Observable.defer { fetcher.fetch(scheduler, upstream) }
           // When the stream begins emitting, we clear the cache
           .doOnFirst { justInvalidateBackingCaches() }
           // When the upstream is subscribed to and returns data, it should be placed into the caches,
@@ -77,8 +77,8 @@ internal class RepoImpl<T : Any> internal constructor(
         logger.log { "Fetching from repository" }
       }
 
-      val memory: Observable<T> = memoryCache.get()
-      val persist: Observable<T> = persister.read()
+      val memory: Observable<T> = Observable.defer { memoryCache.get() }
+      val persist: Observable<T> = Observable.defer { persister.read() }
       if (fetchCacheAndUpstream) {
         return@defer fetchCacheThenUpstream(freshData, memory, persist)
       } else {
