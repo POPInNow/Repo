@@ -37,6 +37,19 @@ interface RepoBuilder<T : Any> {
   fun debug(debug: String): RepoBuilder<T>
 
   /**
+   * Turn on debugging messages by setting a log tag
+   *
+   * @param debug log tag
+   * @param logger Logger implementation, pass null for default
+   * @return [RepoBuilder]
+   */
+  @CheckResult
+  fun debug(
+    debug: String,
+    logger: RepoLogger?
+  ): RepoBuilder<T>
+
+  /**
    * Provide a custom Fetcher implementation
    *
    * @param fetcher Custom implementation

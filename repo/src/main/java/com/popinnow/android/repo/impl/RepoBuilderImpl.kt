@@ -23,6 +23,7 @@ import com.popinnow.android.repo.Persister
 import com.popinnow.android.repo.Persister.PersisterMapper
 import com.popinnow.android.repo.Repo
 import com.popinnow.android.repo.RepoBuilder
+import com.popinnow.android.repo.RepoLogger
 import com.popinnow.android.repo.impl.noop.NoopCache
 import com.popinnow.android.repo.impl.noop.NoopPersister
 import io.reactivex.Scheduler
@@ -33,7 +34,8 @@ import java.util.concurrent.TimeUnit
 internal class RepoBuilderImpl<T : Any> internal constructor(
   private var fetcher: Fetcher<T>? = null,
   private var scheduler: Scheduler? = null,
-  private var debug: String = ""
+  private var debug: String = "",
+  private var logger: RepoLogger? = null
 ) : RepoBuilder<T> {
 
   private var cacheBuilder = MemoryCacheBuilder<T>(
@@ -53,7 +55,15 @@ internal class RepoBuilderImpl<T : Any> internal constructor(
   )
 
   override fun debug(debug: String): RepoBuilder<T> {
+    return debug(debug, null)
+  }
+
+  override fun debug(
+    debug: String,
+    logger: RepoLogger?
+  ): RepoBuilder<T> {
     this.debug = debug
+    this.logger = logger
     return this
   }
 
@@ -185,7 +195,7 @@ internal class RepoBuilderImpl<T : Any> internal constructor(
       val customCache = this.cacheBuilder.custom
       if (customCache == null) {
         cache = MemoryCacheImpl(
-            Logger.create("MemoryCache[$debug]", debug.isNotBlank()),
+            Logger.create("MemoryCache[$debug]", debug.isNotBlank(), logger),
             this.cacheBuilder.time,
             this.cacheBuilder.timeUnit
         )
@@ -206,7 +216,7 @@ internal class RepoBuilderImpl<T : Any> internal constructor(
       val customPersister = this.persisterBuilder.custom
       if (customPersister == null) {
         persister = PersisterImpl(
-            Logger.create("Persister[$debug]", debug.isNotBlank()),
+            Logger.create("Persister[$debug]", debug.isNotBlank(), logger),
             this.persisterBuilder.time,
             this.persisterBuilder.timeUnit,
             scheduler ?: DEFAULT_SCHEDULER,
@@ -226,11 +236,11 @@ internal class RepoBuilderImpl<T : Any> internal constructor(
 
   override fun build(): Repo<T> {
     return RepoImpl(
-        fetcher ?: FetcherImpl(Logger.create("Fetcher[$debug]", debug.isNotBlank())),
+        fetcher ?: FetcherImpl(Logger.create("Fetcher[$debug]", debug.isNotBlank(), logger)),
         cacheBuilderToCache(),
         persisterBuilderToPersister(),
         scheduler ?: DEFAULT_SCHEDULER,
-        Logger.create("Repo[$debug]", debug.isNotBlank())
+        Logger.create("Repo[$debug]", debug.isNotBlank(), logger)
     )
   }
 

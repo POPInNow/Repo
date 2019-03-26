@@ -48,9 +48,9 @@ internal class Logger private constructor(
     fun create(
       tag: String,
       debug: Boolean,
-      logger: RepoLogger = TimberLogger
+      logger: RepoLogger?
     ): Logger {
-      return Logger(tag, debug, logger)
+      return Logger(tag, debug, logger ?: TimberLogger)
     }
 
   }
