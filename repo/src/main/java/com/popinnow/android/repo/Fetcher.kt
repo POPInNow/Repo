@@ -17,7 +17,7 @@
 package com.popinnow.android.repo
 
 import androidx.annotation.CheckResult
-import com.popinnow.android.repo.internal.Cancellable
+import com.popinnow.android.repo.internal.Shutdownable
 import io.reactivex.Observable
 import io.reactivex.Scheduler
 
@@ -28,7 +28,7 @@ import io.reactivex.Scheduler
  * Possible upstream sources can include the network, disk, memory, or databases,
  * but the Fetcher is not limited to only these sources.
  */
-interface Fetcher<T : Any> : Cancellable {
+interface Fetcher<T : Any> : Shutdownable {
 
   /**
    * Fetch data from the upstream source.
@@ -51,19 +51,5 @@ interface Fetcher<T : Any> : Cancellable {
     scheduler: Scheduler,
     upstream: () -> Observable<T>
   ): Observable<T>
-
-  /**
-   * Cancels all in-flight requests to an upstream and clears the cache
-   *
-   * @see clear
-   */
-  override fun cancel()
-
-  /**
-   * Clears the cache but does not cancel any in-flight requests to an upstream
-   *
-   * @see cancel
-   */
-  override fun clear()
 
 }

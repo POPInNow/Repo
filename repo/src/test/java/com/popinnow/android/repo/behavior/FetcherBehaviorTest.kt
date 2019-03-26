@@ -132,8 +132,8 @@ class FetcherBehaviorTest : BaseBehaviorTest() {
    *  Does invalidating the fetcher cache not stop the actual upstream request
    */
   @Test
-  fun `FetcherBehavior cancel stops upstream`() {
-    val fetcher = createFetcher("cancel stop upstream")
+  fun `FetcherBehavior shutdown stops upstream`() {
+    val fetcher = createFetcher("shutdown stop upstream")
 
     val completed = Counter(0)
     val emitted = Counter(0)
@@ -154,11 +154,11 @@ class FetcherBehaviorTest : BaseBehaviorTest() {
     // Start a fetch,  don't increment the counter yet
     startFetch()
 
-    // After a small delay (mid flight) cancel
+    // After a small delay (mid flight) shutdown
     Thread.sleep(500)
-    fetcher.cancel()
+    fetcher.shutdown()
 
-    // We should have cancelled the upstream so it should never complete
+    // We should have shutdown the upstream so it should never complete
     Thread.sleep(2000)
 
     // After enough wait, we should have no emits and no completed

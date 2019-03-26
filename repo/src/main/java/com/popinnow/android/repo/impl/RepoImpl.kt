@@ -85,7 +85,7 @@ internal class RepoImpl<T : Any> internal constructor(
         return@defer fetchCacheOrUpstream(freshData, memory, persist)
       }
     }
-        .doOnError { cancel() }
+        .doOnError { shutdown() }
   }
 
   @CheckResult
@@ -160,9 +160,9 @@ internal class RepoImpl<T : Any> internal constructor(
     fetcher.clear()
   }
 
-  override fun cancel() {
-    logger.log { "Cancelling Fetcher" }
-    fetcher.cancel()
+  override fun shutdown() {
+    logger.log { "Shutting down Fetcher" }
+    fetcher.shutdown()
 
     clear()
   }

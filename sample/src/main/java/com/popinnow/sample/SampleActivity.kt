@@ -115,9 +115,9 @@ class SampleActivity : AppCompatActivity() {
 
   private fun setupObservableMockButton() {
     observableMockButton.setOnClickListener {
-      // Cancel the request before launching a new one
+      // Shutdown the request before launching a new one
       observableMockDisposable.dispose()
-      observableRepo.cancel()
+      observableRepo.shutdown()
 
       // Even though the subscription was disposed, if the cache is not busted you'll see the
       // original data and then see the new counter data
@@ -159,14 +159,14 @@ class SampleActivity : AppCompatActivity() {
 
   private fun setupObservableApplicationButton() {
     observableApplicationButton.setOnClickListener { v ->
-      // Cancel the disposable but not the upstream request
+      // Shutdown the disposable but not the upstream request
       observableApplicationDisposable.dispose()
 
       // Even though the subscription was disposed, if the cache is not busted you'll see the
       // original data and then see the new counter data
       //
       // Since this repo lives in Application scope, it will keep its cached state even if you
-      // close and re-open the application. Upstream requests will not be cancelled unless you
+      // close and re-open the application. Upstream requests will not be shutdown unless you
       // stop them at the Application exit point.
       observableApplicationDisposable = v.context.getSampleApplication()
           .getWithObservableRepo(bustCacheObservableApplication)
@@ -192,9 +192,9 @@ class SampleActivity : AppCompatActivity() {
 
   private fun setupSingleMockButton() {
     singleMockButton.setOnClickListener {
-      // Cancel the request before launching a new one
+      // Shutdown the request before launching a new one
       singleMockDisposable.dispose()
-      singleRepo.cancel()
+      singleRepo.shutdown()
 
       // Even though the subscription was disposed, if the cache is not busted you'll see the
       // original data instead of the new counter data
@@ -224,14 +224,14 @@ class SampleActivity : AppCompatActivity() {
 
   private fun setupSingleApplication() {
     singleApplicationButton.setOnClickListener { v ->
-      // Cancel disposable but not the upstream request
+      // Shutdown disposable but not the upstream request
       singleApplicationDisposable.dispose()
 
       // Even though the subscription was disposed, if the cache is not busted you'll see the
       // original data instead of the new counter data
       //
       // Since this repo lives in Application scope, it will keep its cached state even if you
-      // close and re-open the application. Upstream requests will not be cancelled unless you
+      // close and re-open the application. Upstream requests will not be shutdown unless you
       // stop them at the Application exit point.
       singleApplicationDisposable = v.context.getSampleApplication()
           .getWithSingleRepo(bustCacheSingleApplication)
@@ -262,8 +262,8 @@ class SampleActivity : AppCompatActivity() {
     observableMockDisposable.dispose()
     singleMockDisposable.dispose()
 
-    observableRepo.cancel()
-    singleRepo.cancel()
+    observableRepo.shutdown()
+    singleRepo.shutdown()
 
     observableApplicationDisposable.dispose()
     singleApplicationDisposable.dispose()
@@ -271,7 +271,7 @@ class SampleActivity : AppCompatActivity() {
     // If you want to tear down all Application level Repos as well, set this flag.
     if (applicationLevelDispose) {
       this.getSampleApplication()
-          .cancelRepos()
+          .shutdownRepos()
     }
   }
 }

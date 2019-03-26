@@ -56,13 +56,13 @@ internal class MultiRepoImpl<T : Any> internal constructor(
     upstream: () -> Single<T>
   ): Single<T> = repoForKey(key).get(bustCache, upstream)
 
-  override fun cancel(key: String) {
-    repoForKey(key).cancel()
+  override fun shutdown(key: String) {
+    repoForKey(key).shutdown()
   }
 
-  override fun cancel() {
+  override fun shutdown() {
     synchronized(lock) {
-      repoMap.values.forEach { it.cancel() }
+      repoMap.values.forEach { it.shutdown() }
 
       repoMap.clear()
     }

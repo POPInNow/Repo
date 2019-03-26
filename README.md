@@ -239,18 +239,18 @@ instance it is interacting with.
 
 ### Removing Data in Repo Instances
 
-Data in `Repo` instances can removed in two different ways - the `cancel()` and `clear()` functions.  
+Data in `Repo` instances can removed in two different ways - the `shutdown()` and `clear()` functions.  
 
 `clear()` will only clear data from the `Repo` instance's caching layer. Any stored data will  
 be cleared out, but any currently active requests through a `Fetcher` to an upstream data source  
-will not be cancelled. This frees the memory up to be garbage collected, but will not stop requests.
+will not be stopped. This frees the memory up to be garbage collected, but will not stop requests.
 
-`cancel()` will clear out data from the `Repo`, and cancel any currently active requests through  
+`shutdown()` will clear out data from the `Repo`, and stop any currently active requests through  
 a `Fetcher` to an upstream data source.
 
 `MultiRepo` follows the same API, but will operate on all of it's held `Repo` instances. To operate  
-on an individual `Repo` held within a `MultiRepo`, the `clear(String)` and `cancel(String)`  
-functions are provided - which operate similarly to calling `clear()` or `cancel()` on the  
+on an individual `Repo` held within a `MultiRepo`, the `clear(String)` and `shutdown(String)`  
+functions are provided - which operate similarly to calling `clear()` or `shutdown()` on the  
 `Repo` instance directly.
 
 ## Community

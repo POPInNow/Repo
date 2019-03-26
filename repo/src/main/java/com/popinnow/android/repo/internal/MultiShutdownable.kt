@@ -17,14 +17,19 @@
 package com.popinnow.android.repo.internal
 
 /**
- * Cancellable interfaces support collections of data
+ * [MultiShutdownable] are like [Shutdownable] interfaces with more fine grained control.
+ *
+ * An [MultiShutdownable] can shutdown a specific key in its collection of data, or its entire collection.
+ *
+ * @see Shutdownable
  */
-interface Cancellable : Clearable {
+interface MultiShutdownable : Shutdownable, MultiClearable {
 
   /**
-   * Cancel any operations that may currently be in flight, and clears any cached data
+   * Shutdown in flight requests for a given key, and clears the cached data for that key
    *
-   * @see clear
+   * @param key The key for this request.
+   * @see shutdown
    */
-  fun cancel()
+  fun shutdown(key: String)
 }

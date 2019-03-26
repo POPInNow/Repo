@@ -37,9 +37,9 @@ class SampleApplication : Application() {
   private val mockDataSourceString = SampleMockDataSourceString()
   private val mockDataSourceInt = SampleMockDataSourceInt()
 
-  fun cancelRepos() {
-    observableRepo.cancel()
-    singleRepo.cancel()
+  fun shutdownRepos() {
+    observableRepo.shutdown()
+    singleRepo.shutdown()
   }
 
   @CheckResult

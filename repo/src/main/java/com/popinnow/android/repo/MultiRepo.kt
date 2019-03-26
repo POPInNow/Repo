@@ -17,7 +17,7 @@
 package com.popinnow.android.repo
 
 import androidx.annotation.CheckResult
-import com.popinnow.android.repo.internal.MultiCancellable
+import com.popinnow.android.repo.internal.MultiShutdownable
 import io.reactivex.Observable
 import io.reactivex.Single
 
@@ -26,7 +26,7 @@ import io.reactivex.Single
  *
  * @see [Repo]
  */
-interface MultiRepo<T : Any> : MultiCancellable {
+interface MultiRepo<T : Any> : MultiShutdownable {
 
   /**
    * Observe the [Repo] identified by [key]
@@ -60,33 +60,4 @@ interface MultiRepo<T : Any> : MultiCancellable {
     upstream: () -> Single<T>
   ): Single<T>
 
-  /**
-   * Cancels any in-flights requests for the [Repo] identified by [key]
-   *
-   * @param key Unique key
-   * @see [Repo.cancel]
-   */
-  override fun cancel(key: String)
-
-  /**
-   * Clears cached data for the [Repo] identified by [key], but does not stop any in-flight requests
-   *
-   * @param key Unique key
-   * @see [Repo.clear]
-   */
-  override fun clear(key: String)
-
-  /**
-   * Cancels all in-flight requests for all [Repo] objects held by this [MultiRepo]
-   *
-   * @see [Repo.cancel]
-   */
-  override fun cancel()
-
-  /**
-   * Clears cached data for all [Repo] objects held by this [MultiRepo]
-   *
-   * @see [Repo.cancel]
-   */
-  override fun clear()
 }

@@ -17,7 +17,7 @@
 package com.popinnow.android.repo
 
 import androidx.annotation.CheckResult
-import com.popinnow.android.repo.internal.Cancellable
+import com.popinnow.android.repo.internal.Shutdownable
 import io.reactivex.Observable
 import io.reactivex.Single
 
@@ -27,7 +27,7 @@ import io.reactivex.Single
  * cache-then-upstream is implemented via the [observe] method
  * cache-or-upstream is implemented via the [get] method
  */
-interface Repo<T : Any> : Cancellable {
+interface Repo<T : Any> : Shutdownable {
 
   /**
    * Observe data from this Repo, possibly from the provided upstream source.
@@ -75,19 +75,4 @@ interface Repo<T : Any> : Cancellable {
     upstream: () -> Single<T>
   ): Single<T>
 
-  /**
-   * Cancels all in-flight requests currently being performed by the [Fetcher] implementation.
-   *
-   * @see [clear]
-   */
-  override fun cancel()
-
-  /**
-   * Clears all [MemoryCache] and [Persister] caches
-   *
-   * Does not stop any [Fetcher] in-flight requests
-   *
-   * @see [cancel]
-   */
-  override fun clear()
 }
