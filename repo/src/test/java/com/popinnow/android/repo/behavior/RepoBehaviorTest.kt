@@ -29,16 +29,13 @@ import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.mockito.junit.MockitoJUnitRunner
 import java.util.concurrent.TimeUnit.SECONDS
 
-@RunWith(MockitoJUnitRunner::class)
 class RepoBehaviorTest : BaseBehaviorTest() {
 
   @CheckResult
   private fun <T : Any> builder(debug: String): RepoBuilder<T> {
-    return newRepoBuilder<T>().debug(debug)
+    return newRepoBuilder<T>().debug(debug, SystemLogger)
         .scheduler(DEFAULT_SCHEDULER)
   }
 

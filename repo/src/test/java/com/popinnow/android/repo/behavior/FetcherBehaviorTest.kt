@@ -26,11 +26,8 @@ import com.popinnow.android.repo.startNow
 import io.reactivex.Observable
 import io.reactivex.schedulers.Schedulers
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.mockito.junit.MockitoJUnitRunner
 import java.util.concurrent.TimeUnit.SECONDS
 
-@RunWith(MockitoJUnitRunner::class)
 class FetcherBehaviorTest : BaseBehaviorTest() {
 
   @CheckResult

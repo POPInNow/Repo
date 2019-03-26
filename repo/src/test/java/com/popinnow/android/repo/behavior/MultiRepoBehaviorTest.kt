@@ -18,22 +18,20 @@ package com.popinnow.android.repo.behavior
 
 import androidx.annotation.CheckResult
 import com.popinnow.android.repo.MultiRepo
+import com.popinnow.android.repo.logger.SystemLogger
 import com.popinnow.android.repo.newMultiRepo
 import com.popinnow.android.repo.newRepoBuilder
 import com.popinnow.android.repo.startNow
 import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.mockito.junit.MockitoJUnitRunner
 
-@RunWith(MockitoJUnitRunner::class)
 class MultiRepoBehaviorTest : BaseBehaviorTest() {
 
   @CheckResult
   private fun createRepo(tag: String): MultiRepo<String> {
     return newMultiRepo {
-      newRepoBuilder<String>(tag)
+      newRepoBuilder<String>(tag, SystemLogger)
           .scheduler(DEFAULT_SCHEDULER)
           .build()
     }
