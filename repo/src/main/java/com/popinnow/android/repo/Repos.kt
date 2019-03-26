@@ -29,8 +29,11 @@ import com.popinnow.android.repo.impl.RepoBuilderImpl
  */
 @JvmOverloads
 @CheckResult
-fun <T : Any> newRepoBuilder(debug: String = ""): RepoBuilder<T> {
-  return RepoBuilderImpl<T>().debug(debug)
+fun <T : Any> newRepoBuilder(
+  debug: String = "",
+  logger: RepoLogger? = null
+): RepoBuilder<T> {
+  return RepoBuilderImpl<T>().debug(debug, logger)
 }
 
 /**
@@ -40,9 +43,12 @@ fun <T : Any> newRepoBuilder(debug: String = ""): RepoBuilder<T> {
  */
 @JvmOverloads
 @CheckResult
-fun <T : Any> newRepo(debug: String = ""): Repo<T> {
+fun <T : Any> newRepo(
+  debug: String = "",
+  logger: RepoLogger? = null
+): Repo<T> {
   return newRepoBuilder<T>()
-      .debug(debug)
+      .debug(debug, logger)
       .memoryCache()
       .build()
 }
