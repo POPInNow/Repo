@@ -194,8 +194,7 @@ The default `MemoryCache` implementation will cache any data put into it for a p
 by default. The `MemoryCache` preserves ordering, but is backed by an unbounded data structure - so  
 potentially endless emissions can make the cache extremely large or can in some extreme cases cause  
 out of memory errors. If one is using `MemoryCache` to observe against an endless upstream source,  
-one may need to periodically clear out or replace the cache in order to stay within memory sane  
-constraints.
+one may need to periodically clear out the cache in order to stay within memory constraints.
 
 The default `Persister` implementation will cache any data put into it for a period of 10 minutes  
 by default. The `Persister` preserves ordering and is backed by a flat file on disk. The `Persister`  
@@ -218,21 +217,6 @@ a database table. Data returned from the upstream should be in the form of an Rx
 there is already data cached in the `Repo`, all valid data will be returned following the  
 "cache-then-upstream" pattern - if cache exists, it will be returned first, and the upstream will  
 be hit once the cache is returned.
-
-`MultiRepo` follows the same API but expects an additional `key` argument to identify which `Repo`  
-instance it is interacting with.
-
-### Adding Data into Repo Instances
-
-`Repo` instances manipulated in two different ways - the `push()` and `replace()` functions.
-
-`push()` is used to append a single piece of data into the `Repo` instance - it will become the  
-latest valid data and will reset any cache timeouts. A variant exists to push a list of data, named  
-`pushAll()`.
-
-`replace()` is used to replace a single piece of data into the `Repo` instance - it will erase any  
-already cached data, reset cache timeouts, and then be inserted, becoming the latest valid data.  
-A variant exists to replace an entire list of data, named `replaceAll()`.
 
 `MultiRepo` follows the same API but expects an additional `key` argument to identify which `Repo`  
 instance it is interacting with.
