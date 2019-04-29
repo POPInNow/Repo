@@ -122,38 +122,38 @@ class SampleActivity : AppCompatActivity() {
       // Even though the subscription was disposed, if the cache is not busted you'll see the
       // original data and then see the new counter data
       observableMockDisposable =
-          observableRepo.observe(bustCacheObservableMock) {
-            Observable.just(mockDataSourceString.getCharacter(bustCacheObservableMock))
-                .doOnSubscribe {
-                  Logger.debug(
-                      "ObservableMock Source Subscribe on Thread: ${Thread.currentThread().name}"
-                  )
-                }
-                .doOnNext {
-                  Logger.debug(
-                      "ObservableMock Source Emit on Thread: ${Thread.currentThread().name}"
-                  )
-                }
-          }
-              .subscribeOn(Schedulers.computation())
-              .observeOn(AndroidSchedulers.mainThread())
+        observableRepo.observe(bustCacheObservableMock) {
+          Observable.just(mockDataSourceString.getCharacter(bustCacheObservableMock))
               .doOnSubscribe {
                 Logger.debug(
-                    "ObservableMock Observer Subscribe on Thread: ${Thread.currentThread().name}"
+                    "ObservableMock Source Subscribe on Thread: ${Thread.currentThread().name}"
                 )
               }
               .doOnNext {
                 Logger.debug(
-                    "ObservableMock Observer Emit on Thread: ${Thread.currentThread().name}"
+                    "ObservableMock Source Emit on Thread: ${Thread.currentThread().name}"
                 )
               }
-              .subscribe({
-                Logger.info("ObservableMock subscribed: $it")
-              }, {
-                Logger.error(it, "ObservableMock error")
-              }, {
-                Logger.info("ObservableMock complete")
-              })
+        }
+            .subscribeOn(Schedulers.computation())
+            .observeOn(AndroidSchedulers.mainThread())
+            .doOnSubscribe {
+              Logger.debug(
+                  "ObservableMock Observer Subscribe on Thread: ${Thread.currentThread().name}"
+              )
+            }
+            .doOnNext {
+              Logger.debug(
+                  "ObservableMock Observer Emit on Thread: ${Thread.currentThread().name}"
+              )
+            }
+            .subscribe({
+              Logger.info("ObservableMock subscribed: $it")
+            }, {
+              Logger.error(it, "ObservableMock error")
+            }, {
+              Logger.info("ObservableMock complete")
+            })
     }
   }
 
