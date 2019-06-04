@@ -27,7 +27,7 @@ buildscript {
   }
   dependencies {
     // Android
-    classpath 'com.android.tools.build:gradle:3.4.0'
+    classpath 'com.android.tools.build:gradle:3.4.1'
 
     // Kotlin
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
@@ -57,7 +57,7 @@ ext {
   maxSdk = 28
 
   // Library
-  rxjava = "2.2.8"
+  rxjava = "2.2.9"
   timber = "4.7.1"
   okio = "2.2.2"
   annotation = "1.0.2"
@@ -68,13 +68,13 @@ ext {
 
   // Tests
   junit = "4.12"
-  mockito = '2.27.0'
+  mockito = '2.28.2'
 
   // Sample
   appcompat = "1.0.2"
   rxandroid = "2.1.1"
   retrofit = "2.5.0"
-  okhttp = '3.14.1'
+  okhttp = '3.14.2'
 }
 
 allprojects {
