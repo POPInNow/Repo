@@ -18,38 +18,14 @@ package com.popinnow.android.repo
 
 import androidx.annotation.CheckResult
 import com.popinnow.android.repo.internal.Shutdownable
-import io.reactivex.Observable
-import io.reactivex.Scheduler
+import kotlin.coroutines.CoroutineContext
 
-/**
- * Fetcher retrieves data from an upstream source.
- *
- * Fetcher does not care what the upstream source it - only that it talks [Observable].
- * Possible upstream sources can include the network, disk, memory, or databases,
- * but the Fetcher is not limited to only these sources.
- */
 interface Fetcher<T : Any> : Shutdownable {
 
-  /**
-   * Fetch data from the upstream source.
-   *
-   * If [fetch] is called with a while still fetching an in flight request,
-   * the [io.reactivex.Observer] will be attached to the existing in flight request instead of
-   * calling the upstream again.
-   *
-   * @param scheduler The Scheduler to fetch the upstream observable from.
-   *
-   * @param upstream A lazy generator for the upstream data source observable.
-   *            The upstream observable will only be called when it is making a new request.
-   *            If the upstream is associated with an already in flight
-   *            request, the upstream will never be evaluated.
-   *
-   *            NOTE: While hot observables should in theory work, they are not tested.
-   */
   @CheckResult
-  fun fetch(
-    scheduler: Scheduler,
-    upstream: () -> Observable<T>
-  ): Observable<T>
+  suspend fun fetch(
+    context: CoroutineContext,
+    upstream: () -> T
+  ): T
 
 }

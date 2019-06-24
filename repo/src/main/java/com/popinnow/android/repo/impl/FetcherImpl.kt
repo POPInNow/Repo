@@ -16,13 +16,15 @@
 
 package com.popinnow.android.repo.impl
 
-import androidx.annotation.CheckResult
 import com.popinnow.android.repo.Fetcher
-import io.reactivex.Observable
-import io.reactivex.Scheduler
-import io.reactivex.disposables.Disposable
-import io.reactivex.disposables.Disposables
-import io.reactivex.subjects.ReplaySubject
+import kotlinx.coroutines.CoroutineStart.LAZY
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.yield
+import timber.log.Timber
+import java.util.concurrent.atomic.AtomicReference
+import kotlin.coroutines.CoroutineContext
 
 /**
  * Default implementation of the SingleFetcher interface
@@ -33,105 +35,83 @@ internal class FetcherImpl<T : Any> internal constructor(
   private val logger: Logger
 ) : Fetcher<T> {
 
-  private val lock = Any()
-  @Volatile private var inFlight: Observable<T>? = null
-  @Volatile private var disposable: Disposable = Disposables.disposed()
+  private val activeTask = AtomicReference<Deferred<T>?>(null)
 
-  override fun fetch(
-    scheduler: Scheduler,
-    upstream: () -> Observable<T>
-  ): Observable<T> {
-    synchronized(lock) {
-      // We can't use the getOrPut() extension because it may run the upstream fetch even though
-      // it guarantees no double data insertions.
-      val cachedRequest: Observable<T>? = inFlight
+  override suspend fun fetch(
+    context: CoroutineContext,
+    upstream: () -> T
+  ): T {
+    // If we have an already active task, join to it
+    activeTask.get()
+        ?.let { task ->
+          logger.log { "Joining fetch call to an already active task: $task" }
+          return task.await()
+        }
 
-      val source: Observable<T>
-      if (cachedRequest == null) {
-        logger.log { "Attempting upstream" }
-        source = fetchUpstream(upstream, scheduler)
-      } else {
-        logger.log { "Attaching in flight" }
-        source = cachedRequest
-      }
-      // Once the fetch has ended, we can clear the in flight cache.
-      // We do not use the terminate event since the public consumer can fall off, but we still
-      // want the request to stay in flight if one exists.
-      return source
-          .doOnNext { clear() }
-          .doOnError { shutdown() }
-          .doOnNext { logger.log { "--> Emit: $it" } }
-    }
-  }
-
-  @CheckResult
-  private fun fetchUpstream(
-    upstream: () -> Observable<T>,
-    scheduler: Scheduler
-  ): Observable<T> {
-    // Create the subject which will be returned as the resulting observable
-    val subject = ReplaySubject.create<T>()
-        .toSerialized()
-
-    // One last check to be sure we are not clobbering an in flight
-    synchronized(lock) {
-      val old: Observable<T>? = inFlight
-      if (old != null) {
-        logger.log { "Upstream attempt provides in flight request" }
-        return old
+    // New scope to run our work in
+    return coroutineScope {
+      // Create a new lazy task which will run once await() is called for the first time.
+      val newTask = async(context = context, start = LAZY) {
+        logger.log { "Hit upstream to fetch new data" }
+        return@async upstream()
+      }.apply {
+        // Once this task has completed, clear out the activeTask if this is the current one running.
+        invokeOnCompletion {
+          logger.log { "Fetcher completed, clear out activeTask if possible" }
+          activeTask.compareAndSet(this, null)
+        }
       }
 
-      // Set the new in flight
-      inFlight = subject
-
-      // We subscribe here internally so that the actual returned subject is not opinionated about
-      // the scheduler it is running on.
-      //
-      // NOTE: This is not a completely transparent operation and
-      // scheduler independence is not guaranteed. If you need exact operations to happen on exact
-      // schedulers critical to your application, you may wish to implement your own stricter
-      // implementation of the Fetcher interface.
-      shutdownInFlight()
-      disposable = upstream()
-          // We must tell the original stream source to subscribe on schedulers outside of the normal
-          // returned flow else if the returned stream is terminated prematurely, the source will
-          // emit on a dead thread.
-          // We must both observe and subscribe or else emissions on a dead thread are possible.
-          .observeOn(scheduler)
-          .subscribeOn(scheduler)
-          .subscribe(
-              {
-                logger.log { "----> Upstream emit: $it" }
-                subject.onNext(it)
-              },
-              { subject.onError(it) },
-              { subject.onComplete() },
-              { subject.onSubscribe(it) }
-          )
-    }
-
-    logger.log { "Provides new request" }
-    return subject
-  }
-
-  override fun clear() {
-    synchronized(lock) {
-      logger.log { "Clear cached in-flight request" }
-      inFlight = null
-    }
-  }
-
-  private fun shutdownInFlight() {
-    synchronized(lock) {
-      if (!disposable.isDisposed) {
-        logger.log { "Shutdown in flight" }
-        disposable.dispose()
+      // Loop until we can confidently either launch a newTask or attach to the activeTask
+      val result: T
+      while (true) {
+        if (!activeTask.compareAndSet(null, newTask)) {
+          // If we do have a current task, we can join it
+          val currentTask = activeTask.get()
+          if (currentTask != null) {
+            // Cancel the new task in case it is running, we don't need it since we are attaching
+            newTask.cancel()
+            logger.log { "Attach to currently running task and await completion" }
+            result = currentTask.await()
+            break
+          } else {
+            // Retry the loop after yielding the context to any other waiting actors
+            yield()
+          }
+        } else {
+          logger.log { "Launch new task and await completion" }
+          result = newTask.await()
+          break
+        }
       }
+
+      return@coroutineScope result
     }
   }
 
   override fun shutdown() {
-    shutdownInFlight()
-    clear()
+    // Cancel an active task if it exists
+    Timber.d("Shutdown Fetcher")
+    activeTask.get()
+        ?.cancel()
+
+    // Clear the activeTask state
+    clearActiveTask()
   }
+
+  override fun clear() {
+    // Set the currently tracked task to null
+    //
+    // This will make the activeTask available to be set again and fire a new request
+    // but it will not cancel the existing task if one is running.
+    //
+    // You will lose the ability to shutdown a running task by clearing the Fetcher.
+    Timber.d("Clear Fetcher")
+    clearActiveTask()
+  }
+
+  private fun clearActiveTask() {
+    activeTask.set(null)
+  }
+
 }
