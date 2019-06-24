@@ -18,8 +18,11 @@ package com.popinnow.android.repo.impl
 
 import androidx.annotation.CheckResult
 import com.popinnow.android.repo.MemoryCache
-import io.reactivex.Observable
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 
 internal class MemoryCacheImpl<T : Any> constructor(
   private val logger: Logger,
@@ -30,8 +33,7 @@ internal class MemoryCacheImpl<T : Any> constructor(
   private val ttl = timeUnit.toNanos(time)
 
   // Data backing field
-  private val lock = Any()
-  @Volatile private var data: Entry<T>? = null
+  private val data: AtomicReference<Entry<T>?> = AtomicReference(null)
 
   init {
     logger.log { "Create with TTL: $ttl nano seconds" }
@@ -39,41 +41,38 @@ internal class MemoryCacheImpl<T : Any> constructor(
 
   @CheckResult
   private fun hasCachedData(): Boolean {
-    synchronized(lock) {
-      val cached = data
-      if (cached == null) {
-        logger.log { "Cached data is null, do not return" }
-        return false
-      }
+    val cached = data.get()
+    if (cached == null) {
+      logger.log { "Cached data is null, do not return" }
+      return false
+    }
 
-      if (cached.data.isEmpty()) {
-        logger.log { "Cached data is empty, do not return" }
-        return false
-      }
+    if (cached.data.isEmpty()) {
+      logger.log { "Cached data is empty, do not return" }
+      return false
+    }
 
-      // If this is still true, then cached was not null, we unwrap with !!
-      val cachedTime = cached.time
-      val currentTime = System.nanoTime()
-      if (cachedTime + ttl < currentTime) {
-        logger.log { "Cached time is out of bounds. ${cachedTime + ttl} $currentTime" }
-        return false
-      } else {
-        return true
-      }
+    // If this is still true, then cached was not null, we unwrap with !!
+    val cachedTime = cached.time
+    val currentTime = System.nanoTime()
+    if (cachedTime + ttl < currentTime) {
+      logger.log { "Cached time is out of bounds. ${cachedTime + ttl} $currentTime" }
+      return false
+    } else {
+      return true
     }
   }
 
-  override fun get(): Observable<T> {
+  @ExperimentalCoroutinesApi
+  override suspend fun get(): Flow<T>? {
     if (hasCachedData()) {
-      synchronized(lock) {
-        val list = ArrayList(requireNotNull(data).data)
-        logger.log { "Memory cache return data: ${ArrayList(list)}" }
-        return Observable.fromIterable(list)
-      }
+      val list = ArrayList(requireNotNull(data.get()).data)
+      logger.log { "Memory cache return data: ${ArrayList(list)}" }
+      return flow { list.forEach { emit(it) } }
     } else {
       logger.log { "Memory cache is empty" }
       clear()
-      return Observable.empty<T>()
+      return null
     }
   }
 
@@ -82,28 +81,24 @@ internal class MemoryCacheImpl<T : Any> constructor(
   }
 
   private inline fun addToCache(addToList: (ArrayList<T>) -> Unit) {
-    synchronized(lock) {
-      val list: ArrayList<T>
-      val cached = data
-      if (cached == null) {
-        list = ArrayList(1)
-      } else {
-        list = cached.data
-      }
-      addToList(list)
-
-      // Don't log list or its a ConcurrentModificationError. Wrap in a copy
-      val currentTime = System.nanoTime()
-      logger.log { "Put in memory cache: ($currentTime) ${ArrayList(list)}" }
-      data = Entry(currentTime, list)
+    val list: ArrayList<T>
+    val cached = data.get()
+    if (cached == null) {
+      list = ArrayList(1)
+    } else {
+      list = cached.data
     }
+    addToList(list)
+
+    // Don't log list or its a ConcurrentModificationError. Wrap in a copy
+    val currentTime = System.nanoTime()
+    logger.log { "Put in memory cache: ($currentTime) ${ArrayList(list)}" }
+    data.set(Entry(currentTime, list))
   }
 
   override fun clear() {
-    synchronized(lock) {
-      logger.log { "Cleared" }
-      data = null
-    }
+    logger.log { "Cleared" }
+    data.set(null)
   }
 
   private data class Entry<T : Any> internal constructor(

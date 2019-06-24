@@ -18,15 +18,17 @@ package com.popinnow.android.repo.impl.noop
 
 import androidx.annotation.CheckResult
 import com.popinnow.android.repo.MemoryCache
-import io.reactivex.Observable
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 
 /**
  * A MemoryCache implementation that does nothing.
  */
 internal object NoopCache : MemoryCache<Any> {
 
-  override fun get(): Observable<Any> {
-    return Observable.empty()
+  @ExperimentalCoroutinesApi
+  override suspend fun get(): Flow<Any>? {
+    return null
   }
 
   override fun add(value: Any) {

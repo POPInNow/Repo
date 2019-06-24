@@ -18,39 +18,16 @@ package com.popinnow.android.repo
 
 import androidx.annotation.CheckResult
 import com.popinnow.android.repo.internal.Clearable
-import io.reactivex.Observable
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 
-/**
- * MemoryCache is an in-memory cache for [Observable] which are retrieved from a [Fetcher]
- *
- * The default implementation caches items based on time from the point that the item is written
- * to the cache.
- */
 interface MemoryCache<T : Any> : Clearable {
 
-  /**
-   * Retrieves data stored in the cache.
-   *
-   * If there is no data stored in the cache , the cache will return an [Observable.empty]
-   *
-   * @return [Observable]
-   */
   @CheckResult
-  fun get(): Observable<T>
+  @ExperimentalCoroutinesApi
+  suspend fun get(): Flow<T>?
 
-  /**
-   * Adds data into the cache.
-   *
-   * If there is data in the cache already, new data will be appended.
-   *
-   * @param value The data to put into the cache.
-   */
   fun add(value: T)
-
-  /**
-   * Clears the cache
-   */
-  override fun clear()
 
 }
 
