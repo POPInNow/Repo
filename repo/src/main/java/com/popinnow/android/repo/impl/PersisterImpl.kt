@@ -20,28 +20,30 @@ import androidx.annotation.CheckResult
 import androidx.annotation.VisibleForTesting
 import com.popinnow.android.repo.Persister
 import com.popinnow.android.repo.Persister.PersisterMapper
-import io.reactivex.Completable
-import io.reactivex.CompletableObserver
-import io.reactivex.Observable
-import io.reactivex.Scheduler
-import io.reactivex.disposables.Disposable
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.launch
 import okio.buffer
 import okio.sink
 import okio.source
 import java.io.File
 import java.util.concurrent.TimeUnit
+import kotlin.coroutines.CoroutineContext
 
 internal class PersisterImpl<T : Any> internal constructor(
   private val logger: Logger,
   time: Long,
   timeUnit: TimeUnit,
-  private val scheduler: Scheduler,
+  private val context: CoroutineContext,
   private val file: File,
   private val mapper: PersisterMapper<T>
 ) : Persister<T> {
 
   private val ttl = timeUnit.toMillis(time)
-
   private val lock = Any()
 
   init {
@@ -95,21 +97,22 @@ internal class PersisterImpl<T : Any> internal constructor(
     }
   }
 
-  override fun read(): Observable<T> {
+  @ExperimentalCoroutinesApi
+  override suspend fun read(): Flow<T>? {
     if (isFileValid()) {
       val data = readFromFile()
       if (data.isEmpty()) {
         logger.log { "Persister is empty" }
         clear()
-        return Observable.empty<T>()
+        return null
       } else {
         logger.log { "Persister return data: ${ArrayList(data)}" }
-        return Observable.fromIterable(data)
+        return flow { data.forEach { emit(it) } }
       }
     } else {
       logger.log { "Persister is empty" }
       clear()
-      return Observable.empty<T>()
+      return null
     }
   }
 
@@ -137,26 +140,22 @@ internal class PersisterImpl<T : Any> internal constructor(
     values: List<T>,
     append: Boolean,
     onWriteComplete: (Boolean) -> Unit
-  ) {
-    Completable.fromAction { writeList(values, append) }
-        .subscribeOn(scheduler)
-        .unsubscribeOn(scheduler)
-        .observeOn(scheduler)
-        .subscribe(object : CompletableObserver {
-          override fun onComplete() {
-            logger.log { "Wrote '$values' to $file" }
-            onWriteComplete(TRUE)
-          }
+  ): Job {
+    return CoroutineScope(context).launch {
+      logger.log { "Writing '$values' to $file" }
 
-          override fun onSubscribe(d: Disposable) {
-            logger.log { "Writing '$values' to $file" }
-          }
+      try {
+        writeList(values, append)
 
-          override fun onError(e: Throwable) {
-            logger.error(e) { "Failed to write '$values' to $file" }
-            onWriteComplete(FALSE)
-          }
-        })
+        logger.log { "Wrote '$values' to $file" }
+        onWriteComplete(TRUE)
+      } catch (e: Throwable) {
+        if (e !is CancellationException) {
+          logger.error(e) { "Failed to write '$values' to $file" }
+          onWriteComplete(FALSE)
+        }
+      }
+    }
   }
 
   private fun writeList(

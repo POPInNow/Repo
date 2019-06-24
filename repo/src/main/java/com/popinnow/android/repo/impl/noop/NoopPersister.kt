@@ -18,15 +18,17 @@ package com.popinnow.android.repo.impl.noop
 
 import androidx.annotation.CheckResult
 import com.popinnow.android.repo.Persister
-import io.reactivex.Observable
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 
 /**
  * A Persister implementation that does nothing.
  */
 internal object NoopPersister : Persister<Any> {
 
-  override fun read(): Observable<Any> {
-    return Observable.empty()
+  @ExperimentalCoroutinesApi
+  override suspend fun read(): Flow<Any>? {
+    return null
   }
 
   override fun write(value: Any) {

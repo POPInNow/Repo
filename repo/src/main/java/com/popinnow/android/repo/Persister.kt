@@ -18,41 +18,16 @@ package com.popinnow.android.repo
 
 import androidx.annotation.CheckResult
 import com.popinnow.android.repo.internal.Clearable
-import io.reactivex.Observable
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 
-/**
- * Persister is an long-term cache for [Observable] which are retrieved from a [Fetcher]
- *
- * The default implementation caches items based on time from the point that the item is written
- * to the persister. The default implementation uses disk backed persistent storage.
- *
- * @see Clearable
- */
 interface Persister<T : Any> : Clearable {
 
-  /**
-   * Retrieves persistent stored data.
-   *
-   * If there is no data stored in the persister, the persister will return an [Observable.empty]
-   *
-   * @return [Observable]
-   */
   @CheckResult
-  fun read(): Observable<T>
+  @ExperimentalCoroutinesApi
+  suspend fun read(): Flow<T>?
 
-  /**
-   * Adds data into the persister.
-   *
-   * If there is data in the persister already, new data will be appended.
-   *
-   * @param value The data to put into the persister.
-   */
   fun write(value: T)
-
-  /**
-   * Clears the persister and deletes its backing storage
-   */
-  override fun clear()
 
   /**
    * The interface which defines the mapping of data from Objects to Strings in a consistent,
