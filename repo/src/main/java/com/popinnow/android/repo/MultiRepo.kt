@@ -18,46 +18,24 @@ package com.popinnow.android.repo
 
 import androidx.annotation.CheckResult
 import com.popinnow.android.repo.internal.MultiShutdownable
-import io.reactivex.Observable
-import io.reactivex.Single
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 
-/**
- * A Repo-Like interface which maps over multiple similar Repo instances
- *
- * @see [Repo]
- */
 interface MultiRepo<T : Any> : MultiShutdownable {
 
-  /**
-   * Observe the [Repo] identified by [key]
-   *
-   * @see [Repo.observe]
-   * @param key Unique key
-   * @param bustCache
-   * @param upstream
-   * @return [Observable]
-   */
   @CheckResult
-  fun observe(
+  @ExperimentalCoroutinesApi
+  suspend fun observe(
     key: String,
     bustCache: Boolean,
-    upstream: () -> Observable<T>
-  ): Observable<T>
+    upstream: () -> Flow<T>
+  ): Flow<T>
 
-  /**
-   * Get the [Repo] identified by [key]
-   *
-   * @see [Repo.get]
-   * @param key Unique key
-   * @param bustCache
-   * @param upstream
-   * @return [Single]
-   */
   @CheckResult
-  fun get(
+  suspend fun get(
     key: String,
     bustCache: Boolean,
-    upstream: () -> Single<T>
-  ): Single<T>
+    upstream: () -> T
+  ): T
 
 }

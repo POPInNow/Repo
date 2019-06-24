@@ -18,61 +18,22 @@ package com.popinnow.android.repo
 
 import androidx.annotation.CheckResult
 import com.popinnow.android.repo.internal.Shutdownable
-import io.reactivex.Observable
-import io.reactivex.Single
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 
-/**
- * Repo follows the cache-then-upstream model and cache-or-upstream model.
- *
- * cache-then-upstream is implemented via the [observe] method
- * cache-or-upstream is implemented via the [get] method
- */
 interface Repo<T : Any> : Shutdownable {
 
-  /**
-   * Observe data from this Repo, possibly from the provided upstream source.
-   *
-   * If [bustCache] is true, the Repo will skip any caching layers that may have data, and will
-   * always fetch new data from the [upstream]. Any data retrieved from the [upstream] will still
-   * be put back into the caches.
-   *
-   * If no cached data exists in the Repo, then fresh data will be pulled
-   * from the [upstream]. If cached data exists, it will be emitted first, and then the [upstream]
-   * will be pulled.
-   *
-   * Ordering is guaranteed - cached data will always emit first if it exists.
-   *
-   * @param bustCache Bypass any caching and pull data straight from the upstream source.
-   * @param upstream The lazy upstream data source.
-   * @return [Observable]
-   */
   @CheckResult
-  fun observe(
+  @ExperimentalCoroutinesApi
+  suspend fun observe(
     bustCache: Boolean,
-    upstream: () -> Observable<T>
-  ): Observable<T>
+    upstream: () -> Flow<T>
+  ): Flow<T>
 
-  /**
-   * Get data from this Repo, possibly from the provided upstream source.
-   *
-   * If [bustCache] is true, the Repo will skip any caching layers that may have data, and will
-   * always fetch new data from the [upstream]. Any data retrieved from the [upstream] will still
-   * be put back into the caches.
-   *
-   * If no cached data exists in the Repo, then fresh data will be pulled
-   * from the [upstream]. If cached data exists, the latest will be emitted, and the [upstream]
-   * will never be pulled.
-   *
-   * Ordering is guaranteed - cached data will always emit instead of the upstream if it exists.
-   *
-   * @param bustCache Bypass any caching and pull data straight from the upstream source.
-   * @param upstream The lazy upstream data source.
-   * @return [Single]
-   */
   @CheckResult
-  fun get(
+  suspend fun get(
     bustCache: Boolean,
-    upstream: () -> Single<T>
-  ): Single<T>
+    upstream: () -> T
+  ): T
 
 }

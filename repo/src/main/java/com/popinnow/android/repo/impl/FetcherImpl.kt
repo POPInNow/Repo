@@ -19,12 +19,13 @@ package com.popinnow.android.repo.impl
 import com.popinnow.android.repo.Fetcher
 import kotlinx.coroutines.CoroutineStart.LAZY
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.yield
 import timber.log.Timber
 import java.util.concurrent.atomic.AtomicReference
-import kotlin.coroutines.CoroutineContext
 
 /**
  * Default implementation of the SingleFetcher interface
@@ -35,12 +36,11 @@ internal class FetcherImpl<T : Any> internal constructor(
   private val logger: Logger
 ) : Fetcher<T> {
 
-  private val activeTask = AtomicReference<Deferred<T>?>(null)
+  @ExperimentalCoroutinesApi
+  private val activeTask = AtomicReference<Deferred<Flow<T>>?>(null)
 
-  override suspend fun fetch(
-    context: CoroutineContext,
-    upstream: () -> T
-  ): T {
+  @ExperimentalCoroutinesApi
+  override suspend fun fetch(upstream: () -> Flow<T>): Flow<T> {
     // If we have an already active task, join to it
     activeTask.get()
         ?.let { task ->
@@ -51,7 +51,7 @@ internal class FetcherImpl<T : Any> internal constructor(
     // New scope to run our work in
     return coroutineScope {
       // Create a new lazy task which will run once await() is called for the first time.
-      val newTask = async(context = context, start = LAZY) {
+      val newTask = async(start = LAZY) {
         logger.log { "Hit upstream to fetch new data" }
         return@async upstream()
       }.apply {
@@ -63,7 +63,7 @@ internal class FetcherImpl<T : Any> internal constructor(
       }
 
       // Loop until we can confidently either launch a newTask or attach to the activeTask
-      val result: T
+      val result: Flow<T>
       while (true) {
         if (!activeTask.compareAndSet(null, newTask)) {
           // If we do have a current task, we can join it
@@ -89,6 +89,7 @@ internal class FetcherImpl<T : Any> internal constructor(
     }
   }
 
+  @ExperimentalCoroutinesApi
   override fun shutdown() {
     // Cancel an active task if it exists
     Timber.d("Shutdown Fetcher")
@@ -99,6 +100,7 @@ internal class FetcherImpl<T : Any> internal constructor(
     clearActiveTask()
   }
 
+  @ExperimentalCoroutinesApi
   override fun clear() {
     // Set the currently tracked task to null
     //
@@ -110,6 +112,7 @@ internal class FetcherImpl<T : Any> internal constructor(
     clearActiveTask()
   }
 
+  @ExperimentalCoroutinesApi
   private fun clearActiveTask() {
     activeTask.set(null)
   }

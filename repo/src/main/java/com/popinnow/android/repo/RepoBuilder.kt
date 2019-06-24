@@ -21,6 +21,7 @@ import com.popinnow.android.repo.Persister.PersisterMapper
 import io.reactivex.Scheduler
 import java.io.File
 import java.util.concurrent.TimeUnit
+import kotlin.coroutines.CoroutineContext
 
 /**
  * Builder to construct Repo objects
@@ -59,22 +60,22 @@ interface RepoBuilder<T : Any> {
   fun fetcher(fetcher: Fetcher<T>): RepoBuilder<T>
 
   /**
-   * Provide a custom scheduler for Fetcher operations
+   * Provide a custom CoroutineContext for Fetcher operations
    *
-   * @param scheduler Custom implementation
+   * @param context Custom implementation
    * @return [RepoBuilder]
    */
   @CheckResult
-  fun scheduler(scheduler: Scheduler): RepoBuilder<T>
+  fun context(context: CoroutineContext): RepoBuilder<T>
 
   /**
-   * Provide a custom scheduler for Fetcher operations
+   * Provide a custom CoroutineContext for Fetcher operations
    *
-   * @param scheduler Custom implementation
+   * @param context Custom implementation
    * @return [RepoBuilder]
    */
   @CheckResult
-  fun scheduler(scheduler: () -> Scheduler): RepoBuilder<T>
+  fun context(context: () -> CoroutineContext): RepoBuilder<T>
 
   /**
    * Enable memory caching

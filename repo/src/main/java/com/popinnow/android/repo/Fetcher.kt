@@ -18,14 +18,13 @@ package com.popinnow.android.repo
 
 import androidx.annotation.CheckResult
 import com.popinnow.android.repo.internal.Shutdownable
-import kotlin.coroutines.CoroutineContext
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 
 interface Fetcher<T : Any> : Shutdownable {
 
   @CheckResult
-  suspend fun fetch(
-    context: CoroutineContext,
-    upstream: () -> T
-  ): T
+  @ExperimentalCoroutinesApi
+  suspend fun fetch(upstream: () -> Flow<T>): Flow<T>
 
 }

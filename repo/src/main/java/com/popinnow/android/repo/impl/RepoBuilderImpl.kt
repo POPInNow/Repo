@@ -26,14 +26,14 @@ import com.popinnow.android.repo.RepoBuilder
 import com.popinnow.android.repo.RepoLogger
 import com.popinnow.android.repo.impl.noop.NoopCache
 import com.popinnow.android.repo.impl.noop.NoopPersister
-import io.reactivex.Scheduler
-import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.Dispatchers
 import java.io.File
 import java.util.concurrent.TimeUnit
+import kotlin.coroutines.CoroutineContext
 
 internal class RepoBuilderImpl<T : Any> internal constructor(
   private var fetcher: Fetcher<T>? = null,
-  private var scheduler: Scheduler? = null,
+  private var context: CoroutineContext? = null,
   private var debug: String = "",
   private var logger: RepoLogger? = null
 ) : RepoBuilder<T> {
@@ -179,12 +179,12 @@ internal class RepoBuilderImpl<T : Any> internal constructor(
     return this
   }
 
-  override fun scheduler(scheduler: () -> Scheduler): RepoBuilder<T> {
-    return scheduler(scheduler())
+  override fun context(context: () -> CoroutineContext): RepoBuilder<T> {
+    return context(context())
   }
 
-  override fun scheduler(scheduler: Scheduler): RepoBuilder<T> {
-    this.scheduler = scheduler
+  override fun context(context: CoroutineContext): RepoBuilder<T> {
+    this.context = context
     return this
   }
 
@@ -219,7 +219,7 @@ internal class RepoBuilderImpl<T : Any> internal constructor(
             Logger.create("Persister[$debug]", debug.isNotBlank(), logger),
             this.persisterBuilder.time,
             this.persisterBuilder.timeUnit,
-            scheduler ?: DEFAULT_SCHEDULER,
+            context ?: DEFAULT_CONTEXT,
             // If we have gotten here, these variables should be non-null
             requireNotNull(this.persisterBuilder.file) { "Persister missing 'file'" },
             requireNotNull(this.persisterBuilder.mapper) { "Persister missing 'mapper'" }
@@ -239,7 +239,7 @@ internal class RepoBuilderImpl<T : Any> internal constructor(
         fetcher ?: FetcherImpl(Logger.create("Fetcher[$debug]", debug.isNotBlank(), logger)),
         cacheBuilderToCache(),
         persisterBuilderToPersister(),
-        scheduler ?: DEFAULT_SCHEDULER,
+        context ?: DEFAULT_CONTEXT,
         Logger.create("Repo[$debug]", debug.isNotBlank(), logger)
     )
   }
@@ -262,7 +262,7 @@ internal class RepoBuilderImpl<T : Any> internal constructor(
 
   companion object {
 
-    private val DEFAULT_SCHEDULER: Scheduler = Schedulers.io()
+    private val DEFAULT_CONTEXT: CoroutineContext = Dispatchers.IO
 
     private const val DEFAULT_MEMORY_TIME: Long = 30
     private val DEFAULT_MEMORY_UNIT: TimeUnit = TimeUnit.SECONDS

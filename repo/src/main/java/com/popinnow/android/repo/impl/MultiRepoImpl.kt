@@ -19,8 +19,8 @@ package com.popinnow.android.repo.impl
 import androidx.annotation.CheckResult
 import com.popinnow.android.repo.MultiRepo
 import com.popinnow.android.repo.Repo
-import io.reactivex.Observable
-import io.reactivex.Single
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import java.util.concurrent.ConcurrentHashMap
 
 internal class MultiRepoImpl<T : Any> internal constructor(
@@ -44,17 +44,19 @@ internal class MultiRepoImpl<T : Any> internal constructor(
     }
   }
 
-  override fun observe(
+  @ExperimentalCoroutinesApi
+  override suspend fun observe(
     key: String,
     bustCache: Boolean,
-    upstream: () -> Observable<T>
-  ): Observable<T> = repoForKey(key).observe(bustCache, upstream)
+    upstream: () -> Flow<T>
+  ): Flow<T> = repoForKey(key).observe(bustCache, upstream)
 
-  override fun get(
+  @ExperimentalCoroutinesApi
+  override suspend fun get(
     key: String,
     bustCache: Boolean,
-    upstream: () -> Single<T>
-  ): Single<T> = repoForKey(key).get(bustCache, upstream)
+    upstream: () -> T
+  ): T = repoForKey(key).get(bustCache, upstream)
 
   override fun shutdown(key: String) {
     repoForKey(key).shutdown()

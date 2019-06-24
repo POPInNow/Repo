@@ -16,124 +16,141 @@
 
 package com.popinnow.android.repo.impl
 
-import androidx.annotation.CheckResult
 import androidx.annotation.VisibleForTesting
 import com.popinnow.android.repo.Fetcher
 import com.popinnow.android.repo.MemoryCache
 import com.popinnow.android.repo.Persister
 import com.popinnow.android.repo.Repo
-import io.reactivex.Observable
-import io.reactivex.Scheduler
-import io.reactivex.Single
-import java.util.concurrent.atomic.AtomicBoolean
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.FlowCollector
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.toCollection
+import kotlinx.coroutines.withContext
+import kotlin.coroutines.CoroutineContext
 
 internal class RepoImpl<T : Any> internal constructor(
   private val fetcher: Fetcher<T>,
   private val memoryCache: MemoryCache<T>,
   private val persister: Persister<T>,
-  private val scheduler: Scheduler,
+  private val context: CoroutineContext,
   private val logger: Logger
 ) : Repo<T> {
 
-  @CheckResult
-  private fun fetchCacheThenUpstream(
-    upstream: Observable<T>,
-    cache: Observable<T>,
-    persist: Observable<T>
-  ): Observable<T> {
-    return cache.switchIfEmpty(persist)
-        .concatWith(upstream)
-  }
-
-  @CheckResult
-  private fun fetchCacheOrUpstream(
-    upstream: Observable<T>,
-    cache: Observable<T>,
-    persist: Observable<T>
-  ): Observable<T> {
-    return cache.lastElement()
-        .switchIfEmpty(persist.lastElement())
-        .switchIfEmpty(upstream.singleOrError())
-        .toObservable()
-  }
-
-  private fun fetch(
+  @ExperimentalCoroutinesApi
+  private suspend fun fetch(
     fetchCacheAndUpstream: Boolean,
     bustCache: Boolean,
-    upstream: () -> Observable<T>
-  ): Observable<T> {
-    return Observable.defer {
-      val freshData = Observable.defer { fetcher.fetch(scheduler, upstream) }
-          // When the stream begins emitting, we clear the cache
-          .doOnFirst { justInvalidateBackingCaches() }
-          // When the upstream is subscribed to and returns data, it should be placed into the caches,
-          // but subscribing to the caches should not reset the cached data.
-          .doOnNext { internalPut(it) }
-
+    upstream: () -> Flow<T>
+  ): Flow<T> {
+    return withContext(context) {
       if (bustCache) {
-        logger.log { "Busting cache to fetch from upstream" }
         justInvalidateBackingCaches()
-      } else {
-        logger.log { "Fetching from repository" }
       }
 
-      val memory: Observable<T> = Observable.defer { memoryCache.get() }
-      val persist: Observable<T> = Observable.defer { persister.read() }
       if (fetchCacheAndUpstream) {
-        return@defer fetchCacheThenUpstream(freshData, memory, persist)
-      } else {
-        return@defer fetchCacheOrUpstream(freshData, memory, persist)
-      }
-    }
-        .doOnError { shutdown() }
-  }
+        logger.log { "Fetch from cache and persister and upstream" }
+        return@withContext flow<T> {
+          val memory = memoryCache.get()
+          if (memory != null) {
+            logger.log { "Emit from cache" }
+            emitFromCached(this, memory)
+          } else {
+            val persist = persister.read()
+            if (persist != null) {
+              logger.log { "Emit from persister" }
+              emitFromCached(this, persist)
+            }
+          }
 
-  @CheckResult
-  private inline fun <T : Any> Observable<T>.doOnFirst(crossinline consumer: (T) -> Unit): Observable<T> {
-    return this.compose { source ->
-      val firstEmitted = AtomicBoolean(false)
-      return@compose source.doOnNext {
-        if (firstEmitted.compareAndSet(false, true)) {
-          consumer(it)
+          logger.log { "Emit from upstream" }
+          emitFromUpstream(this, upstream)
+        }
+      } else {
+        logger.log { "Fetch from cache or persister or upstream" }
+        return@withContext flow<T> {
+          val memory = memoryCache.get()
+          if (memory != null) {
+            logger.log { "Emit from cache" }
+            emitFromCached(this, memory)
+          } else {
+            val persist = persister.read()
+            if (persist != null) {
+              logger.log { "Emit from persister" }
+              emitFromCached(this, persist)
+            } else {
+              logger.log { "Emit from upstream" }
+              emitFromUpstream(this, upstream)
+            }
+          }
         }
       }
     }
   }
 
-  /**
-   * Exposed as internal so that it can be tested.
-   */
-  @VisibleForTesting
-  internal fun testingGet(
-    bustCache: Boolean,
-    upstream: () -> Observable<T>
-  ): Single<T> {
-    return fetch(false, bustCache, upstream).singleOrError()
+  @ExperimentalCoroutinesApi
+  private suspend fun emitFromUpstream(
+    collector: FlowCollector<T>,
+    upstream: () -> Flow<T>
+  ) {
+    val upstreamData = fetcher.fetch(upstream)
+
+    justInvalidateBackingCaches()
+    upstreamData.onEach { data ->
+      internalPut(data)
+      collector.emit(data)
+    }
+  }
+
+  @ExperimentalCoroutinesApi
+  private suspend fun emitFromCached(
+    collector: FlowCollector<T>,
+    cached: Flow<T>
+  ) {
+    collector.emit(cached.toCollection(arrayListOf()).last())
   }
 
   /**
    * Exposed as internal so that it can be tested.
    */
   @VisibleForTesting
-  internal fun testingObserve(
+  @ExperimentalCoroutinesApi
+  internal suspend fun testingGet(
     bustCache: Boolean,
-    upstream: () -> Observable<T>
-  ): Observable<T> {
+    upstream: () -> Flow<T>
+  ): T {
+    return fetch(false, bustCache, upstream).first()
+  }
+
+  /**
+   * Exposed as internal so that it can be tested.
+   */
+  @VisibleForTesting
+  @ExperimentalCoroutinesApi
+  internal suspend fun testingObserve(
+    bustCache: Boolean,
+    upstream: () -> Flow<T>
+  ): Flow<T> {
     return fetch(true, bustCache, upstream)
   }
 
-  override fun get(
+  @ExperimentalCoroutinesApi
+  override suspend fun get(
     bustCache: Boolean,
-    upstream: () -> Single<T>
-  ): Single<T> {
-    val realUpstream = { upstream().toObservable() }
-    return fetch(false, bustCache, realUpstream).singleOrError()
+    upstream: () -> T
+  ): T {
+    val realUpstream = { flowOf(upstream()) }
+    return fetch(false, bustCache, realUpstream).first()
   }
 
-  override fun observe(
+  @ExperimentalCoroutinesApi
+  override suspend fun observe(
     bustCache: Boolean,
-    upstream: () -> Observable<T>
-  ): Observable<T> {
+    upstream: () -> Flow<T>
+  ): Flow<T> {
     return fetch(true, bustCache, upstream)
   }
 
